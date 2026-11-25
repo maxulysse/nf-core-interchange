@@ -1,0 +1,27 @@
+name: Render
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load the honeycomb and every map in headless Chrome and fail on script errors
+        run: |
+          render() {
+            google-chrome --headless=new --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=2000 \
+              --dump-dom "file://$PWD/index.html$1" 2> chrome.log > dom.html
+            if grep -i 'Uncaught' chrome.log; then exit 1; fi
+          }
+          render ""
+          grep -q 'class="tile' dom.html
+          for f in maps/*.js; do
+            id=$(basename "$f" .js)
+            grep -q "src=\"$f\"" index.html || { echo "$f is not loaded in index.html"; exit 1; }
+            render "#/$id"
+            grep -q 'class="stn' dom.html || { echo "map $id did not render"; exit 1; }
+          done
