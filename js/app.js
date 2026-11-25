@@ -1,75 +1,126 @@
-// Honeycomb overview and routing. No hash shows the honeycomb, #<id> shows that pipeline's interchange map.
-// A tile with a map zooms in before the map opens.
-const TILE_R = 64, GAP = 5;
+// Honeycomb tree and routing. A group tile zooms into a honeycomb of its children; a pipeline tile
+// zooms into its interchange map. The hash names one node: none is the top, #<id> a group or pipeline.
+const TILE_R = 64, GAP = 5, PX = 1.6;
 const pave = document.getElementById("pave"), pcard = document.getElementById("pcard");
-const tileXY = p => [TILE_R * Math.sqrt(3) * (p.q + p.r / 2), TILE_R * 1.5 * p.r];
+const crumbs = document.getElementById("crumbs"), lede = document.getElementById("lede");
+const NODES = {}, PARENT = {};
+(function index(n, parent) {
+  if (NODES[n.id]) throw new Error(`Duplicate id in TREE: ${n.id}`);
+  NODES[n.id] = n; PARENT[n.id] = parent;
+  n.children?.forEach(c => index(c, n));
+})(TREE, null);
+const isGroup = n => !!n.children;
+const label = n => n.label ?? n.id;
+const leaves = n => isGroup(n) ? n.children.flatMap(leaves) : [n];
+const pathTo = n => n ? [...pathTo(PARENT[n.id]), n] : [];
+const plural = (k, w) => `${k} ${w}${k === 1 ? "" : "s"}`;
 
-// viewBox fits every tile with a margin, so adding a tile anywhere grows the map to hold it.
-const xs = PIPELINES.map(p => tileXY(p)[0]), ys = PIPELINES.map(p => tileXY(p)[1]);
-const M_ = TILE_R * 1.2;
-const home = [Math.min(...xs) - M_, Math.min(...ys) - M_,
-  Math.max(...xs) - Math.min(...xs) + 2 * M_, Math.max(...ys) - Math.min(...ys) + 2 * M_];
+// Spiral placement in axial hex coordinates: the centre, then each ring outward.
+const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+function spiral(count) {
+  const out = [[0, 0]];
+  for (let k = 1; out.length < count; k++) {
+    let q = DIRS[4][0] * k, r = DIRS[4][1] * k;
+    for (let i = 0; i < 6; i++) for (let j = 0; j < k; j++) { out.push([q, r]); q += DIRS[i][0]; r += DIRS[i][1]; }
+  }
+  return out.slice(0, count);
+}
+const tileXY = ([q, r]) => [TILE_R * Math.sqrt(3) * (q + r / 2), TILE_R * 1.5 * r];
 const setBox = b => pave.setAttribute("viewBox", b.map(v => v.toFixed(1)).join(" "));
-setBox(home);
 
-PIPELINES.forEach(p => {
-  const [x, y] = tileXY(p), has = !!MAPS[p.id], inner = TILE_R - GAP;
-  // Long names shrink to fit the tile width; 0.56em is about one Overpass character.
-  const width = inner * Math.sqrt(3) * 0.86;
-  const size = Math.min(has ? 17 : 13, width / (p.id.length * 0.56));
-  p.node = el("g", { class: `tile${has ? " has" : ""}`, role: "button",
-    "aria-label": has ? `${p.id}: open its interchange map` : `${p.id}: no map yet` });
-  p.node.append(el("polygon", { points: hexPoints(x, y, inner) }),
-    el("text", { x, y: y + 2, class: "name", style: `font-size:${size.toFixed(1)}px` }, p.id),
-    el("text", { x, y: y + 20, class: "sub" }, has ? `${MAPS[p.id].S.length - 1} stations` : "no map yet"),
-    el("title", {}, p.id));
-  activate(p.node, () => has ? zoomInto(p) : selectTile(p));
-  pave.append(p.node);
-});
+let level = TREE, home = [0, 0, 1, 1];
+function showGroup(g) {
+  level = g;
+  const pos = spiral(g.children.length);
+  g.children.forEach((c, i) => { c.qr = pos[i]; });
+  // viewBox fits the tiles with a margin, and never shrinks below about three tiles across, so a small group stays tile-sized.
+  const xs = g.children.map(c => tileXY(c.qr)[0]), ys = g.children.map(c => tileXY(c.qr)[1]);
+  const m = TILE_R * 1.2, x0 = Math.min(...xs) - m, y0 = Math.min(...ys) - m;
+  let w = Math.max(...xs) - Math.min(...xs) + 2 * m, h = Math.max(...ys) - Math.min(...ys) + 2 * m;
+  const W = Math.max(w, TILE_R * Math.sqrt(3) * 3.4), H = Math.max(h, TILE_R * 3.6);
+  home = [x0 - (W - w) / 2, y0 - (H - h) / 2, W, H];
+  setBox(home);
+  // Same tile size on every level: the honeycomb is drawn at a fixed scale, and only narrow screens shrink it.
+  pave.style.width = `${(W * PX).toFixed(0)}px`;
+  pave.replaceChildren();
+  g.children.forEach(c => {
+    const [x, y] = tileXY(c.qr), grp = isGroup(c), has = !grp && !!MAPS[c.id], inner = TILE_R - GAP;
+    // Long names shrink to fit the tile width; 0.56em is about one Overpass character.
+    const width = inner * Math.sqrt(3) * 0.86;
+    const size = Math.min(grp || has ? 17 : 13, width / (label(c).length * 0.56));
+    const n = leaves(c).length;
+    const sub = grp ? plural(n, "pipeline") : has ? `${MAPS[c.id].S.length - 1} stations` : "no map yet";
+    c.node = el("g", { class: `tile${grp ? " grp" : has ? " has" : ""}`, role: "button",
+      "aria-label": grp ? `${label(c)}: ${sub}` : has ? `${c.id}: open its interchange map` : `${c.id}: no map yet` });
+    c.node.append(el("polygon", { points: hexPoints(x, y, inner) }),
+      el("text", { x, y: y + 2, class: "name", style: `font-size:${size.toFixed(1)}px` }, label(c)),
+      el("text", { x, y: y + 20, class: "sub" }, sub),
+      el("title", {}, label(c)));
+    activate(c.node, () => grp || has ? zoomInto(c) : selectTile(c));
+    pave.append(c.node);
+  });
+  pave.classList.remove("zooming", "enter"); void pave.getBoundingClientRect(); pave.classList.add("enter");
+  lede.hidden = g !== TREE;
+  resetPave();
+}
 
 function selectTile(p) {
-  PIPELINES.forEach(t => t.node.classList.toggle("sel", t === p));
+  level.children.forEach(t => t.node.classList.toggle("sel", t === p));
   pcard.innerHTML = `<div class="kicker">Pipeline</div><h2>${p.id}</h2>
     <p>No interchange map yet. Add one in <code>maps/${p.id}.js</code> and it opens from this tile.</p>
-    <dl><dt>Link</dt><dd><a href="https://nf-co.re/${p.id}" target="_blank" rel="noopener">nf-co.re/${p.id}</a></dd></dl>`;
+    <dl><dt>Group</dt><dd>${pathTo(PARENT[p.id]).slice(1).map(label).join(" › ")}</dd>
+    <dt>Link</dt><dd><a href="https://nf-co.re/${p.id}" target="_blank" rel="noopener">nf-co.re/${p.id}</a></dd></dl>`;
 }
 function resetPave() {
-  PIPELINES.forEach(t => t.node.classList.remove("sel"));
-  const n = Object.keys(MAPS).length;
-  pcard.innerHTML = `<div class="kicker">Overview</div><h2>${PIPELINES.length} pipelines, ${n} map${n === 1 ? "" : "s"}</h2>
-    <p>Each tile is a pipeline. Filled tiles open an interchange map, with that pipeline as the hub and every pipeline it hands data to or from around it.</p>
-    <p style="color:var(--muted)">Select a tile. Dashed tiles have no map yet.</p>`;
+  level.children.forEach(t => t.node.classList.remove("sel"));
+  const all = leaves(level), maps = all.filter(n => MAPS[n.id]).length;
+  const groups = level.children.filter(isGroup).length;
+  pcard.innerHTML = `<div class="kicker">${level === TREE ? "Overview" : "Group"}</div>
+    <h2>${level === TREE ? `${plural(all.length, "pipeline")}, ${plural(maps, "map")}` : label(level)}</h2>
+    ${level === TREE ? `<p>Pipelines are grouped by field, and big fields split again. Open a group to go one level down, until you reach a pipeline and its interchange map.</p>`
+      : `<p>${plural(all.length, "pipeline")}${groups ? ` in ${plural(groups, "sub-group")}` : ""}, ${maps} with a map.</p>`}
+    <p style="color:var(--muted)">Blue tiles are groups. Green tiles open a map; dashed tiles have no map yet.</p>`;
 }
 pave.onclick = ev => { if (ev.target === pave) resetPave(); };
 
-// Zoom: the viewBox closes in on the tile while the others fade, then the map opens.
-function zoomInto(p) {
-  if (reduced) { location.hash = p.id; return; }
-  const [x, y] = tileXY(p), w = TILE_R * 2.4, h = w * home[3] / home[2];
-  const to = [x - w / 2, y - h / 2, w, h], t0 = performance.now(), DUR = 450;
-  p.node.classList.add("zoom"); pave.classList.add("zooming");
+// Zoom: the viewBox closes in on the tile while the others fade, then the next level opens.
+function zoomInto(c) {
+  if (reduced) { location.hash = c.id; return; }
+  const [x, y] = tileXY(c.qr), w = TILE_R * 2.4, h = w * home[3] / home[2];
+  const to = [x - w / 2, y - h / 2, w, h], t0 = performance.now(), DUR = 450, from = home;
+  c.node.classList.add("zoom"); pave.classList.add("zooming");
   const ease = t => 1 - (1 - t) ** 3;
   (function step(now) {
     const k = ease(Math.min(1, (now - t0) / DUR));
-    setBox(home.map((v, i) => v + (to[i] - v) * k));
-    if (k < 1) requestAnimationFrame(step); else location.hash = p.id;
+    setBox(from.map((v, i) => v + (to[i] - v) * k));
+    if (k < 1) requestAnimationFrame(step); else location.hash = c.id;
   })(t0);
+}
+
+function renderCrumbs(n) {
+  const path = pathTo(n);
+  crumbs.replaceChildren(...path.flatMap((p, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = label(p);
+    if (i === path.length - 1) b.setAttribute("aria-current", "page");
+    else b.addEventListener("click", () => { location.hash = p === TREE ? "" : p.id; });
+    if (i === 0) return [b];
+    const sep = document.createElement("span"); sep.className = "sep"; sep.textContent = "›"; sep.setAttribute("aria-hidden", "true");
+    return [sep, b];
+  }));
 }
 
 const vPave = document.getElementById("v-pave"), vMap = document.getElementById("v-map");
 function route() {
-  const id = location.hash.match(/^#([\w-]+)$/)?.[1];
-  const m = id && MAPS[id];
+  const n = NODES[location.hash.slice(1)] ?? TREE;
+  const m = !isGroup(n) && MAPS[n.id];
   vPave.hidden = !!m; vMap.hidden = !m;
-  if (m) { renderMap(m); document.title = `${m.title} · nf-core Interchange`; window.scrollTo(0, 0); }
-  else {
-    document.title = "nf-core Interchange";
-    pave.classList.remove("zooming"); PIPELINES.forEach(t => t.node.classList.remove("zoom"));
-    setBox(home); resetPave();
-  }
+  if (m) { renderMap(m); window.scrollTo(0, 0); }
+  else { showGroup(isGroup(n) ? n : PARENT[n.id]); if (!isGroup(n)) selectTile(n); }
+  renderCrumbs(n);
+  document.title = n === TREE ? "nf-core Interchange" : `${m ? m.title : label(n)} · nf-core Interchange`;
 }
 addEventListener("hashchange", route);
-document.getElementById("back").addEventListener("click", () => { location.hash = ""; });
 document.addEventListener("keydown", ev => {
   if (ev.key !== "Escape") return;
   vMap.hidden ? resetPave() : resetMap();

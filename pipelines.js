@@ -1,20 +1,33 @@
-// Tiles on the honeycomb. q and r are axial hex coordinates (pointy-top): (1,0) is east, (0,1) south-east,
-// (-1,1) south-west, (-1,0) west, (0,-1) north-west, (1,-1) north-east.
-// A tile opens a map when maps/<id>.js registers one (and is loaded in index.html); the others show a card.
-// Placeholder list: the pipelines already on the sarek map. Replace with your own.
-const PIPELINES = [
-  { id: "sarek", q: 0, r: 0 },
-  { id: "references", q: 0, r: -1 },
-  { id: "createpanelrefs", q: 1, r: -1 },
-  { id: "seqinspector", q: -1, r: 0 },
-  { id: "bamtofastq", q: -1, r: 1 },
-  { id: "fetchngs", q: -1, r: -1 },
-  { id: "demultiplex", q: -2, r: 1 },
-  { id: "variantbenchmarking", q: 1, r: 0 },
-  { id: "variantprioritization", q: 2, r: -1 },
-  { id: "tumourevo", q: 2, r: 0 },
-  { id: "epitopeprediction", q: 0, r: 1 },
-  { id: "hlatyping", q: 1, r: 1 },
-];
+// The honeycomb tree. A node with children is a group and opens into a honeycomb of them;
+// a node without children is a pipeline and opens its map when maps/<id>.js registers one.
+// Every id must be unique: it is also the page address (#sarek, #genomics).
+// Tiles are placed in a spiral from the centre, in the order listed: put the busiest first.
+// Draft grouping: rearrange freely.
+const TREE = { id: "all", label: "All pipelines", children: [
+  { id: "genomics", label: "Genomics", children: [
+    { id: "variants", label: "Variants", children: [
+      { id: "sarek" }, { id: "raredisease" }, { id: "createpanelrefs" }, { id: "variantbenchmarking" } ] },
+    { id: "cancer", label: "Cancer", children: [
+      { id: "oncoanalyser" }, { id: "variantprioritization" }, { id: "tumourevo" } ] },
+    { id: "immunology", label: "Immunology", children: [
+      { id: "hlatyping" }, { id: "epitopeprediction" }, { id: "airrflow" } ] },
+  ] },
+  { id: "data-in", label: "Data in", children: [
+    { id: "fetchngs" }, { id: "demultiplex" }, { id: "seqinspector" }, { id: "bamtofastq" }, { id: "references" } ] },
+  { id: "transcriptomics", label: "Transcriptomics", children: [
+    { id: "bulk-rna", label: "Bulk", children: [
+      { id: "rnaseq" }, { id: "differentialabundance" }, { id: "rnafusion" }, { id: "rnasplice" }, { id: "rnavar" }, { id: "drop" } ] },
+    { id: "single-cell", label: "Single-cell", children: [ { id: "scrnaseq" } ] },
+  ] },
+  { id: "epigenomics", label: "Epigenomics", children: [
+    { id: "chipseq" }, { id: "atacseq" }, { id: "methylseq" }, { id: "cutandrun" } ] },
+  { id: "microbes", label: "Microbes", children: [
+    { id: "metagenomics", label: "Metagenomics", children: [
+      { id: "taxprofiler" }, { id: "mag" }, { id: "createtaxdb" }, { id: "funcscan" }, { id: "detaxizer" } ] },
+    { id: "pathogens", label: "Pathogens", children: [
+      { id: "viralrecon" }, { id: "bacass" }, { id: "pathogensurveillance" } ] },
+  ] },
+  { id: "proteomics", label: "Proteomics", children: [ { id: "quantms" }, { id: "mhcquant" } ] },
+] };
 const MAPS = {};
 const registerMap = m => { MAPS[m.id] = m; };

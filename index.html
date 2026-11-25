@@ -23,16 +23,17 @@ document.documentElement.dataset.theme = stored ?? (matchMedia("(prefers-color-s
     <button class="theme" id="theme" type="button"></button>
   </header>
 
+  <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
+
   <section class="view" id="v-pave">
-    <p class="lede">Every pipeline on one honeycomb. Open a tile to see its interchange: where its inputs and resources come from, and where its results go next.</p>
+    <p class="lede" id="lede">nf-core pipelines, grouped by field. Open a group to go one level down, and a pipeline to see its interchange: where its inputs and resources come from, and where its results go next.</p>
     <div class="main">
-      <div class="map pave"><svg id="pave" role="group" aria-label="Honeycomb of pipelines"></svg></div>
+      <div class="map pave"><svg id="pave" role="group" aria-label="Honeycomb of groups and pipelines"></svg></div>
       <aside class="card" id="pcard" aria-live="polite"></aside>
     </div>
   </section>
 
   <section class="view" id="v-map" hidden>
-    <button class="back" id="back" type="button">← All pipelines</button>
     <h2 id="map-title" style="font-size:24px"></h2>
     <div class="main">
       <div class="map"><svg id="map" viewBox="0 0 1000 680" role="group"></svg><div class="legend" id="legend"></div></div>

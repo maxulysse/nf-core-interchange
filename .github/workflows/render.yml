@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Load the honeycomb and every map in headless Chrome and fail on script errors
+      - name: Load every group and every map in headless Chrome and fail on script errors
         run: |
           render() {
             google-chrome --headless=new --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=2000 \
@@ -19,6 +19,10 @@ jobs:
           }
           render ""
           grep -q 'class="tile' dom.html
+          for id in $(grep -o 'id: "[a-z0-9-]*", label' pipelines.js | cut -d'"' -f2); do
+            render "#$id"
+            grep -q 'class="tile' dom.html || { echo "group $id did not render"; exit 1; }
+          done
           for f in maps/*.js; do
             id=$(basename "$f" .js)
             grep -q "src=\"$f\"" index.html || { echo "$f is not loaded in index.html"; exit 1; }
