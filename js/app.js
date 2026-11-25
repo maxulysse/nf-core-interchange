@@ -7,6 +7,7 @@ const crumbs = document.getElementById("crumbs"), lede = document.getElementById
 const isGroup = n => !!n.children;
 const NODES = {}, PARENTS = {};
 (function index(n, parent) {
+  if (isGroup(n)) n.children = n.children.map(c => typeof c === "string" ? { id: c } : c);
   const seen = NODES[n.id];
   if (seen && (isGroup(n) || isGroup(seen))) throw new Error(`Duplicate group id in TREE: ${n.id}`);
   if (parent && PARENTS[n.id]?.includes(parent)) throw new Error(`${n.id} is listed twice in ${parent.id}`);
@@ -22,6 +23,9 @@ const pathTo = n => n ? [...pathTo(parentOf(n)), n] : [];
 const groupsOf = id => PARENTS[id].map(g => pathTo(g).slice(1).map(label).join(" › "));
 const groupLinks = id => PARENTS[id].map(g => `<a href="#${g.id}">${pathTo(g).slice(1).map(label).join(" › ")}</a>`).join(", ");
 const plural = (k, w) => `${k} ${w}${k === 1 ? "" : "s"}`;
+// Catalogue text comes from the pipelines' own repositories: escape it before it goes into markup.
+const esc = t => String(t).replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
+const info = id => CATALOGUE[id] ?? { desc: "", rel: null };
 
 // Spiral placement in axial hex coordinates: the centre, then each ring outward.
 const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
@@ -57,14 +61,15 @@ function showGroup(g) {
     const width = inner * Math.sqrt(3) * 0.86;
     const size = Math.min(grp || has ? 17 : 13, width / (label(c).length * 0.56));
     const n = leaves(c).length;
-    const sub = grp ? plural(n, "pipeline") : has ? `${MAPS[c.id].S.length - 1} stations` : "no map yet";
+    const dev = !grp && !info(c.id).rel;
+    const sub = grp ? plural(n, "pipeline") : has ? `${MAPS[c.id].S.length - 1} stations` : dev ? "in development" : info(c.id).rel;
     const also = !grp && PARENTS[c.id].length > 1 ? ` · in ${PARENTS[c.id].length} groups` : "";
-    c.node = el("g", { class: `tile${grp ? " grp" : has ? " has" : ""}`, role: "button",
-      "aria-label": grp ? `${label(c)}: ${sub}` : has ? `${c.id}: open its interchange map` : `${c.id}: no map yet` });
+    c.node = el("g", { class: `tile${grp ? " grp" : has ? " has" : dev ? " dev" : ""}`, role: "button",
+      "aria-label": grp ? `${label(c)}: ${sub}` : has ? `${c.id}: open its interchange map` : `${c.id}, ${sub}: no map yet` });
     c.node.append(el("polygon", { points: hexPoints(x, y, inner) }),
       el("text", { x, y: y + 2, class: "name", style: `font-size:${size.toFixed(1)}px` }, label(c)),
       el("text", { x, y: y + 20, class: "sub" }, sub),
-      el("title", {}, grp ? label(c) : `${c.id}${also}`));
+      el("title", {}, grp ? label(c) : `${c.id}${also}${info(c.id).desc ? `: ${info(c.id).desc}` : ""}`));
     if (also) c.node.append(el("text", { x, y: y + 34, class: "sub" }, `in ${PARENTS[c.id].length} groups`));
     activate(c.node, () => grp || has ? zoomInto(c) : selectTile(c));
     pave.append(c.node);
@@ -76,8 +81,10 @@ function showGroup(g) {
 
 function selectTile(p) {
   level.children.forEach(t => t.node.classList.toggle("sel", t === p));
-  pcard.innerHTML = `<div class="kicker">Pipeline</div><h2>${p.id}</h2>
-    <p>No interchange map yet. Add one in <code>maps/${p.id}.js</code> and it opens from this tile.</p>
+  const { desc, rel } = info(p.id);
+  pcard.innerHTML = `<div class="kicker">Pipeline · ${rel ? esc(rel) : "in development"}</div><h2>${p.id}</h2>
+    ${desc ? `<p>${esc(desc)}</p>` : ""}
+    <p style="color:var(--muted)">No interchange map yet. Add one in <code>maps/${p.id}.js</code> and it opens from this tile.</p>
     <dl><dt>${PARENTS[p.id].length > 1 ? "Groups" : "Group"}</dt><dd>${groupLinks(p.id)}</dd>
     <dt>Link</dt><dd><a href="https://nf-co.re/${p.id}" target="_blank" rel="noopener">nf-co.re/${p.id}</a></dd></dl>`;
 }
@@ -87,9 +94,10 @@ function resetPave() {
   const groups = level.children.filter(isGroup).length;
   pcard.innerHTML = `<div class="kicker">${level === TREE ? "Overview" : "Group"}</div>
     <h2>${level === TREE ? `${plural(all.length, "pipeline")}, ${plural(maps, "map")}` : label(level)}</h2>
-    ${level === TREE ? `<p>Pipelines are grouped by field, and big fields split again. Open a group to go one level down, until you reach a pipeline and its interchange map.</p>`
+    ${level === TREE ? `<p>Groups follow the data you start from, then split by what you want to do with it. Open a group to go one level down, until you reach a pipeline and its interchange map.</p>`
       : `<p>${plural(all.length, "pipeline")}${groups ? ` in ${plural(groups, "sub-group")}` : ""}, ${maps} with a map.</p>`}
-    <p style="color:var(--muted)">Blue tiles are groups. Green tiles open a map; dashed tiles have no map yet.</p>`;
+    <p style="color:var(--muted)">Blue tiles are groups. Green tiles open a map; dashed tiles have no map yet, faint ones are still in development.</p>
+    ${level === TREE ? `<p style="color:var(--muted)">Pipeline list from the nf-core catalogue, ${CATALOGUE_DATE}.</p>` : ""}`;
 }
 pave.onclick = ev => { if (ev.target === pave) resetPave(); };
 

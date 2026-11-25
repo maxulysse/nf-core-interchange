@@ -10,6 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check every catalogue pipeline sits in the tree
+        run: |
+          node -e '
+            const fs = require("fs");
+            eval(fs.readFileSync("catalogue.js", "utf8") + fs.readFileSync("pipelines.js", "utf8") + ";globalThis.T = TREE; globalThis.C = CATALOGUE");
+            const seen = new Set();
+            (function walk(n) { typeof n === "string" ? seen.add(n) : n.children.forEach(walk); })(T);
+            const missing = Object.keys(C).filter(k => !seen.has(k)), unknown = [...seen].filter(k => !C[k]);
+            if (missing.length) console.log("Not in TREE:", missing.join(" "));
+            if (unknown.length) console.log("Not in catalogue.js:", unknown.join(" "));
+            process.exit(missing.length || unknown.length ? 1 : 0);'
       - name: Load every group and every map in headless Chrome and fail on script errors
         run: |
           render() {

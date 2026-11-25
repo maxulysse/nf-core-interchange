@@ -97,3 +97,4 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .crumbs button[aria-current] { color: var(--fg); font-weight: 600; cursor: default; }
 .crumbs .sep { color: var(--muted); }
 .lede a { color: var(--res); }
+.tile.dev polygon { stroke-dasharray: 2 6; opacity: .7; } .tile.dev text { opacity: .75; }

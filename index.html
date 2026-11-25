@@ -26,7 +26,7 @@ document.documentElement.dataset.theme = stored ?? (matchMedia("(prefers-color-s
   <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
 
   <section class="view" id="v-pave">
-    <p class="lede" id="lede">nf-core pipelines, grouped by field. Open a group to go one level down, and a pipeline to see its interchange: where its inputs and resources come from, and where its results go next.</p>
+    <p class="lede" id="lede">nf-core pipelines, grouped by the data you start from, then by what you want to do with it. Open a group to go one level down, and a pipeline to see its interchange: where its inputs and resources come from, and where its results go next.</p>
     <div class="main">
       <div class="map pave"><svg id="pave" role="group" aria-label="Honeycomb of groups and pipelines"></svg></div>
       <aside class="card" id="pcard" aria-live="polite"></aside>
@@ -60,6 +60,7 @@ document.documentElement.dataset.theme = stored ?? (matchMedia("(prefers-color-s
   </footer>
 </div>
 
+<script src="catalogue.js"></script>
 <script src="pipelines.js"></script>
 <!-- One line per map. A tile opens a map once its file is listed here. -->
 <script src="maps/sarek.js"></script>
