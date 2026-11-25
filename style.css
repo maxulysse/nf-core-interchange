@@ -96,3 +96,4 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .crumbs button { font: inherit; color: var(--res); background: none; border: 0; padding: 8px 2px; cursor: pointer; }
 .crumbs button[aria-current] { color: var(--fg); font-weight: 600; cursor: default; }
 .crumbs .sep { color: var(--muted); }
+.lede a { color: var(--res); }

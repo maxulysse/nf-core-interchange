@@ -1,6 +1,7 @@
 // The honeycomb tree. A node with children is a group and opens into a honeycomb of them;
 // a node without children is a pipeline and opens its map when maps/<id>.js registers one.
-// Every id must be unique: it is also the page address (#sarek, #genomics).
+// Group ids must be unique: an id is also the page address (#sarek, #genomics). A pipeline may be listed in
+// several groups; its page shows all of them, and the breadcrumb follows the group you opened it from.
 // Tiles are placed in a spiral from the centre, in the order listed: put the busiest first.
 // Draft grouping: rearrange freely.
 const TREE = { id: "all", label: "All pipelines", children: [
@@ -8,7 +9,7 @@ const TREE = { id: "all", label: "All pipelines", children: [
     { id: "variants", label: "Variants", children: [
       { id: "sarek" }, { id: "raredisease" }, { id: "createpanelrefs" }, { id: "variantbenchmarking" } ] },
     { id: "cancer", label: "Cancer", children: [
-      { id: "oncoanalyser" }, { id: "variantprioritization" }, { id: "tumourevo" } ] },
+      { id: "sarek" }, { id: "oncoanalyser" }, { id: "variantprioritization" }, { id: "tumourevo" } ] },
     { id: "immunology", label: "Immunology", children: [
       { id: "hlatyping" }, { id: "epitopeprediction" }, { id: "airrflow" } ] },
   ] },

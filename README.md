@@ -17,7 +17,7 @@ It grows out of [Sarek Interchange](https://github.com/maxulysse/sarek-interchan
 
 ## Add a pipeline
 
-1. Add the pipeline to its group in `TREE` in `pipelines.js` (or add a group: any node with `children`). Tiles are placed in a spiral from the centre in the order listed, and every id must be unique.
+1. Add the pipeline to its group in `TREE` in `pipelines.js` (or add a group: any node with `children`). Tiles are placed in a spiral from the centre in the order listed, group ids must be unique, and a pipeline may be listed in several groups.
 2. To give it a map, copy `maps/sarek.js` to `maps/<pipeline>.js`, set `id` to the pipeline, and mark its station with `hub: true`.
 3. Load it in `index.html` with `<script src="maps/<pipeline>.js"></script>`, next to the sarek line.
 

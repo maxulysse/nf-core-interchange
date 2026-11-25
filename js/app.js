@@ -3,16 +3,24 @@
 const TILE_R = 64, GAP = 5, PX = 1.6;
 const pave = document.getElementById("pave"), pcard = document.getElementById("pcard");
 const crumbs = document.getElementById("crumbs"), lede = document.getElementById("lede");
-const NODES = {}, PARENT = {};
+// A group appears once. A pipeline may appear in several groups: PARENTS lists them all.
+const isGroup = n => !!n.children;
+const NODES = {}, PARENTS = {};
 (function index(n, parent) {
-  if (NODES[n.id]) throw new Error(`Duplicate id in TREE: ${n.id}`);
-  NODES[n.id] = n; PARENT[n.id] = parent;
+  const seen = NODES[n.id];
+  if (seen && (isGroup(n) || isGroup(seen))) throw new Error(`Duplicate group id in TREE: ${n.id}`);
+  if (parent && PARENTS[n.id]?.includes(parent)) throw new Error(`${n.id} is listed twice in ${parent.id}`);
+  NODES[n.id] ??= n; (PARENTS[n.id] ??= []).push(parent);
   n.children?.forEach(c => index(c, n));
 })(TREE, null);
-const isGroup = n => !!n.children;
 const label = n => n.label ?? n.id;
-const leaves = n => isGroup(n) ? n.children.flatMap(leaves) : [n];
-const pathTo = n => n ? [...pathTo(PARENT[n.id]), n] : [];
+// Distinct pipelines under a node, counted once even when they sit in several of its groups.
+const leaves = n => isGroup(n) ? [...new Map(n.children.flatMap(leaves).map(l => [l.id, l])).values()] : [n];
+// The breadcrumb follows the group you came from (the current level) when the pipeline is in it, else its first group.
+const parentOf = n => { const ps = PARENTS[n.id]; return ps.includes(level) ? level : ps[0]; };
+const pathTo = n => n ? [...pathTo(parentOf(n)), n] : [];
+const groupsOf = id => PARENTS[id].map(g => pathTo(g).slice(1).map(label).join(" › "));
+const groupLinks = id => PARENTS[id].map(g => `<a href="#${g.id}">${pathTo(g).slice(1).map(label).join(" › ")}</a>`).join(", ");
 const plural = (k, w) => `${k} ${w}${k === 1 ? "" : "s"}`;
 
 // Spiral placement in axial hex coordinates: the centre, then each ring outward.
@@ -50,12 +58,14 @@ function showGroup(g) {
     const size = Math.min(grp || has ? 17 : 13, width / (label(c).length * 0.56));
     const n = leaves(c).length;
     const sub = grp ? plural(n, "pipeline") : has ? `${MAPS[c.id].S.length - 1} stations` : "no map yet";
+    const also = !grp && PARENTS[c.id].length > 1 ? ` · in ${PARENTS[c.id].length} groups` : "";
     c.node = el("g", { class: `tile${grp ? " grp" : has ? " has" : ""}`, role: "button",
       "aria-label": grp ? `${label(c)}: ${sub}` : has ? `${c.id}: open its interchange map` : `${c.id}: no map yet` });
     c.node.append(el("polygon", { points: hexPoints(x, y, inner) }),
       el("text", { x, y: y + 2, class: "name", style: `font-size:${size.toFixed(1)}px` }, label(c)),
       el("text", { x, y: y + 20, class: "sub" }, sub),
-      el("title", {}, label(c)));
+      el("title", {}, grp ? label(c) : `${c.id}${also}`));
+    if (also) c.node.append(el("text", { x, y: y + 34, class: "sub" }, `in ${PARENTS[c.id].length} groups`));
     activate(c.node, () => grp || has ? zoomInto(c) : selectTile(c));
     pave.append(c.node);
   });
@@ -68,7 +78,7 @@ function selectTile(p) {
   level.children.forEach(t => t.node.classList.toggle("sel", t === p));
   pcard.innerHTML = `<div class="kicker">Pipeline</div><h2>${p.id}</h2>
     <p>No interchange map yet. Add one in <code>maps/${p.id}.js</code> and it opens from this tile.</p>
-    <dl><dt>Group</dt><dd>${pathTo(PARENT[p.id]).slice(1).map(label).join(" › ")}</dd>
+    <dl><dt>${PARENTS[p.id].length > 1 ? "Groups" : "Group"}</dt><dd>${groupLinks(p.id)}</dd>
     <dt>Link</dt><dd><a href="https://nf-co.re/${p.id}" target="_blank" rel="noopener">nf-co.re/${p.id}</a></dd></dl>`;
 }
 function resetPave() {
@@ -110,13 +120,15 @@ function renderCrumbs(n) {
   }));
 }
 
+const mapGroups = document.getElementById("map-groups");
 const vPave = document.getElementById("v-pave"), vMap = document.getElementById("v-map");
 function route() {
   const n = NODES[location.hash.slice(1)] ?? TREE;
   const m = !isGroup(n) && MAPS[n.id];
   vPave.hidden = !!m; vMap.hidden = !m;
   if (m) { renderMap(m); window.scrollTo(0, 0); }
-  else { showGroup(isGroup(n) ? n : PARENT[n.id]); if (!isGroup(n)) selectTile(n); }
+  else { showGroup(isGroup(n) ? n : parentOf(n)); if (!isGroup(n)) selectTile(n); }
+  mapGroups.innerHTML = m ? `In ${groupLinks(n.id)}` : "";
   renderCrumbs(n);
   document.title = n === TREE ? "nf-core Interchange" : `${m ? m.title : label(n)} · nf-core Interchange`;
 }
