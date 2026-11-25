@@ -12,7 +12,7 @@ It grows out of [Sarek Interchange](https://github.com/maxulysse/sarek-interchan
 | `pipelines.js` | The tiles on the honeycomb and their positions |
 | `maps/<pipeline>.js` | One interchange map: stations (`S`) and handoffs (`E`) |
 | `js/map.js` | Draws a metro map from a map file |
-| `js/app.js` | Honeycomb, zoom into a map, routing (`#/<pipeline>`), theme |
+| `js/app.js` | Honeycomb, zoom into a map, routing (`#<pipeline>`), theme |
 | `style.css` | Styles for both views |
 
 ## Add a pipeline

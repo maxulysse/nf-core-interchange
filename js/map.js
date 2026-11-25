@@ -150,7 +150,7 @@ function selectStation(s) {
     ${outs.length ? `<dt>To</dt><dd>${outs.map(e => e.t).join(", ")}</dd>` : ""}
     <dt>Link</dt><dd>${link(s)}</dd></dl>
     ${!s.hub && MAPS[s.id] ? `<button class="open" type="button">Open the ${s.id} interchange →</button>` : ""}`;
-  card.querySelector(".open")?.addEventListener("click", () => { location.hash = "#/" + s.id; });
+  card.querySelector(".open")?.addEventListener("click", () => { location.hash = s.id; });
 }
 function selectEdge(e) {
   highlight([e.node, byId[e.f].node, byId[e.t].node]);

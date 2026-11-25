@@ -1,4 +1,4 @@
-// Honeycomb overview and routing. #/ shows the honeycomb, #/<id> shows that pipeline's interchange map.
+// Honeycomb overview and routing. No hash shows the honeycomb, #<id> shows that pipeline's interchange map.
 // A tile with a map zooms in before the map opens.
 const TILE_R = 64, GAP = 5;
 const pave = document.getElementById("pave"), pcard = document.getElementById("pcard");
@@ -44,7 +44,7 @@ pave.onclick = ev => { if (ev.target === pave) resetPave(); };
 
 // Zoom: the viewBox closes in on the tile while the others fade, then the map opens.
 function zoomInto(p) {
-  if (reduced) { location.hash = "#/" + p.id; return; }
+  if (reduced) { location.hash = p.id; return; }
   const [x, y] = tileXY(p), w = TILE_R * 2.4, h = w * home[3] / home[2];
   const to = [x - w / 2, y - h / 2, w, h], t0 = performance.now(), DUR = 450;
   p.node.classList.add("zoom"); pave.classList.add("zooming");
@@ -52,13 +52,13 @@ function zoomInto(p) {
   (function step(now) {
     const k = ease(Math.min(1, (now - t0) / DUR));
     setBox(home.map((v, i) => v + (to[i] - v) * k));
-    if (k < 1) requestAnimationFrame(step); else location.hash = "#/" + p.id;
+    if (k < 1) requestAnimationFrame(step); else location.hash = p.id;
   })(t0);
 }
 
 const vPave = document.getElementById("v-pave"), vMap = document.getElementById("v-map");
 function route() {
-  const id = location.hash.match(/^#\/(.+)$/)?.[1];
+  const id = location.hash.match(/^#([\w-]+)$/)?.[1];
   const m = id && MAPS[id];
   vPave.hidden = !!m; vMap.hidden = !m;
   if (m) { renderMap(m); document.title = `${m.title} · nf-core Interchange`; window.scrollTo(0, 0); }
@@ -69,7 +69,7 @@ function route() {
   }
 }
 addEventListener("hashchange", route);
-document.getElementById("back").addEventListener("click", () => { location.hash = "#/"; });
+document.getElementById("back").addEventListener("click", () => { location.hash = ""; });
 document.addEventListener("keydown", ev => {
   if (ev.key !== "Escape") return;
   vMap.hidden ? resetPave() : resetMap();
