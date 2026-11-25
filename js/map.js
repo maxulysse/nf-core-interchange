@@ -43,9 +43,11 @@ groupBy(hubEdges, e => e.face).forEach(es => {
   const len = across(es[0].face) === "y" ? HEX_R : HEX_R * Math.sqrt(3);
   es.forEach((e, i) => e.off = ((i + 0.5) / es.length - 0.5) * len);
 });
+// At the far station they sit a fixed PAR apart, in the same order as at the hub, so they meet the station as one bundle.
+const PAR = 10;
 groupBy(hubEdges, e => [e.f, e.t].sort().join()).forEach(es => {
-  const mid = es.reduce((sum, e) => sum + e.off, 0) / es.length;
-  es.forEach(e => { const d = e.off - mid; e.shift = across(e.face) === "y" ? [0, d] : [d, 0]; });
+  es.sort((a, b) => a.off - b.off);
+  es.forEach((e, i) => { const d = (i - (es.length - 1) / 2) * PAR; e.shift = across(e.face) === "y" ? [0, d] : [d, 0]; });
 });
 function port(s, e) {
   if (!s.hub) return [s.x + e.shift[0], s.y + e.shift[1]];
@@ -123,7 +125,9 @@ S.forEach(s => {
   const [dx, dy, anc] = LBL[s.side];
   // The hub label sits inside the fixed-size hexagon, so it keeps its size.
   const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F})` });
-  label.append(el("text", { x: dx, y: dy, "text-anchor": anc, class: "name" }, s.id),
+  // A long hub name shrinks to fit the hexagon; 0.56em is about one Overpass character.
+  const hubSize = s.hub ? `font-size:${Math.min(26, HEX_R * 1.5 / (s.id.length * 0.56)).toFixed(1)}px` : "";
+  label.append(el("text", { x: dx, y: dy, "text-anchor": anc, class: "name", style: hubSize }, s.id),
     el("text", { x: dx, y: dy + 15, "text-anchor": anc, class: "ver" }, release(s)));
   s.node.append(mark(s), label);
   activate(s.node, () => selectStation(s)); gS.append(s.node);
