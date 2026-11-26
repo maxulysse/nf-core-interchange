@@ -15,12 +15,12 @@ const NODES = {}, PARENTS = {};
   n.children?.forEach(c => index(c, n));
 })(TREE, null);
 const label = n => n.label ?? n.id;
+const contains = (g, id) => g.children.some(c => c.id === id || isGroup(c) && contains(c, id));
 // Distinct pipelines under a node, counted once even when they sit in several of its groups.
 const leaves = n => isGroup(n) ? [...new Map(n.children.flatMap(leaves).map(l => [l.id, l])).values()] : [n];
 // The breadcrumb follows the group you came from (the current level) when the pipeline is in it, else its first group.
 const parentOf = n => { const ps = PARENTS[n.id]; return ps.includes(level) ? level : ps[0]; };
 const pathTo = n => n ? [...pathTo(parentOf(n)), n] : [];
-const groupsOf = id => PARENTS[id].map(g => pathTo(g).slice(1).map(label).join(" › "));
 const groupLinks = id => PARENTS[id].map(g => `<a href="#${g.id}">${pathTo(g).slice(1).map(label).join(" › ")}</a>`).join(", ");
 const plural = (k, w) => `${k} ${w}${k === 1 ? "" : "s"}`;
 // Catalogue text comes from the pipelines' own repositories: escape it before it goes into markup.
@@ -41,7 +41,7 @@ const tileXY = ([q, r]) => [TILE_R * Math.sqrt(3) * (q + r / 2), TILE_R * 1.5 * 
 const setBox = b => pave.setAttribute("viewBox", b.map(v => v.toFixed(1)).join(" "));
 
 let level = TREE, home = [0, 0, 1, 1];
-function showGroup(g) {
+function showGroup(g, from) {
   level = g;
   const pos = spiral(g.children.length);
   g.children.forEach((c, i) => { c.qr = pos[i]; });
@@ -63,19 +63,20 @@ function showGroup(g) {
     const n = leaves(c).length;
     const dev = !grp && !info(c.id).rel;
     const sub = grp ? plural(n, "pipeline") : has ? `${MAPS[c.id].S.length - 1} stations` : dev ? "in development" : info(c.id).rel;
-    const also = !grp && PARENTS[c.id].length > 1 ? ` · in ${PARENTS[c.id].length} groups` : "";
     c.node = el("g", { class: `tile${grp ? " grp" : has ? " has" : dev ? " dev" : ""}`, role: "button",
       "aria-label": grp ? `${label(c)}: ${sub}` : has ? `${c.id}: open its interchange map` : `${c.id}, ${sub}: no map yet` });
     c.node.append(el("polygon", { points: hexPoints(x, y, inner) }),
       el("text", { x, y: y + 2, class: "name", style: `font-size:${size.toFixed(1)}px` }, label(c)),
       el("text", { x, y: y + 20, class: "sub" }, sub),
-      el("title", {}, grp ? label(c) : `${c.id}${also}${info(c.id).desc ? `: ${info(c.id).desc}` : ""}`));
-    if (also) c.node.append(el("text", { x, y: y + 34, class: "sub" }, `in ${PARENTS[c.id].length} groups`));
+      el("title", {}, grp ? label(c) : `${c.id}${info(c.id).desc ? `: ${info(c.id).desc}` : ""}`));
     activate(c.node, () => grp || has ? zoomInto(c) : selectTile(c));
     pave.append(c.node);
   });
   pave.classList.remove("zooming", "enter"); void pave.getBoundingClientRect(); pave.classList.add("enter");
   lede.hidden = g !== TREE;
+  // Going back opens the group zoomed on the tile we came from (or the one holding it), then pulls back.
+  const back = from && g.children.find(c => c.id === from || isGroup(c) && contains(c, from));
+  if (back && !reduced) animateBox(pave, tileBox(back), home);
   resetPave();
 }
 
@@ -94,25 +95,19 @@ function resetPave() {
   const groups = level.children.filter(isGroup).length;
   pcard.innerHTML = `<div class="kicker">${level === TREE ? "Overview" : "Group"}</div>
     <h2>${level === TREE ? `${plural(all.length, "pipeline")}, ${plural(maps, "map")}` : label(level)}</h2>
-    ${level === TREE ? `<p>Groups follow the data you start from, then split by what you want to do with it. Open a group to go one level down, until you reach a pipeline and its interchange map.</p>`
+    ${level === TREE ? `<p>Groups follow the field or the data you start from, then split by what you want to do with it. Open a group to go one level down, until you reach a pipeline and its interchange map.</p>`
       : `<p>${plural(all.length, "pipeline")}${groups ? ` in ${plural(groups, "sub-group")}` : ""}, ${maps} with a map.</p>`}
-    <p style="color:var(--muted)">Blue tiles are groups. Green tiles open a map; dashed tiles have no map yet, faint ones are still in development.</p>
+    <p style="color:var(--muted)">Filled tiles open a pipeline map. Outlined tiles open another honeycomb. Dashed tiles have no map yet, faint ones are still in development.</p>
     ${level === TREE ? `<p style="color:var(--muted)">Pipeline list from the nf-core catalogue, ${CATALOGUE_DATE}.</p>` : ""}`;
 }
 pave.onclick = ev => { if (ev.target === pave) resetPave(); };
 
+const tileBox = c => { const [x, y] = tileXY(c.qr); return around({ x, y }, TILE_R * 2.4, home); };
 // Zoom: the viewBox closes in on the tile while the others fade, then the next level opens.
 function zoomInto(c) {
   if (reduced) { location.hash = c.id; return; }
-  const [x, y] = tileXY(c.qr), w = TILE_R * 2.4, h = w * home[3] / home[2];
-  const to = [x - w / 2, y - h / 2, w, h], t0 = performance.now(), DUR = 450, from = home;
   c.node.classList.add("zoom"); pave.classList.add("zooming");
-  const ease = t => 1 - (1 - t) ** 3;
-  (function step(now) {
-    const k = ease(Math.min(1, (now - t0) / DUR));
-    setBox(from.map((v, i) => v + (to[i] - v) * k));
-    if (k < 1) requestAnimationFrame(step); else location.hash = c.id;
-  })(t0);
+  animateBox(pave, home, tileBox(c), () => { forward = true; location.hash = c.id; });
 }
 
 function renderCrumbs(n) {
@@ -130,15 +125,17 @@ function renderCrumbs(n) {
 
 const mapGroups = document.getElementById("map-groups");
 const vPave = document.getElementById("v-pave"), vMap = document.getElementById("v-map");
+let last = null;
 function route() {
-  const n = NODES[location.hash.slice(1)] ?? TREE;
+  const n = NODES[location.hash.slice(1)] ?? TREE, from = forward ? null : last;
+  forward = false; last = n.id;
   const m = !isGroup(n) && MAPS[n.id];
   vPave.hidden = !!m; vMap.hidden = !m;
-  if (m) { renderMap(m); window.scrollTo(0, 0); }
-  else { showGroup(isGroup(n) ? n : parentOf(n)); if (!isGroup(n)) selectTile(n); }
+  if (m) { renderMap(m, from); window.scrollTo(0, 0); }
+  else { showGroup(isGroup(n) ? n : parentOf(n), from); if (!isGroup(n)) selectTile(n); }
   mapGroups.innerHTML = m ? `In ${groupLinks(n.id)}` : "";
   renderCrumbs(n);
-  document.title = n === TREE ? "nf-core Interchange" : `${m ? m.title : label(n)} · nf-core Interchange`;
+  document.title = n === TREE ? "nf-core/interchange" : `${m ? m.title : label(n)} · nf-core/interchange`;
 }
 addEventListener("hashchange", route);
 document.addEventListener("keydown", ev => {

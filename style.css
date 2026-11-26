@@ -82,7 +82,7 @@ header { display: flex; justify-content: space-between; align-items: center; gap
 .tile:hover polygon, .tile:focus-visible polygon, .tile.sel polygon { stroke: var(--fg); }
 .tile.has:hover polygon, .tile.has:focus-visible polygon { fill: color-mix(in srgb, var(--hub) 85%, var(--fg)); }
 .tile:focus-visible { outline: none; }
-.pave svg.zooming .tile:not(.zoom) { opacity: 0; transition: opacity .35s; }
+.pave svg.zooming .tile:not(.zoom), #map.zooming > g > :not(.zoom) { opacity: 0; transition: opacity .35s; }
 .view { display: grid; gap: 20px; animation: fadein .35s ease-out; }
 @keyframes fadein { from { opacity: 0; transform: scale(.97); } }
 @media (prefers-reduced-motion: reduce) { .view { animation: none; } }

@@ -1,5 +1,5 @@
 // Draws one interchange map: the hub pipeline in the middle as a hexagon, the pipelines and resources
-// around it as stations, and each handoff as a metro line. Call renderMap(M) with a registered map.
+// around it as stations, and each handoff as a metro line. Call renderMap(M, from), where from is the id of the previous view.
 const narrow = matchMedia("(max-width: 640px)");
 narrow.addEventListener("change", () => location.reload());
 const F = narrow.matches ? 1.8 : 1;
@@ -23,17 +23,33 @@ function activate(node, fn) {
   node.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); fn(); } });
 }
 let resetMap = () => {};
+// Set by a zoom into a tile or station; any other route change counts as going back.
+let forward = false;
+// Eases an SVG viewBox between two [x, y, w, h] boxes, then calls done if the page has not moved on.
+// A newer call on the same SVG stops this one.
+function animateBox(svg, from, to, done) {
+  const id = svg.anim = (svg.anim ?? 0) + 1, at = location.hash, t0 = performance.now(), DUR = 450, ease = t => 1 - (1 - t) ** 3;
+  (function step(now) {
+    if (svg.anim !== id) return;
+    const k = ease(Math.min(1, (now - t0) / DUR));
+    svg.setAttribute("viewBox", from.map((v, i) => (v + (to[i] - v) * k).toFixed(1)).join(" "));
+    if (k < 1) requestAnimationFrame(step); else if (location.hash === at) done?.();
+  })(t0);
+}
+// A box of width w centred on a point, with the aspect ratio of the full box.
+const around = (s, w, full) => { const h = w * full[3] / full[2]; return [s.x - w / 2, s.y - h / 2, w, h]; };
 
-function renderMap(M) {
+function renderMap(M, from) {
 // Copies, so rendering twice never stacks state on the shared data.
 const S = M.S.map(s => ({ ...s })), E = M.E.map(e => ({ ...e }));
 const byId = Object.fromEntries(S.map(s => [s.id, s]));
 const HUB = S.find(s => s.hub);
-const release = s => s.ext ? "resource" : s.rel;
+// Releases come from catalogue.js; rel in a map is only for stations outside the nf-core catalogue.
+const release = s => s.ext ? "resource" : CATALOGUE[s.id]?.rel ?? s.rel ?? "in development";
 const far = e => byId[e.f === HUB.id ? e.t : e.f];
 document.getElementById("map-title").textContent = M.title;
 document.getElementById("map-checked").textContent = M.checked;
-document.getElementById("map-credits").innerHTML = M.credits ?? "";
+document.getElementById("map-credits").innerHTML = `Thanks to the <a href="https://github.com/nf-core/${HUB.id}/graphs/contributors">contributors of nf-core/${HUB.id}</a>.`;
 const hubEdges = E.filter(e => e.f === HUB.id || e.t === HUB.id);
 hubEdges.forEach(e => { const s = far(e), dx = s.x - HUB.x, dy = s.y - HUB.y;
   e.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "r" : "l") : (dy > 0 ? "b" : "t"); });
@@ -48,6 +64,16 @@ const PAR = 10;
 groupBy(hubEdges, e => [e.f, e.t].sort().join()).forEach(es => {
   es.sort((a, b) => a.off - b.off);
   es.forEach((e, i) => { const d = (i - (es.length - 1) / 2) * PAR; e.shift = across(e.face) === "y" ? [0, d] : [d, 0]; });
+});
+// A line to a station level with its hub face runs straight: its port moves to the station's height (or x)
+// when the lines beside it still fit, and the others step aside to stay PAR apart.
+groupBy(hubEdges, e => e.face).forEach(es => {
+  const k = across(es[0].face), half = (k === "y" ? HEX_R : HEX_R * Math.sqrt(3)) / 2;
+  es.sort((a, b) => a.off - b.off);
+  es.forEach((e, i) => { const want = far(e)[k] + e.shift[k === "y" ? 1 : 0] - HUB[k];
+    e.level = want >= -half + i * PAR && want <= half - (es.length - 1 - i) * PAR; if (e.level) e.off = want; });
+  for (let i = 1; i < es.length; i++) if (!es[i].level) es[i].off = Math.min(half, Math.max(es[i].off, es[i - 1].off + PAR));
+  for (let i = es.length - 2; i >= 0; i--) if (!es[i].level) es[i].off = Math.max(-half, Math.min(es[i].off, es[i + 1].off - PAR));
 });
 function port(s, e) {
   if (!s.hub) return [s.x + e.shift[0], s.y + e.shift[1]];
@@ -90,9 +116,11 @@ function rounded(pts) {
 
 const svg = document.getElementById("map");
 svg.replaceChildren(); svg.setAttribute("aria-label", `Map of pipelines connected to nf-core/${HUB.id}`);
-svg.setAttribute("viewBox", "0 0 1000 680");
-if (narrow.matches) { const pad = 100 * (F - 1);
-  svg.classList.add("narrow"); svg.setAttribute("viewBox", `${-pad} ${-pad / 2} ${1000 + 2 * pad} ${680 + pad}`); }
+const pad = 100 * (F - 1), full = [-pad, -pad / 2, 1000 + 2 * pad, 680 + pad];
+svg.classList.toggle("narrow", narrow.matches); svg.classList.remove("zooming");
+// Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
+const start = byId[from] ? around(byId[from], 160, full) : around(HUB, HEX_R * 2.4, full);
+if (reduced) svg.setAttribute("viewBox", full.join(" ")); else animateBox(svg, start, full);
 const gL = el("g"), gD = el("g"), gS = el("g");
 svg.append(gL, gD, gS);
 
@@ -116,8 +144,7 @@ E.forEach((e, i) => {
 });
 
 const LBL = { left: [-18, 5, "end"], above: [0, -32, "middle"], below: [0, 32, "middle"], inside: [0, 0, "middle"] };
-const hexPts = s => hexPoints(s.x, s.y, HEX_R);
-const mark = s => s.hub ? el("polygon", { points: hexPts(s) })
+const mark = s => s.hub ? el("polygon", { points: hexPoints(s.x, s.y, HEX_R) })
   : s.ext ? el("rect", { x: s.x - 9, y: s.y - 9, width: 18, height: 18, class: "mark" })
   : el("circle", { cx: s.x, cy: s.y, r: 10, class: "mark" });
 S.forEach(s => {
@@ -130,7 +157,8 @@ S.forEach(s => {
   label.append(el("text", { x: dx, y: dy, "text-anchor": anc, class: "name", style: hubSize }, s.id),
     el("text", { x: dx, y: dy + 15, "text-anchor": anc, class: "ver" }, release(s)));
   s.node.append(mark(s), label);
-  activate(s.node, () => selectStation(s)); gS.append(s.node);
+  // A second click on a selected station that has its own map opens that map.
+  activate(s.node, () => s.node.classList.contains("sel") && !s.hub && MAPS[s.id] ? openMap(s) : selectStation(s)); gS.append(s.node);
 });
 
 const card = document.getElementById("card");
@@ -147,14 +175,21 @@ function selectStation(s) {
   const ins = E.filter(e => e.t === s.id), outs = E.filter(e => e.f === s.id);
   highlight([s.node, ...[...ins, ...outs].flatMap(e => [e.node, byId[e.f].node, byId[e.t].node])]);
   s.node.classList.add("sel");
-  card.innerHTML = `<div class="kicker">${s.ext ? "Resource" : `Pipeline · ${s.rel}${s.tag ? ` (${s.tag})` : ""}`}</div>
+  card.innerHTML = `<div class="kicker">${s.ext ? "Resource" : `Pipeline · ${release(s)}${s.tag ? ` (${s.tag})` : ""}`}</div>
     <h2>${s.id}</h2><p>${s.blurb}</p>
     <dl>${s.takes ? `<dt>Takes</dt><dd>${s.takes}</dd>` : ""}<dt>Gives</dt><dd>${s.gives}</dd>
     ${ins.length ? `<dt>From</dt><dd>${ins.map(e => e.f).join(", ")}</dd>` : ""}
     ${outs.length ? `<dt>To</dt><dd>${outs.map(e => e.t).join(", ")}</dd>` : ""}
     <dt>Link</dt><dd>${link(s)}</dd></dl>
     ${!s.hub && MAPS[s.id] ? `<button class="open" type="button">Open the ${s.id} interchange →</button>` : ""}`;
-  card.querySelector(".open")?.addEventListener("click", () => { location.hash = s.id; });
+  card.querySelector(".open")?.addEventListener("click", () => openMap(s));
+}
+// Zooms into a station while the rest fades, then opens its map, which starts zoomed on that same pipeline.
+function openMap(s) {
+  if (reduced) { location.hash = s.id; return; }
+  const v = svg.viewBox.baseVal;
+  s.node.classList.add("zoom"); svg.classList.add("zooming");
+  animateBox(svg, [v.x, v.y, v.width, v.height], around(s, 160, full), () => { forward = true; location.hash = s.id; });
 }
 function selectEdge(e) {
   highlight([e.node, byId[e.f].node, byId[e.t].node]);
@@ -167,7 +202,7 @@ function reset() {
   card.innerHTML = `<div class="kicker">Overview</div><h2>${S.length - 1} stations around ${HUB.id}, ${E.length} handoffs</h2>
     <p>${M.overview}</p>
     ${Object.entries(ST).map(([k, v]) => `<p><strong>${v.label}: ${E.filter(e => e.st === k).length}</strong>, ${v.note}.</p>`).join("")}
-    <p style="color:var(--muted)">Select a station or a line for details. Click the empty map to come back here.</p>`;
+    <p style="color:var(--muted)">Select a station or a line for details, and click a selected station again to open its own map. Click the empty map to come back here.</p>`;
 }
 svg.onclick = ev => { if (ev.target === svg) reset(); };
 
@@ -183,6 +218,7 @@ function row(cells, open) {
   activate(tr, () => { open(); document.querySelector(".main").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "end" }); });
   return tr;
 }
+document.querySelectorAll("#v-map th[aria-sort]").forEach(h => h.removeAttribute("aria-sort"));
 document.getElementById("t-st").replaceChildren(...S.map(s =>
   row(`<td><strong>${s.id}</strong></td><td class="mono">${release(s)}</td><td>${s.takes}</td><td>${s.gives}</td>`, () => selectStation(s))));
 document.getElementById("t-e").replaceChildren(...E.map(e =>
