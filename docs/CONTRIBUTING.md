@@ -8,7 +8,7 @@ The Update catalogue workflow regenerates `catalogue.js` every Monday and opens 
 
 1. Add the pipeline to its group in `TREE` in `pipelines.js` (or add a group: any node with `children`). Tiles are placed in a spiral from the centre in the order listed, group ids must be unique, and a pipeline may be listed in several groups.
 2. Describe each new station once in `stations.js` and each new handoff once in `handoffs.js`, with the day you checked it against both pipelines' latest releases. Releases come from `catalogue.js`. A station outside nf-core is a resource: mark it `ext: true` and give it a `url`. Mark a reference or database handoff with `res: true`.
-3. To give it a map, copy `maps/sarek.js` to `maps/<pipeline>.js`, set `id` to the pipeline and place its stations in `at`. The map draws every handoff of its hub, so place every station those handoffs name; list other handoffs to draw in `also`, and hub handoffs to leave out in `skip`.
+3. To give it a map, copy `maps/sarek.js` to `maps/<pipeline>.js`, set `id` to the pipeline and place its stations in `at`, around the hub, which always sits in the middle at (500, 340). The map draws every handoff of its hub, so place every station those handoffs name; list other handoffs to draw in `also`, and hub handoffs to leave out in `skip`.
 4. Load it in `index.html` with `<script src="maps/<pipeline>.js"></script>`, next to the sarek line.
 
 A station on any map that has its own map opens it on a second click, or from the button in its card.

@@ -11,13 +11,9 @@ const ST = {
 // handoffs.js that it draws, each coloured. renderMap draws it and bin/check.js checks it.
 function mapModel(M) {
   // Copies, so rendering twice never stacks state on the shared data.
-  const S = Object.entries(M.at).map(([id, at]) => ({
-    id,
-    ...STATIONS[id],
-    ...at,
-    ...(id === M.id && { hub: true, side: "inside" }),
-  }));
-  const HUB = S.find((s) => s.hub);
+  // The hub always sits in the middle of the 1000 x 680 map; a map places only the stations around it.
+  const HUB = { id: M.id, ...STATIONS[M.id], x: 500, y: 340, hub: true, side: "inside" };
+  const S = [HUB, ...Object.entries(M.at).map(([id, at]) => ({ id, ...STATIONS[id], ...at }))];
   const also = new Set(M.also),
     skip = new Set(M.skip);
   const pair = (h) => `${h.f}>${h.t}`;

@@ -99,7 +99,7 @@ function showGroup(g, from) {
     const sub = grp
       ? plural(n, "pipeline")
       : has
-        ? `${Object.keys(MAPS[c.id].at).length - 1} stations`
+        ? `${Object.keys(MAPS[c.id].at).length} stations`
         : dev
           ? "dev"
           : info(c.id).rel;

@@ -1,23 +1,22 @@
-// Interchange map for nf-core/sarek: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
+// Interchange map for nf-core/sarek: where each station sits around the hub, which is always at (500, 340). Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "sarek",
   overview:
     "Where nf-core/sarek gets its input data and resources, and where its results go next. Each line is a handoff between two pipelines.",
   at: {
-    sarek: { x: 520, y: 320 },
-    fetchngs: { x: 140, y: 224, side: "left" },
-    demultiplex: { x: 140, y: 398, side: "left" },
-    bamtofastq: { x: 140, y: 600, side: "left" },
-    seqinspector: { x: 320, y: 311, side: "below", tag: "optional" },
-    "AWS iGenomes": { x: 140, y: 80, side: "above" },
-    references: { x: 400, y: 80, side: "above" },
-    createpanelrefs: { x: 640, y: 80, side: "above" },
-    "annotation-cache": { x: 880, y: 80, side: "above" },
-    variantprioritization: { x: 920, y: 455, side: "below" },
-    variantbenchmarking: { x: 920, y: 311, side: "below" },
-    tumourevo: { x: 920, y: 600, side: "below" },
-    epitopeprediction: { x: 640, y: 600, side: "below" },
-    hlatyping: { x: 400, y: 600, side: "below" },
+    fetchngs: { x: 120, y: 244, side: "left" },
+    demultiplex: { x: 120, y: 418, side: "left" },
+    bamtofastq: { x: 120, y: 620, side: "left" },
+    seqinspector: { x: 300, y: 331, side: "below", tag: "optional" },
+    "AWS iGenomes": { x: 120, y: 100, side: "above" },
+    references: { x: 380, y: 100, side: "above" },
+    createpanelrefs: { x: 620, y: 100, side: "above" },
+    "annotation-cache": { x: 860, y: 100, side: "above" },
+    variantprioritization: { x: 900, y: 475, side: "below" },
+    variantbenchmarking: { x: 900, y: 331, side: "below" },
+    tumourevo: { x: 900, y: 620, side: "below" },
+    epitopeprediction: { x: 620, y: 620, side: "below" },
+    hlatyping: { x: 380, y: 620, side: "below" },
   },
   // fetchngs reaches sarek through seqinspector here; the fetchngs map draws the direct handoff.
   skip: ["fetchngs>sarek"],

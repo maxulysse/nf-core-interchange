@@ -55,19 +55,16 @@ for (const M of Object.values(MAPS)) {
   (M.skip ?? [])
     .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
     .forEach((p) => fail(`${M.id}: skip names unknown handoff ${p}`));
-  if (!M.at[M.id]) {
-    fail(`${M.id}: the hub is not placed`);
-    continue;
-  }
+  if (M.at[M.id]) fail(`${M.id}: places its hub, which always sits in the middle`);
   const { E } = mapModel(M);
   E.flatMap((e) => [e.f, e.t])
-    .filter((id) => !M.at[id])
+    .filter((id) => id !== M.id && !M.at[id])
     .forEach((id) => fail(`${M.id}: draws a handoff to ${id}, which it does not place`));
   E.filter((e) => !e.line).forEach((e) =>
     fail(`${M.id}: ${pair(e)} touches no station on a hub line, so it has no colour`),
   );
   ids.filter((id) => !E.some((e) => e.f === id || e.t === id)).forEach((id) => fail(`${M.id}: ${id} has no line`));
-  ids.forEach((id) => placed.add(id));
+  [M.id, ...ids].forEach((id) => placed.add(id));
   E.forEach((e) => drawn.add(e.handoff));
 }
 Object.keys(STATIONS)
