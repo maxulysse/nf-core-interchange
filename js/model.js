@@ -116,13 +116,13 @@ function layout(M, E) {
   };
   const at = {};
   // A row of up to three stays within reach of the hub's top or bottom face, so its lines arrive vertically.
-  const row = (m) => (m <= 3 ? [124, 248, 248] : [250, 500, 254]);
-  offsets(top, row(top.length).slice(0, 2), row(top.length)[2]).forEach(
-    (d, i) => (at[top[i]] = { x: 500 + d, y: 80, side: "above" }),
-  );
-  offsets(bottom, row(bottom.length).slice(0, 2), row(bottom.length)[2]).forEach(
-    (d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }),
-  );
+  // A row of four sits further out, 120 apart, so its outer lines still arrive vertically; five or more spread
+  // to the full width.
+  const row = (m) => (m <= 3 ? [124, 248, 248, 0] : m === 4 ? [120, 360, 248, 30] : [250, 500, 254, 0]);
+  const [ts, tw, tp, tf] = row(top.length),
+    [bs, bw, bp, bf] = row(bottom.length);
+  offsets(top, [ts, tw], tp).forEach((d, i) => (at[top[i]] = { x: 500 + d, y: 80 - tf, side: "above" }));
+  offsets(bottom, [bs, bw], bp).forEach((d, i) => (at[bottom[i]] = { x: 500 + d, y: 600 + bf, side: "below" }));
   if (stop) {
     // The stop sits level with the hub, so source, stop and hub run as one straight line; the other inputs sit
     // above and below it, further out when the stop fans in two sources.
