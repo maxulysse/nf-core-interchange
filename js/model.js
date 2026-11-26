@@ -146,9 +146,54 @@ function layout(M, E, stop) {
   return at;
 }
 
+// A station's release, or what it is instead: "resource", or "dev" before a first release.
+const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
+// Station labels are drawn F times larger on a map narrower than 760px. Their widths are estimated from character
+// counts, generously (0.62em a character, 0.78em a capital), so a label keeps clear of its neighbours in any font.
+const textWidth = (t, px) => [...t].reduce((w, c) => w + (c >= "A" && c <= "Z" ? 0.78 : 0.62), 0) * px;
+const labelWidth = (s) => Math.max(textWidth(s.id, 15), textWidth(release(s), 11));
+// The box a station's label covers, in map units: its name's baseline sits (lx, ly) from the station, times F.
+function labelBox(s, F) {
+  const w = labelWidth(s) * F;
+  return {
+    x: s.x + s.lx * F - (s.anchor === "end" ? w : s.anchor === "middle" ? w / 2 : 0),
+    y: s.y + (s.ly - 12) * F,
+    w,
+    h: 30 * F,
+  };
+}
+// Puts each label below its station, or above on the top row. A side column too tight for labels below puts them
+// beside its stations, away from the hub; a row whose labels would touch staggers them over two or three tiers.
+// Returns the map's box, grown to hold every label.
+function placeLabels(S, F) {
+  const set = (s, lx, ly, anchor = "middle") => Object.assign(s, { lx, ly, anchor });
+  S.forEach((s) => set(s, 0, s.hub ? 0 : s.label === "above" ? -32 : 32));
+  const others = S.filter((s) => !s.hub);
+  for (const side of [-1, 1]) {
+    const col = others.filter((s) => s.x === CENTRE.x + side * COL).sort((a, b) => a.y - b.y);
+    if (col.some((s, i) => i && s.y - col[i - 1].y < 52 * F + 12))
+      col.forEach((s) => set(s, side * 16, -2, side < 0 ? "end" : "start"));
+  }
+  for (const row of [others.filter((s) => s.y <= CENTRE.y - ROW), others.filter((s) => s.y >= CENTRE.y + ROW)]) {
+    row.sort((a, b) => a.x - b.x);
+    // Labels k apart share a tier: use the fewest tiers that keep each one clear.
+    const gap = (a, b) => b.x - a.x - ((labelWidth(a) + labelWidth(b)) / 2 + 8) * F;
+    const tiers = [1, 2, 3].find((k) => row.slice(k).every((s, i) => gap(row[i], s) >= 0)) ?? 3;
+    row.forEach((s, i) => (s.ly += Math.sign(s.ly) * 36 * (i % tiers)));
+  }
+  const pad = 100 * (F - 1),
+    boxes = others.map((s) => labelBox(s, F)),
+    x0 = Math.min(-pad, ...boxes.map((b) => b.x - 12)),
+    y0 = Math.min(-pad / 2, ...boxes.map((b) => b.y - 12)),
+    x1 = Math.max(MAP_W + pad, ...boxes.map((b) => b.x + b.w + 12)),
+    y1 = Math.max(MAP_H + pad / 2, ...boxes.map((b) => b.y + b.h + 12));
+  return [x0, y0, x1 - x0, y1 - y0];
+}
+
 // What a map draws, without the DOM: its stations with their text from stations.js, and the handoffs from
-// handoffs.js that it draws, each coloured and routed. renderMap draws it and bin/check.js checks it.
-function mapModel(M) {
+// handoffs.js that it draws, each coloured and routed, and its labels placed for scale F. renderMap draws it and
+// bin/check.js checks it.
+function mapModel(M, F = 1) {
   const also = new Set(M.also),
     skip = new Set();
   let stop;
@@ -182,6 +227,7 @@ function mapModel(M) {
   };
   E.forEach((e) => (e.leg = legOf(e)));
   routeMap(HUB, S, E);
+  const box = placeLabels(S, F);
   const days = E.map((e) => e.checked).sort();
-  return { HUB, S, E, checked: [days[0], days.at(-1)] };
+  return { HUB, S, E, box, checked: [days[0], days.at(-1)] };
 }

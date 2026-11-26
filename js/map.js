@@ -1,8 +1,14 @@
 // Draws one interchange map: the hub pipeline in the middle as a hexagon, the pipelines and resources
 // around it as stations, and each handoff as a metro line. Call renderMap(M, from), where from is the id of the previous view.
-const narrow = matchMedia("(max-width: 640px)");
-narrow.addEventListener("change", () => location.reload());
-const F = narrow.matches ? 1.8 : 1;
+// The map always fits its box. Below 760px wide its labels scale up, by F (at most 1.8 on a phone), so they stay
+// readable; a width change that alters F, such as turning a phone, draws the map again.
+const mapBox = document.querySelector("#v-map .map");
+const labelScale = () => Math.min(1.8, Math.max(1, Math.round(7600 / mapBox.clientWidth) / 10));
+let F = 1,
+  shown = null;
+new ResizeObserver(() => {
+  if (shown && !mapBox.closest(".view").hidden && labelScale() !== F) renderMap(shown, null, true);
+}).observe(mapBox);
 const LN = { reads: "Input data", res: "Resources", out: "Results out" };
 // Map and catalogue text that is not markup: escape it before it goes into HTML. Notes and overviews are markup.
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -56,55 +62,11 @@ const around = (s, w, full) => {
   return [s.x - w / 2, s.y - h / 2, w, h];
 };
 
-// Narrow screens scale labels by F, so neighbours can collide. A column too tight for labels below its stations
-// gets them beside, on the side away from the hub; a row whose labels touch staggers them over two or three tiers.
-// Returns the box `full` grown to hold every label.
-function fitNarrow(svg, S, full) {
-  const move = (s, x, y, anchor) =>
-    [...s.label_.children].forEach((t, i) => {
-      t.setAttribute("x", x);
-      t.setAttribute("y", y + i * 15);
-      t.setAttribute("text-anchor", anchor);
-    });
-  const near = (a, b) => Math.abs(a - b) < 1;
-  const stations = S.filter((s) => !s.hub);
-  // Height of a label below its station, in map units: offset, name, version, margin.
-  const below = (32 + 15 + 8) * F;
-  for (const [x, side] of [
-    [CENTRE.x - COL, -1],
-    [CENTRE.x + COL, 1],
-  ]) {
-    const col = stations.filter((s) => near(s.x, x) && s.label === "below").sort((a, b) => a.y - b.y);
-    if (col.slice(1).some((s, i) => s.y - col[i].y < below + 12))
-      col.forEach((s) => move(s, side * 16, -2, side < 0 ? "end" : "start"));
-  }
-  const width = (s) => s.label_.getBBox().width * F;
-  for (const lab of ["above", "below"]) {
-    const rows = {};
-    stations.filter((s) => s.label === lab).forEach((s) => (rows[Math.round(s.y)] ??= []).push(s));
-    for (const row of Object.values(rows)) {
-      row.sort((a, b) => a.x - b.x);
-      // Labels `k` apart share a tier; use the fewest tiers, up to three, that keep each tier clear.
-      const clash = (k) => row.slice(k).some((s, i) => s.x - row[i].x < (width(s) + width(row[i])) / 2 + 8);
-      const tiers = [1, 2, 3].find((k) => !clash(k)) ?? 3;
-      const out = lab === "above" ? -1 : 1;
-      row.forEach((s, i) => i % tiers && move(s, 0, out * (32 + 36 * (i % tiers)), "middle"));
-    }
-  }
-  const b = svg.getBBox(),
-    m = 12,
-    x0 = Math.min(full[0], b.x - m),
-    y0 = Math.min(full[1], b.y - m),
-    x1 = Math.max(full[0] + full[2], b.x + b.width + m),
-    y1 = Math.max(full[1] + full[3], b.y + b.height + m);
-  return [x0, y0, x1 - x0, y1 - y0];
-}
-
-function renderMap(M, from) {
-  const { HUB, S, E, checked } = mapModel(M);
+function renderMap(M, from, redraw = false) {
+  shown = M;
+  F = labelScale();
+  const { HUB, S, E, box: full, checked } = mapModel(M, F);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
-  // Releases come from catalogue.js.
-  const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
   document.getElementById("map-title").textContent = mapTitle(M.id);
   document.getElementById("map-checked").textContent =
     checked[0] === checked[1] ? `on ${checked[0]}` : `between ${checked[0]} and ${checked[1]}`;
@@ -113,10 +75,11 @@ function renderMap(M, from) {
   const svg = document.getElementById("map");
   svg.replaceChildren();
   svg.setAttribute("aria-label", `Map of pipelines connected to nf-core/${HUB.id}`);
-  const pad = 100 * (F - 1);
-  let full = [-pad, -pad / 2, MAP_W + 2 * pad, MAP_H + pad];
-  svg.classList.toggle("narrow", narrow.matches);
   svg.classList.remove("zooming");
+  // Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
+  const start = byId[from] ? around(byId[from], 160, full) : around(HUB, HEX_R * 2.4, full);
+  if (reduced || redraw) svg.setAttribute("viewBox", full.join(" "));
+  else animateBox(svg, start, full);
   const gL = el("g"),
     gD = el("g"),
     gS = el("g");
@@ -159,7 +122,6 @@ function renderMap(M, from) {
     }
   });
 
-  const LBL = { above: [0, -32, "middle"], below: [0, 32, "middle"], inside: [0, 0, "middle"] };
   const mark = (s) =>
     s.hub
       ? el("polygon", { points: hexPoints(s.x, s.y, HEX_R) })
@@ -172,27 +134,19 @@ function renderMap(M, from) {
       role: "button",
       "aria-label": s.id,
     });
-    const [dx, dy, anc] = LBL[s.label];
     // The hub label sits inside the fixed-size hexagon, so it keeps its size.
     const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F})` });
     // A long hub name shrinks to fit the hexagon; 0.56em is about one Overpass character.
     const hubSize = s.hub ? `font-size:${Math.min(26, (HEX_R * 1.5) / (s.id.length * 0.56)).toFixed(1)}px` : "";
     label.append(
-      el("text", { x: dx, y: dy, "text-anchor": anc, class: "name", style: hubSize }, s.id),
-      el("text", { x: dx, y: dy + 15, "text-anchor": anc, class: "ver" }, release(s)),
+      el("text", { x: s.lx, y: s.ly, "text-anchor": s.anchor, class: "name", style: hubSize }, s.id),
+      el("text", { x: s.lx, y: s.ly + 15, "text-anchor": s.anchor, class: "ver" }, release(s)),
     );
     s.node.append(mark(s), label);
-    s.label_ = label;
     // A second click on a selected station that has its own map opens that map.
     activate(s.node, () => (s.node.classList.contains("sel") && !s.hub && MAPS[s.id] ? openMap(s) : selectStation(s)));
     gS.append(s.node);
   });
-
-  if (narrow.matches) full = fitNarrow(svg, S, full);
-  // Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
-  const start = byId[from] ? around(byId[from], 160, full) : around(HUB, HEX_R * 2.4, full);
-  if (reduced) svg.setAttribute("viewBox", full.join(" "));
-  else animateBox(svg, start, full);
 
   const card = document.getElementById("card");
   const pill = (st) => `<span class="pill ${st}">${ST[st].label}</span>`;

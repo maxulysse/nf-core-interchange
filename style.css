@@ -99,9 +99,6 @@ code,
   width: 100%;
   height: auto;
 }
-.map > svg:not(.narrow) {
-  min-width: 760px;
-}
 
 .line {
   fill: none;
@@ -370,7 +367,6 @@ header {
   place-items: center;
 }
 .pave > svg {
-  min-width: 0 !important;
   max-width: 100%;
   touch-action: manipulation;
 }

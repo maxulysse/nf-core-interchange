@@ -7,8 +7,8 @@ const vm = require("vm");
 const scripts = [...fs.readFileSync("index.html", "utf8").matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
 for (const f of scripts.slice(0, scripts.indexOf("js/map.js")))
   vm.runInThisContext(fs.readFileSync(f, "utf8"), { filename: f });
-const { TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel } = vm.runInThisContext(
-  "({ TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel })",
+const { TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, HEX_R, mapModel, labelBox } = vm.runInThisContext(
+  "({ TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, HEX_R, mapModel, labelBox })",
 );
 
 let bad = 0;
@@ -54,6 +54,22 @@ for (const M of Object.values(MAPS)) {
   );
   const at = S.map((s) => `${s.x},${s.y}`);
   at.filter((xy, i) => at.indexOf(xy) !== i).forEach((xy) => fail(`${M.id}: two stations sit at ${xy}`));
+  // At desktop and phone scale, no label covers another label, another station or the hub.
+  for (const F of [1, 1.8]) {
+    const { S } = mapModel(M, F);
+    const meet = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    const mark = (s, r = s.hub ? HEX_R : 10) => ({ x: s.x - r, y: s.y - r, w: 2 * r, h: 2 * r });
+    const labelled = S.filter((s) => !s.hub);
+    labelled.forEach((a, i) => {
+      labelled.slice(i + 1).forEach((b) => {
+        if (meet(labelBox(a, F), labelBox(b, F)))
+          fail(`${M.id}: at scale ${F}, the labels of ${a.id} and ${b.id} touch`);
+      });
+      S.filter((b) => b !== a && meet(labelBox(a, F), mark(b))).forEach((b) =>
+        fail(`${M.id}: at scale ${F}, the label of ${a.id} covers ${b.id}`),
+      );
+    });
+  }
   S.forEach((s) => placed.add(s.id));
   E.forEach((e) => drawn.add(e.handoff));
 }
