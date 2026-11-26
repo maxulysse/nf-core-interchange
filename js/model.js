@@ -8,13 +8,18 @@ const ST = {
 };
 
 // A pipeline's field is the first top-level honeycomb group that lists it; resources come after every field.
-const FIELD = {};
+// A pipeline also in a later field sorts after the rest of its first one, next to that field.
+const FIELD = {},
+  LAST = {};
 TREE.children.forEach((g, i) =>
   (function walk(n) {
-    typeof n === "string" ? (FIELD[n] ??= i) : n.children.forEach(walk);
+    if (typeof n !== "string") return n.children.forEach(walk);
+    FIELD[n] ??= i;
+    LAST[n] = i;
   })(g),
 );
-const byField = (a, b) => (FIELD[a] ?? Infinity) - (FIELD[b] ?? Infinity) || a.localeCompare(b);
+const byField = (a, b) =>
+  (FIELD[a] ?? Infinity) - (FIELD[b] ?? Infinity) || (LAST[a] ?? 0) - (LAST[b] ?? 0) || a.localeCompare(b);
 
 // Places stations on the star around the hub, at most six a side (the most a hub face takes before its lines
 // crowd). Inputs fan in from the left, resources from the top, outputs fan out to the right; each spills to the
@@ -57,10 +62,10 @@ function layout(M, E) {
   // Outputs that would fill the right share it evenly with the bottom, with the top when no resource uses it or
   // both are full, and with the left when no input uses it.
   const outLines = outs.reduce((n, id) => n + lines(id), 0);
-  // On a very busy map the resources join the inputs on the left, which then holds up to eight lines, and the
-  // top goes to the outputs.
+  // On a very busy map the resources join the inputs on the left and the top goes to the outputs; the left and
+  // right then hold up to eight lines.
   const busy = outs.length >= 2 * MAX_SIDE && !stop,
-    room = busy ? { ...LINES, l: HOLD.l } : LINES;
+    room = busy ? { ...LINES, l: HOLD.l, r: HOLD.r } : LINES;
   const share =
     outLines >= LINES.r || outs.length >= MAX_SIDE
       ? [
@@ -77,7 +82,10 @@ function layout(M, E) {
   ])
     for (const id of list) {
       const w = lines(id);
-      const prefer = busy && role === "res" ? ["l", "t", "r", "b"] : PREFER[role];
+      // Outputs never join inputs or resources on the left.
+      const prefer = (busy && role === "res" ? ["l", "t", "r", "b"] : PREFER[role]).filter(
+        (k) => !(role === "out" && k === "l" && count.l),
+      );
       const open = prefer.filter(
         (k) => !closed.has(k) && count[k] < Math.min(busy ? HOLD[k] : MAX_SIDE, HOLD[k]) && used[k] + w <= room[k],
       );
