@@ -1,5 +1,6 @@
 // Every handoff between two stations. A map draws each handoff that touches its hub, plus the ones it lists in also.
-// res marks a reference or database, not sample data. src names where the handoff was first tested.
+// checked is the day it was last checked against both pipelines' latest releases. res marks a reference or
+// database, not sample data. src names where the handoff was first tested.
 const SOURCES = {
   sig: '<a href="https://vagkaratzas.github.io/meta-omics-sig/" target="_blank" rel="noopener">nf-core meta-omics SIG benchmark</a>',
 };
@@ -7,6 +8,7 @@ const HANDOFFS = [
   {
     f: "ampliseq",
     t: "differentialabundance",
+    checked: "2026-11-26",
     st: "conversion",
     via: "abundance table into --matrix, with --input and --contrasts",
     note: "ampliseq writes QIIME2 and BIOM tables; differentialabundance wants a plain feature-by-sample matrix. Not yet run.",
@@ -15,6 +17,7 @@ const HANDOFFS = [
   {
     f: "annotation-cache",
     t: "rnavar",
+    checked: "2026-11-25",
     res: true,
     st: "native",
     via: "--vep_cache, --snpeff_cache (s3://annotation-cache by default)",
@@ -23,6 +26,7 @@ const HANDOFFS = [
   {
     f: "annotation-cache",
     t: "sarek",
+    checked: "2026-11-16",
     res: true,
     st: "native",
     via: "--download_cache, --vep_cache, --snpeff_cache",
@@ -31,6 +35,7 @@ const HANDOFFS = [
   {
     f: "bamtofastq",
     t: "raredisease",
+    checked: "2026-11-25",
     st: "conversion",
     via: "reads/*_{1,2}.merged.fastq.gz into sample, lane, fastq_1, fastq_2",
     note: "The pedigree columns (sex, phenotype, case_id, parents) come from you. Paired-end only: raredisease takes no single-end Illumina data.",
@@ -38,6 +43,7 @@ const HANDOFFS = [
   {
     f: "bamtofastq",
     t: "rnaseq",
+    checked: "2026-11-25",
     st: "conversion",
     via: "reads/*_{1,2}.merged.fastq.gz into sample, fastq_1, fastq_2, strandedness",
     note: "Set strandedness to auto and rnaseq infers it.",
@@ -45,6 +51,7 @@ const HANDOFFS = [
   {
     f: "bamtofastq",
     t: "sarek",
+    checked: "2026-11-25",
     st: "conversion",
     via: "reads/*_{1,2}.merged.fastq.gz into patient, sample, lane, fastq_1, fastq_2",
     note: "Writes FASTQ only. Build the sarek sheet by hand: one row per pair, lane set by you. Sarek can also take BAM/CRAM directly with --step mapping.",
@@ -52,6 +59,7 @@ const HANDOFFS = [
   {
     f: "bamtofastq",
     t: "taxprofiler",
+    checked: "2026-11-25",
     st: "conversion",
     via: "reads/*_{1,2}.merged.fastq.gz into sample, run_accession, instrument_platform, fastq_1, fastq_2",
     note: "To profile what else is in a human BAM or CRAM. Turn on --perform_shortread_hostremoval so the human reads are removed again before classification.",
@@ -59,6 +67,7 @@ const HANDOFFS = [
   {
     f: "createpanelrefs",
     t: "raredisease",
+    checked: "2026-11-25",
     st: "conversion",
     via: "germlinecnvcaller/determinecontigploidy/cohort-model into --ploidy_model; <name>-model shards listed in a TSV (header: models) into --gcnvcaller_model",
     note: "raredisease's docs point to createpanelrefs for these. It also needs --readcount_intervals, the preprocessed intervals, which createpanelrefs does not publish: rebuild them with GATK PreprocessIntervals and the same --gcnv_bin_length and --gcnv_padding.",
@@ -66,6 +75,7 @@ const HANDOFFS = [
   {
     f: "createpanelrefs",
     t: "raredisease",
+    checked: "2026-11-25",
     st: "native",
     via: "gens/createreadcountpanelofnormals/<name>.hdf5 into --gens_pon_female, --gens_pon_male",
     note: "One panel per run: run createpanelrefs twice, on female and on male normals, with --tools gens. Give raredisease the same --gens_interval_list the panels were built with.",
@@ -73,6 +83,7 @@ const HANDOFFS = [
   {
     f: "createpanelrefs",
     t: "rnadnavar",
+    checked: "2026-11-25",
     st: "native",
     via: "gatk4/createsomaticpanelofnormals/*.vcf.gz{,.tbi} into --pon, --pon_tbi",
     note: "The same Mutect2 PON, built from DNA normals. RNA-specific filtering uses a separate --reference_pon, which createpanelrefs does not build.",
@@ -80,6 +91,7 @@ const HANDOFFS = [
   {
     f: "createpanelrefs",
     t: "sarek",
+    checked: "2026-11-25",
     res: true,
     st: "native",
     via: "gatk4/createsomaticpanelofnormals/*.vcf.gz{,.tbi} into --pon, --pon_tbi; cnvkit/<name>.cnn into --cnvkit_reference",
@@ -88,6 +100,7 @@ const HANDOFFS = [
   {
     f: "createtaxdb",
     t: "taxprofiler",
+    checked: "2026-11-26",
     res: true,
     st: "conversion",
     via: "each database into a --databases row: tool, db_name, db_params, db_path",
@@ -97,6 +110,7 @@ const HANDOFFS = [
   {
     f: "demultiplex",
     t: "seqinspector",
+    checked: "2026-11-16",
     st: "native",
     via: "seqinspector samplesheet, then --input",
     note: "demultiplex writes this sheet and a sarek one for the same FASTQ.",
@@ -104,6 +118,7 @@ const HANDOFFS = [
   {
     f: "detaxizer",
     t: "ampliseq",
+    checked: "2026-11-26",
     st: "conversion",
     via: "filtered FASTQ into sample, fastq_1, fastq_2",
     note: "--generate_pipeline_samplesheets only takes taxprofiler and mag, so build this sheet by hand.",
@@ -112,6 +127,7 @@ const HANDOFFS = [
   {
     f: "detaxizer",
     t: "mag",
+    checked: "2026-11-26",
     st: "native",
     via: "--generate_downstream_samplesheets: downstream_samplesheets/mag-pe.csv into --input",
     note: "detaxizer 1.4.0 writes the group and short_reads_platform columns that 1.3.0 left out (nf-core/detaxizer#100). Not yet run with a 1.4.0 sheet.",
@@ -120,6 +136,7 @@ const HANDOFFS = [
   {
     f: "detaxizer",
     t: "metatdenovo",
+    checked: "2026-11-26",
     st: "conversion",
     via: "filtered FASTQ into sample, fastq_1, fastq_2",
     note: '--generate_pipeline_samplesheets has no metatdenovo option. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/detaxizer_to_reads_samplesheet.py" target="_blank" rel="noopener">detaxizer_to_reads_samplesheet.py</a> builds the sheet. Both mates are filtered with the same read list, so pairs stay in sync.',
@@ -128,6 +145,7 @@ const HANDOFFS = [
   {
     f: "detaxizer",
     t: "taxprofiler",
+    checked: "2026-11-26",
     st: "native",
     via: "--generate_downstream_samplesheets: downstream_samplesheets/taxprofiler.csv into --input",
     note: "taxprofiler 2.0.1 read it unchanged in the SIG benchmark. taxprofiler still needs a --databases sheet, which detaxizer does not write.",
@@ -136,6 +154,7 @@ const HANDOFFS = [
   {
     f: "downloadsnpeffcache",
     t: "annotation-cache",
+    checked: "2026-11-16",
     res: true,
     st: "native",
     via: "Uploaded to the S3 bucket",
@@ -144,6 +163,7 @@ const HANDOFFS = [
   {
     f: "downloadvepcache",
     t: "annotation-cache",
+    checked: "2026-11-16",
     res: true,
     st: "native",
     via: "Uploaded to the S3 bucket",
@@ -152,6 +172,7 @@ const HANDOFFS = [
   {
     f: "ENA / SRA",
     t: "fetchngs",
+    checked: "2026-11-25",
     st: "native",
     via: "--input: SRA, ENA, DDBJ or GEO ids, one per line",
     note: "Downloads over FTP by default; --download_method switches to aspera, fastq-dl or sratools. Protected dbGaP data needs --dbgap_key.",
@@ -159,6 +180,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "ampliseq",
+    checked: "2026-11-26",
     st: "native",
     via: "--nf_core_pipeline ampliseq: samplesheet/samplesheet.csv into --input",
     note: "Adds an empty run column; fill it when the samples come from several sequencing runs.",
@@ -167,6 +189,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "atacseq",
+    checked: "2026-11-25",
     st: "native",
     via: "--nf_core_pipeline atacseq: samplesheet/samplesheet.csv into --input",
     note: "Sets replicate to 1 on every row: number the real replicates, and add controls, by hand.",
@@ -174,6 +197,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "detaxizer",
+    checked: "2026-11-26",
     st: "conversion",
     via: "samplesheet/samplesheet.csv, then rename fastq_1, fastq_2 to short_reads_fastq_1, short_reads_fastq_2",
     note: '--nf_core_pipeline has no detaxizer option. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> --target detaxizer does the rename, and detaxizer ran on its sheet in the SIG benchmark.',
@@ -182,6 +206,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "mag",
+    checked: "2026-11-26",
     st: "conversion",
     via: "--nf_core_pipeline mag, then rename fastq_1, fastq_2 to short_reads_1, short_reads_2 and fill group",
     note: 'fetchngs 1.13.0 still writes fastq_1 and fastq_2, while mag 5.5.0 reads short_reads_1 and short_reads_2. It sets short_reads_platform but leaves group, which mag requires, empty (nf-core/fetchngs#401). <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> --target mag does the conversion.',
@@ -190,6 +215,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "metatdenovo",
+    checked: "2026-11-26",
     st: "native",
     via: "--nf_core_pipeline metatdenovo: samplesheet/samplesheet.csv into --input",
     note: "Needs no extra columns.",
@@ -198,6 +224,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "rnaseq",
+    checked: "2026-11-25",
     st: "native",
     via: "--nf_core_pipeline rnaseq: samplesheet/samplesheet.csv into --input",
     note: "Adds strandedness, auto unless --nf_core_rnaseq_strandedness says otherwise.",
@@ -205,6 +232,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "rnavar",
+    checked: "2026-11-25",
     st: "native",
     via: "samplesheet/samplesheet.csv (any --nf_core_pipeline, or none) into --input",
     note: "rnavar only needs sample and fastq_1 and accepts any extra columns, so no rnavar option is needed. Runs of one sample are merged.",
@@ -212,6 +240,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "sarek",
+    checked: "2026-11-25",
     st: "conversion",
     via: "--nf_core_pipeline sarek, then add a lane column",
     note: 'fetchngs sets patient to the sample accession but writes no lane, and sarek 3.12.0 stops on a FASTQ row without one ("Missing or unknown field"). Paired-end runs only: sarek takes no single-end FASTQ.',
@@ -219,6 +248,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "seqinspector",
+    checked: "2026-11-26",
     st: "native",
     via: "samplesheet/samplesheet.csv, then --input",
     note: "No --nf_core_pipeline needed: every fetchngs sheet starts with sample, fastq_1, fastq_2. Not yet run with the extra metadata columns.",
@@ -226,6 +256,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "taxprofiler",
+    checked: "2026-11-26",
     st: "native",
     via: "--nf_core_pipeline taxprofiler: samplesheet/samplesheet.csv into --input",
     note: "Carries run_accession and instrument_platform from ENA, and adds an empty fasta column.",
@@ -234,6 +265,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "viralmetagenome",
+    checked: "2026-11-26",
     st: "conversion",
     via: "samplesheet/samplesheet.csv, cut to sample, fastq_1, fastq_2",
     note: '--nf_core_pipeline has no viralmetagenome option, but viralmetagenome takes the first three columns fetchngs writes. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> also renames the samples, which fetchngs names after the ENA experiment.',
@@ -242,6 +274,7 @@ const HANDOFFS = [
   {
     f: "fetchngs",
     t: "viralrecon",
+    checked: "2026-11-25",
     st: "native",
     via: "--nf_core_pipeline viralrecon: samplesheet/samplesheet.csv into --input",
     note: "For Illumina runs. Nanopore runs go into viralrecon as barcode folders, not FASTQ rows.",
@@ -249,6 +282,7 @@ const HANDOFFS = [
   {
     f: "hlatyping",
     t: "epitopeprediction",
+    checked: "2026-11-16",
     st: "conversion",
     via: "results/*/*_result.tsv into alleles",
     note: "Join the OptiType alleles into one string (A*01:01;B*07:02;...) or a .txt file with one allele per line. HLA-HD, for class II, ships without its licence.",
@@ -256,6 +290,7 @@ const HANDOFFS = [
   {
     f: "igenomes",
     t: "bamtofastq",
+    checked: "2026-11-25",
     res: true,
     st: "native",
     via: "--genome, --igenomes_base",
@@ -264,6 +299,7 @@ const HANDOFFS = [
   {
     f: "igenomes",
     t: "createpanelrefs",
+    checked: "2026-11-25",
     res: true,
     st: "native",
     via: "--genome, --igenomes_base",
@@ -272,6 +308,7 @@ const HANDOFFS = [
   {
     f: "igenomes",
     t: "rnavar",
+    checked: "2026-11-25",
     res: true,
     st: "native",
     via: "--genome (GRCh38 by default), --igenomes_base",
@@ -280,6 +317,7 @@ const HANDOFFS = [
   {
     f: "igenomes",
     t: "sarek",
+    checked: "2026-11-16",
     res: true,
     st: "native",
     via: "--genome, --igenomes_base",
@@ -288,6 +326,7 @@ const HANDOFFS = [
   {
     f: "longraredisease",
     t: "createpanelrefs",
+    checked: "2026-11-25",
     st: "conversion",
     via: "<sample>/mapped_bam/*.bam into sample, bam, then --tools gens --gens_analysis_type lrs",
     note: "Long-read Gens panel from mosdepth coverage. No nf-core pipeline reads that panel yet: longraredisease takes no Gens input.",
@@ -295,6 +334,7 @@ const HANDOFFS = [
   {
     f: "mag",
     t: "funcscan",
+    checked: "2026-11-26",
     st: "conversion",
     via: "contig or bin FASTA into sample, fasta",
     note: "Not yet run.",
@@ -303,6 +343,7 @@ const HANDOFFS = [
   {
     f: "mag",
     t: "magmap",
+    checked: "2026-11-26",
     st: "conversion",
     via: "bins into --genomeinfo: accno, genome_fna",
     note: "magmap also needs its own reads samplesheet. Not yet run.",
@@ -311,6 +352,7 @@ const HANDOFFS = [
   {
     f: "mag",
     t: "metapep",
+    checked: "2026-11-26",
     st: "conversion",
     via: "bin or assembly FASTA into condition, type (bins or assembly), microbiome_path, alleles",
     note: "metapep predicts the proteins itself. Not yet run.",
@@ -319,6 +361,7 @@ const HANDOFFS = [
   {
     f: "mag",
     t: "phageannotator",
+    checked: "2026-11-26",
     st: "conversion",
     via: "contig FASTA and reads into sample, group, fastq_1, fasta",
     note: "Not yet run. phageannotator has no release yet.",
@@ -327,6 +370,7 @@ const HANDOFFS = [
   {
     f: "mag",
     t: "phyloplace",
+    checked: "2026-11-26",
     st: "conversion",
     via: "contig FASTA into queryseqfile",
     note: "The reference alignment, tree and model come from elsewhere. Not yet run.",
@@ -335,6 +379,7 @@ const HANDOFFS = [
   {
     f: "mag",
     t: "proteinfamilies",
+    checked: "2026-11-26",
     st: "conversion",
     via: "Annotation/Prodigal/<assembler>/<sample>/*_prodigal.faa.gz into sample, fasta",
     note: 'Contig ids repeat across MEGAHIT assemblies, so <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/mag_to_proteinfamilies.py" target="_blank" rel="noopener">mag_to_proteinfamilies.py</a> pools the proteins into one FASTA with sample-prefixed headers. Ran in the SIG benchmark: 2.5 million proteins, 5,864 families.',
@@ -343,6 +388,7 @@ const HANDOFFS = [
   {
     f: "mag",
     t: "seqsubmit",
+    checked: "2026-11-26",
     st: "conversion",
     via: "--mode mags or bins: bin FASTA into id, fasta, accession, assembly_software, binning_software, binning_parameters and the environment columns",
     note: "The gzipped FASTA goes over as it is. The row also needs the source ENA accession, software versions, and four ENVO environment terms that mag does not write. Needs ENA Webin credentials.",
@@ -351,6 +397,7 @@ const HANDOFFS = [
   {
     f: "magmap",
     t: "differentialabundance",
+    checked: "2026-11-26",
     st: "conversion",
     via: "counts per gene or genome into --matrix, with --input and --contrasts",
     note: "Not yet run.",
@@ -359,6 +406,7 @@ const HANDOFFS = [
   {
     f: "metatdenovo",
     t: "proteinfamilies",
+    checked: "2026-11-26",
     st: "conversion",
     via: "--orf_caller prodigal: prodigal/<assembly>.prodigal.faa.gz into sample, fasta",
     note: 'One row, as metatdenovo makes one co-assembly. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/metatdenovo_to_proteinfamilies.py" target="_blank" rel="noopener">metatdenovo_to_proteinfamilies.py</a> writes it; ran in the SIG benchmark.',
@@ -367,6 +415,7 @@ const HANDOFFS = [
   {
     f: "metatdenovo",
     t: "seqsubmit",
+    checked: "2026-11-26",
     st: "conversion",
     via: "--mode metagenomic_assemblies: megahit/megahit_assembly.contigs.fa.gz into id, fasta, run_accession, assembler, assembler_version",
     note: "seqsubmit 1.0.0 registers every assembly as a primary metagenome, so a metatranscriptome gets the wrong ENA type. It takes one run_accession per row, not a co-assembly of several runs.",
@@ -375,6 +424,7 @@ const HANDOFFS = [
   {
     f: "proteinfamilies",
     t: "proteinannotator",
+    checked: "2026-11-26",
     st: "native",
     via: "--skip_proteinannotator_samplesheet false: proteinannotator/samplesheet.csv into --input",
     note: "proteinannotator 1.1.0 read it unchanged in the SIG benchmark. The fasta paths are absolute, so leave the proteinfamilies results where they are.",
@@ -383,6 +433,7 @@ const HANDOFFS = [
   {
     f: "proteinfamilies",
     t: "proteinfold",
+    checked: "2026-11-26",
     st: "native",
     via: "--skip_proteinfold_samplesheet false: proteinfold/samplesheet.csv into --input",
     note: "Points at the family representatives, one multi-FASTA, so add --split_fasta. Needs proteinfold 2.0.0 or later. Not yet run.",
@@ -391,6 +442,7 @@ const HANDOFFS = [
   {
     f: "raredisease",
     t: "bamtofastq",
+    checked: "2026-11-25",
     st: "conversion",
     via: "alignment/*_sorted_md.bam into sample_id, mapped, index, file_type",
     note: "raredisease writes no sheet for it; file_type is bam (cram with --save_all_mapped_as_cram). Only needed to realign: raredisease reads its own duplicate-marked BAMs back as they are.",
@@ -398,6 +450,7 @@ const HANDOFFS = [
   {
     f: "raredisease",
     t: "createpanelrefs",
+    checked: "2026-11-25",
     st: "conversion",
     via: "alignment/*_sorted_md.bam into sample, bam, bai",
     note: "Published as BAM by default, CRAM with --save_all_mapped_as_cram. raredisease writes no sheet for it. Use one run per sex for the Gens panels (see the Gens handoff).",
@@ -405,6 +458,7 @@ const HANDOFFS = [
   {
     f: "reference sequences",
     t: "createtaxdb",
+    checked: "2026-11-26",
     st: "native",
     via: "FASTA and taxid into id, taxid, fasta_dna or fasta_aa",
     note: "createtaxdb is fed from references, not from the reads.",
@@ -413,6 +467,7 @@ const HANDOFFS = [
   {
     f: "references",
     t: "bamtofastq",
+    checked: "2026-11-25",
     res: true,
     st: "conversion",
     via: "--fasta, --fasta_fai",
@@ -421,6 +476,7 @@ const HANDOFFS = [
   {
     f: "references",
     t: "createpanelrefs",
+    checked: "2026-11-25",
     res: true,
     st: "conversion",
     via: "--fasta, --fai, --dict",
@@ -429,6 +485,7 @@ const HANDOFFS = [
   {
     f: "references",
     t: "igenomes",
+    checked: "2026-11-25",
     st: "planned",
     via: "<species>/<source>/<genome>/Sequence/... into the bucket",
     note: "The README says it is built mainly to fill AWS iGenomes, and it writes the same folder layout. Which bundles in the bucket come from it is not tracked here.",
@@ -436,6 +493,7 @@ const HANDOFFS = [
   {
     f: "references",
     t: "methylseq",
+    checked: "2026-11-25",
     st: "conversion",
     via: "--fasta, --fasta_index (and --bwamem_index with --aligner bwamem)",
     note: "methylseq 4.2.0 reads no references datasheet. references 0.1 builds no Bismark or bwa-meth index, so methylseq still builds those from the FASTA.",
@@ -443,6 +501,7 @@ const HANDOFFS = [
   {
     f: "references",
     t: "rnaseq",
+    checked: "2026-11-25",
     st: "conversion",
     via: "--fasta, --gtf, --transcript_fasta, --splicesites, --star_index, --salmon_index (and --hisat2_index, --kallisto_index, --rsem_index)",
     note: "rnaseq 3.28.0 reads no references datasheet. Every index references builds from a FASTA and GTF has a matching rnaseq param.",
@@ -450,6 +509,7 @@ const HANDOFFS = [
   {
     f: "references",
     t: "rnavar",
+    checked: "2026-11-25",
     res: true,
     st: "conversion",
     via: "--fasta, --fasta_fai, --dict, --gtf, --star_index",
@@ -458,6 +518,7 @@ const HANDOFFS = [
   {
     f: "references",
     t: "sarek",
+    checked: "2026-11-25",
     res: true,
     st: "conversion",
     via: "--fasta, --fasta_fai, --dict, --bwamem2 (or --bwa, --dragmap), --intervals, --msisensorpro_scan",
@@ -466,6 +527,7 @@ const HANDOFFS = [
   {
     f: "references",
     t: "sarek",
+    checked: "2026-11-25",
     res: true,
     st: "planned",
     via: "--references, --references_datasheets_path",
@@ -474,6 +536,7 @@ const HANDOFFS = [
   {
     f: "references-assets",
     t: "references",
+    checked: "2026-11-25",
     res: true,
     st: "native",
     via: "--input: a sheet from references-assets",
@@ -482,6 +545,7 @@ const HANDOFFS = [
   {
     f: "rnaseq",
     t: "bamtofastq",
+    checked: "2026-11-25",
     st: "conversion",
     via: "star_salmon/<SAMPLE>.markdup.sorted.bam into sample_id, mapped, index, file_type",
     note: "For a rerun with another aligner or genome. With the same setup, rnaseq reads its own BAMs back through genome_bam and transcriptome_bam, no conversion needed.",
@@ -489,6 +553,7 @@ const HANDOFFS = [
   {
     f: "rnaseq",
     t: "rnavar",
+    checked: "2026-11-25",
     st: "conversion",
     via: "star_salmon/<SAMPLE>.markdup.sorted.bam{,.bai} into sample, bam, bai",
     note: "rnavar starts BAM input at SplitNCigarReads, after duplicate marking, which is where rnaseq's STAR BAMs leave off. rnaseq writes no sheet for it; use the same FASTA in both.",
@@ -496,6 +561,7 @@ const HANDOFFS = [
   {
     f: "rnavar",
     t: "variantprioritization",
+    checked: "2026-11-25",
     st: "conversion",
     via: "variant_calling/<SAMPLE>/*.haplotypecaller.filtered.vcf.gz into patient, status 0, sample, vcf",
     note: "Germline report with CPSR, which supports HaplotypeCaller VCFs. RNA calls only cover expressed genes, so a missing variant is not a negative result.",
@@ -503,6 +569,7 @@ const HANDOFFS = [
   {
     f: "sarek",
     t: "bamtofastq",
+    checked: "2026-11-25",
     st: "conversion",
     via: "preprocessing/csv/*.csv into sample_id, mapped, index, file_type",
     note: "Map sample to sample_id, cram and crai to mapped and index, and set file_type to cram. Gives FASTQ back from sarek's CRAMs.",
@@ -510,6 +577,7 @@ const HANDOFFS = [
   {
     f: "sarek",
     t: "createpanelrefs",
+    checked: "2026-11-25",
     st: "conversion",
     via: "preprocessing/csv/recalibrated.csv rows with status 0 into sample, cram, crai",
     note: "Keep the normal samples (status 0) and the sample, cram, crai columns. Build the panel from normals sequenced with the same kit and sequencer as the samples it will serve.",
@@ -517,6 +585,7 @@ const HANDOFFS = [
   {
     f: "sarek",
     t: "epitopeprediction",
+    checked: "2026-11-16",
     st: "conversion",
     via: "variant_calling/*/*.vcf.gz into sample, alleles, mhc_class, filename, germline_vcf, tumor_sample",
     note: "Give the raw somatic VCF, not the annotated one: epitopeprediction runs VEP itself. Set tumor_sample for multi-sample VCFs (Strelka: TUMOR) and germline_vcf to the normal's germline calls.",
@@ -524,6 +593,7 @@ const HANDOFFS = [
   {
     f: "sarek",
     t: "hlatyping",
+    checked: "2026-11-16",
     st: "conversion",
     via: "--save_output_as_bam, then the preprocessing BAM into sample, bam, seq_type",
     note: "hlatyping takes BAM, not CRAM. It extracts the reads again and maps them to the HLA region.",
@@ -531,6 +601,7 @@ const HANDOFFS = [
   {
     f: "sarek",
     t: "tumourevo",
+    checked: "2026-11-16",
     st: "conversion",
     via: "variant_calling/{mutect2,strelka,sentieon_tnscope} VCF and ascat/*.{segments,purityploidy}.txt into dataset, patient, tumour_sample, normal_sample, vcf, tbi, cna_segments, cna_extra, cna_caller",
     note: "tumourevo takes Mutect2, Strelka or TNscope calls and ASCAT copy numbers, so set cna_caller to ASCAT. Sarek writes no sheet for it.",
@@ -538,6 +609,7 @@ const HANDOFFS = [
   {
     f: "sarek",
     t: "variantbenchmarking",
+    checked: "2026-11-16",
     st: "conversion",
     via: "variant_calling/*/*.vcf.gz into id, caller, test_vcf",
     note: "One row per caller VCF, plus --truth_vcf. Sarek writes no sheet for it.",
@@ -545,6 +617,7 @@ const HANDOFFS = [
   {
     f: "sarek",
     t: "variantprioritization",
+    checked: "2026-11-16",
     st: "conversion",
     via: "annotated/*.vcf.gz into patient, status, sample, vcf, cna",
     note: "Same patient, status and sample IDs as sarek. Sarek writes no sheet for it, so build it by hand.",
@@ -552,6 +625,7 @@ const HANDOFFS = [
   {
     f: "seqinspector",
     t: "sarek",
+    checked: "2026-11-16",
     st: "planned",
     via: "--continue_with_lint_fail false, then sarek on success",
     note: "Optional: skip seqinspector and pass the sarek sheet straight on. fetchngs writes one with --nf_core_pipeline sarek; demultiplex leaves patient empty. As a gate, 1.1.2 only stops the whole run on a lint failure, and CheckQC never stops it. A per-sample gate needs seqinspector to write a sarek sheet of samples that pass.",
@@ -559,6 +633,7 @@ const HANDOFFS = [
   {
     f: "taxprofiler",
     t: "differentialabundance",
+    checked: "2026-11-26",
     st: "conversion",
     via: "taxpasta merged profiles into --matrix, with --input and --contrasts",
     note: "The observations sheet and contrasts file come from you. Not yet run.",
@@ -567,6 +642,7 @@ const HANDOFFS = [
   {
     f: "viralmetagenome",
     t: "phageannotator",
+    checked: "2026-11-26",
     st: "conversion",
     via: "per-assembler contigs (gzipped) and their reads into sample, group, fastq_1, fasta",
     note: "The reads come from upstream and group from you. The combined contigs are not gzipped, and phageannotator rejects them. phageannotator has no release yet.",
@@ -575,6 +651,7 @@ const HANDOFFS = [
   {
     f: "viralmetagenome",
     t: "phyloplace",
+    checked: "2026-11-26",
     st: "conversion",
     via: "contigs into queryseqfile",
     note: "Each row also needs refseqfile, refphylogeny and model. No pipeline here makes them, and they depend on the clade.",

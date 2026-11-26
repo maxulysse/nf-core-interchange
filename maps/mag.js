@@ -1,8 +1,6 @@
 // Interchange map for nf-core/mag: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "mag",
-  title: "Mag Interchange",
-  checked: "2026-11-26",
   overview: "Where nf-core/mag gets its shotgun reads, and which pipelines take its contigs, bins and proteins.",
   at: {
     mag: { x: 500, y: 330 },

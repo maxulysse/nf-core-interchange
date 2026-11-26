@@ -1,8 +1,6 @@
 // Interchange map for nf-core/references: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "references",
-  title: "References Interchange",
-  checked: "2026-11-25",
   overview:
     "Where nf-core/references gets its genomes, and which pipelines can read the indices it builds. No released pipeline reads its datasheet yet, so every pipeline handoff passes files by hand. Each line is a handoff between two pipelines.",
   at: {

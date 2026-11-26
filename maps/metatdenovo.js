@@ -1,8 +1,6 @@
 // Interchange map for nf-core/metatdenovo: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "metatdenovo",
-  title: "Metatdenovo Interchange",
-  checked: "2026-11-26",
   overview: "Where nf-core/metatdenovo gets its RNA reads, and which pipelines take its assembly and proteins.",
   at: {
     metatdenovo: { x: 500, y: 330 },

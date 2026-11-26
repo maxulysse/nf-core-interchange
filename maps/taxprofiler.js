@@ -1,8 +1,6 @@
 // Interchange map for nf-core/taxprofiler: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "taxprofiler",
-  title: "Taxprofiler Interchange",
-  checked: "2026-11-26",
   overview: "Where nf-core/taxprofiler gets its shotgun reads and databases, and where its profiles go.",
   at: {
     taxprofiler: { x: 500, y: 330 },

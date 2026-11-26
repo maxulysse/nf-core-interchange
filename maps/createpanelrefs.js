@@ -1,8 +1,6 @@
 // Interchange map for nf-core/createpanelrefs: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "createpanelrefs",
-  title: "Createpanelrefs Interchange",
-  checked: "2026-11-25",
   overview:
     "Where nf-core/createpanelrefs gets its cohort of normal alignments and its reference genome, and which pipelines read the panels and models it builds. Each line is a handoff between two pipelines.",
   at: {

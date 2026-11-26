@@ -1,8 +1,6 @@
 // Interchange map for nf-core/bamtofastq: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "bamtofastq",
-  title: "Bamtofastq Interchange",
-  checked: "2026-11-25",
   overview:
     "Which pipelines' alignments nf-core/bamtofastq turns back into reads, and which pipelines can start again from those reads, to realign against another genome build or with another aligner. Each line is a handoff between two pipelines.",
   at: {

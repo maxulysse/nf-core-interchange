@@ -1,8 +1,6 @@
 // Interchange map for nf-core/detaxizer: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "detaxizer",
-  title: "Detaxizer Interchange",
-  checked: "2026-11-26",
   overview: "Where nf-core/detaxizer gets its reads, and which pipelines read the filtered reads back.",
   at: {
     detaxizer: { x: 500, y: 330 },

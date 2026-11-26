@@ -68,28 +68,14 @@ const around = (s, w, full) => {
 };
 
 function renderMap(M, from) {
-  // Copies, so rendering twice never stacks state on the shared data.
-  const S = Object.entries(M.at).map(([id, at]) => ({
-    id,
-    ...STATIONS[id],
-    ...at,
-    ...(id === M.id && { hub: true, side: "inside" }),
-  }));
+  const { HUB, S, E, checked } = mapModel(M);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
-  const HUB = byId[M.id];
-  const also = new Set(M.also);
-  const drawn = (h) => h.f === HUB.id || h.t === HUB.id || also.has(`${h.f}>${h.t}`);
-  const E = HANDOFFS.filter(drawn).map((h) => ({ ...h }));
-  // Colour by direction: into the hub is input (or a resource), out of it is results. A handoff between two
-  // other stations takes the colour of the hub line at its target, or at its source.
-  E.forEach((e) => (e.line = e.t === HUB.id ? (e.res ? "res" : "reads") : e.f === HUB.id ? "out" : null));
-  const hubLine = (id) => E.find((h) => h.line && (h.f === id || h.t === id))?.line;
-  E.forEach((e) => (e.line ??= e.res ? "res" : (hubLine(e.t) ?? hubLine(e.f))));
   // Releases come from catalogue.js; rel in stations.js is only for stations outside the nf-core catalogue.
   const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? s.rel ?? "in development"));
   const far = (e) => byId[e.f === HUB.id ? e.t : e.f];
   document.getElementById("map-title").textContent = M.title;
-  document.getElementById("map-checked").textContent = M.checked;
+  document.getElementById("map-checked").textContent =
+    checked[0] === checked[1] ? `on ${checked[0]}` : `between ${checked[0]} and ${checked[1]}`;
   document.getElementById("map-credits").innerHTML =
     `Thanks to the <a href="https://github.com/nf-core/${HUB.id}/graphs/contributors">contributors of nf-core/${HUB.id}</a>.`;
   const hubEdges = E.filter((e) => e.f === HUB.id || e.t === HUB.id);

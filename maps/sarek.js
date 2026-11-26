@@ -1,8 +1,6 @@
 // Interchange map for nf-core/sarek: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "sarek",
-  title: "Sarek Interchange",
-  checked: "2026-11-16",
   overview:
     "Where nf-core/sarek gets its input data and resources, and where its results go next. Each line is a handoff between two pipelines.",
   at: {
