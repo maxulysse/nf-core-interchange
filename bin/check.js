@@ -47,20 +47,13 @@ fs.readdirSync("maps")
 const placed = new Set(),
   drawn = new Set();
 for (const M of Object.values(MAPS)) {
-  const hand = Object.keys(M.at ?? {});
-  hand.filter((id) => !STATIONS[id]).forEach((id) => fail(`${M.id}: places unknown station ${id}`));
   (M.also ?? [])
     .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
     .forEach((p) => fail(`${M.id}: also names unknown handoff ${p}`));
-  (M.skip ?? [])
-    .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
-    .forEach((p) => fail(`${M.id}: skip names unknown handoff ${p}`));
-  if (hand.includes(M.id)) fail(`${M.id}: places its hub, which always sits in the middle`);
   const { S, E } = mapModel(M);
   E.filter((e) => !e.line).forEach((e) =>
     fail(`${M.id}: ${pair(e)} touches no station on a hub line, so it has no colour`),
   );
-  hand.filter((id) => !E.some((e) => e.f === id || e.t === id)).forEach((id) => fail(`${M.id}: ${id} has no line`));
   const at = S.map((s) => `${s.x},${s.y}`);
   at.filter((xy, i) => at.indexOf(xy) !== i).forEach((xy) => fail(`${M.id}: two stations sit at ${xy}`));
   S.forEach((s) => placed.add(s.id));

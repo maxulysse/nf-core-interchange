@@ -26,7 +26,7 @@ const byField = (a, b) =>
 // the right they share it evenly with the bottom, the top (when no resource uses it, or when both are full) and
 // the left (when no input uses it). A very busy map (twelve outputs or more) moves its resources to the left with
 // the inputs and lets each side fill to `max`. A stop between sources and the hub (seqinspector) sits left of the
-// hub, level with it. A map's own `at` places a station by hand; a side holding one takes nothing else.
+// hub, level with it.
 const SIDE = {
   l: { n: 6, max: 8, lines: 5 },
   r: { n: 6, max: 8, lines: 5 },
@@ -40,7 +40,7 @@ function layout(M, E) {
   const stop = E.find((e) => e.f !== M.id && e.t !== M.id && E.some((h) => h.f === e.t && h.t === M.id))?.t;
   const feeders = stop ? E.filter((e) => e.t === stop && e.f !== M.id).map((e) => e.f) : [];
   const ids = [...new Set(E.flatMap((e) => [e.f, e.t]))].filter(
-    (id) => id !== M.id && !M.at?.[id] && id !== stop && !feeders.includes(id),
+    (id) => id !== M.id && id !== stop && !feeders.includes(id),
   );
   const into = (id, res) => E.some((e) => e.f === id && e.t === M.id && !!e.res === res);
   const lines = (id) => E.filter((e) => [e.f, e.t].includes(id) && [e.f, e.t].includes(M.id)).length;
@@ -51,11 +51,6 @@ function layout(M, E) {
   const roles = { in: ins, res, out: outs };
 
   // 1. How many stations of each role go on each side.
-  const closed = new Set(
-    Object.values(M.at ?? {}).map(({ x, y }) =>
-      x <= 200 ? "l" : x >= 800 ? "r" : y <= 150 ? "t" : y >= 550 ? "b" : null,
-    ),
-  );
   const busy = outs.length >= 12 && !stop;
   // A busy map packs every hub face to the eight lines the longest face holds.
   const limit = (k) => (busy ? { n: SIDE[k].max, lines: 8 } : SIDE[k]);
@@ -70,7 +65,7 @@ function layout(M, E) {
   if (stop) [count.l, used.l] = [SIDE.l.n - 2, SIDE.l.lines - 2];
   const pick = (role, w) => {
     const order = (busy && role === "res" ? ["l", "t", "r", "b"] : PREFER[role]).filter(
-      (k) => !closed.has(k) && !(role === "out" && k === "l" && count.l),
+      (k) => !(role === "out" && k === "l" && count.l),
     );
     const open = order.filter((k) => count[k] < limit(k).n && used[k] + w <= limit(k).lines);
     const shared = role === "out" && open.filter((k) => share.includes(k)).sort((a, b) => used[a] - used[b])[0];
@@ -134,14 +129,14 @@ function layout(M, E) {
     set(feeders, place(feeders, fan, 200), (d) => ({ x: 120, y: 340 + d, side: "below" }));
   } else set(left, place(left, column, 270, true), (d) => ({ x: 120, y: 340 + d, side: "below" }));
   set(right, place(right, column, 270, true), (d) => ({ x: 880, y: 340 + d, side: "below" }));
-  return { ...at, ...M.at };
+  return at;
 }
 
 // What a map draws, without the DOM: its stations with their text from stations.js, and the handoffs from
 // handoffs.js that it draws, each coloured. renderMap draws it and bin/check.js checks it.
 function mapModel(M) {
   const also = new Set(M.also),
-    skip = new Set(M.skip);
+    skip = new Set();
   const pair = (h) => `${h.f}>${h.t}`;
   // A source that a station intercepts reaches the hub through it: source -> station -> hub.
   const has = (f, t) => HANDOFFS.some((h) => h.f === f && h.t === t);
