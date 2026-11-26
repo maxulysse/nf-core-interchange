@@ -45,7 +45,7 @@ const STATIONS = {
   },
   demultiplex: {
     blurb: "Demultiplexes raw sequencer output into per-sample FASTQ.",
-    takes: "BCL run folder, Illumina samplesheet",
+    takes: "Samplesheet: id, samplesheet (the run's SampleSheet.csv), lane, flowcell (the BCL run folder)",
     gives: "FASTQ, samplesheets for atacseq, methylseq, rnaseq, sarek, seqinspector, taxprofiler",
   },
   detaxizer: {
@@ -108,7 +108,8 @@ const STATIONS = {
   longraredisease: {
     blurb:
       "Long-read pipeline that identifies variants in patients with neurodevelopmental disorders, from ONT or PacBio data.",
-    takes: "Long-read samplesheet",
+    takes:
+      "Samplesheet: sample, file_path (a file or folder of reads), sex, phenotype, family_id, maternal_id, paternal_id, hpo_terms",
     gives: "Aligned BAM, small variants, SVs, CNVs, methylation",
   },
   mag: {
@@ -123,7 +124,7 @@ const STATIONS = {
     gives: "Counts per gene and per genome",
   },
   metapep: {
-    blurb: "Predicts peptides from microbiome proteins and their binding to HLA alleles.",
+    blurb: "Predicts proteins and peptides from microbiome assemblies, bins or taxa, and their binding to HLA alleles.",
     takes: "Samplesheet: condition, type, microbiome_path, alleles (weights_path optional)",
     gives: "Peptides, binding predictions",
   },
@@ -134,7 +135,8 @@ const STATIONS = {
   },
   methylseq: {
     blurb: "Bisulfite and TAPS methylation analysis with Bismark, bwa-meth and MethylDackel, or BWA-MEM and rastair.",
-    takes: "--fasta, --fasta_index, --bismark_index, --bwameth_index, --bwamem_index",
+    takes:
+      "Samplesheet: sample, fastq_1, fastq_2, genome; --fasta, --fasta_index, --bismark_index, --bwameth_index, --bwamem_index",
     gives: "Aligned BAMs, methylation calls, QC",
   },
   phageannotator: {
@@ -166,7 +168,8 @@ const STATIONS = {
   raredisease: {
     blurb:
       "Calls and scores SNVs, SVs and CNVs from WGS or WES of rare disease patients, with GATK gCNV for CNVs and Gens files for CNV review.",
-    takes: "Samplesheet: family, sample, lane, fastq_1, fastq_2, sex, phenotype, parents",
+    takes:
+      "Samplesheet: sample, lane, fastq_1, fastq_2 (or spring_1, spring_2, or bam, bai), sex, phenotype, paternal_id, maternal_id, case_id",
     gives: "Aligned BAM/CRAM, ranked SNV, SV and CNV VCFs, Gens files",
   },
   "reference sequences": {
@@ -191,7 +194,7 @@ const STATIONS = {
   },
   rnadnavar: {
     blurb: "Integrated RNA and DNA analysis for somatic mutation detection, with Mutect2 among its callers.",
-    takes: "Samplesheet of tumour and normal DNA and RNA",
+    takes: "Samplesheet: patient, sample, status, lane, fastq_1, fastq_2 (or bam, cram, vcf, maf), normal_id",
     gives: "Somatic variants supported by DNA and RNA",
   },
   rnaseq: {
@@ -208,13 +211,13 @@ const STATIONS = {
   sarek: {
     blurb:
       "Germline and somatic variant calling from WGS, WES and panels: alignment, preprocessing, 20+ callers, VEP and snpEff annotation. Restart any step with --step and the CSVs in {outdir}/preprocessing/csv.",
-    takes: "Samplesheet: patient, sex, status, sample, lane, fastq_1, fastq_2 (or bam/cram)",
+    takes: "Samplesheet: patient, sex, status, sample, lane, fastq_1, fastq_2 (or spring, bam, cram, vcf)",
     gives: "BAM/CRAM, VCFs per caller, annotated VCFs, MultiQC report, restart CSVs",
   },
   seqinspector: {
     blurb:
-      "Optional QC stop before sarek: QC of sequencing runs and FASTQ. Bundles: illumina, ont, fastq, bam, minimal.",
-    takes: "Samplesheet of FASTQ, optional run folder",
+      "QC of sequencing runs and FASTQ, with MultiQC reports per run and per group. Bundles: illumina, ont, fastq, bam, minimal.",
+    takes: "Samplesheet: sample, fastq_1, fastq_2, rundir, tags",
     gives: "MultiQC QC report",
   },
   seqsubmit: {
