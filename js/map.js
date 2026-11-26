@@ -80,7 +80,8 @@ function renderMap(M, from) {
   E.forEach((e) => (e.shift = [0, 0]));
   // Each far station gets one slot on its hub face; lines to the same station sit PAR apart in that slot, as at the
   // station, so the bundle runs parallel all the way.
-  const PAR = 10;
+  // 8px lines PAR apart stay apart on a diagonal too, where the gap shrinks to PAR / √2.
+  const PAR = 14;
   groupBy(hubEdges, (e) => e.face).forEach((es) => {
     es.sort((a, b) => far(a)[across(a.face)] - far(b)[across(b.face)]);
     const len = across(es[0].face) === "y" ? HEX_R : HEX_R * Math.sqrt(3);
