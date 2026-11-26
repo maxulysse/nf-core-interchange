@@ -1,0 +1,92 @@
+// Interchange map for nf-core/proteinfamilies. Stations (S) are pipelines and resources; edges (E) are handoffs between them.
+registerMap({
+  id: "proteinfamilies",
+  title: "Proteinfamilies Interchange",
+  checked: "2026-11-26",
+  overview:
+    'Which pipelines give nf-core/proteinfamilies its proteins, and which read the samplesheets it writes. Handoffs come from the <a href="https://vagkaratzas.github.io/meta-omics-sig/" target="_blank" rel="noopener">meta-omics SIG benchmark</a>, rechecked against the latest releases.',
+  S: [
+    {
+      id: "proteinfamilies",
+      x: 500,
+      y: 330,
+      hub: true,
+      side: "inside",
+      blurb:
+        "Clusters proteins into families and builds a model for each. It can write samplesheets for proteinfold and proteinannotator.",
+      takes: "Samplesheet: sample, fasta (amino acids: .fa, .fasta, .faa or .fas, optionally gzipped)",
+      gives: "Families, HMMs, alignments, family representatives (_reps.faa)",
+    },
+    {
+      id: "mag",
+      x: 150,
+      y: 200,
+      side: "below",
+      blurb: "Assembles metagenomes and bins the contigs into metagenome-assembled genomes (MAGs).",
+      takes:
+        "Samplesheet: sample, group, short_reads_1, short_reads_2, short_reads_platform (or long_reads, long_reads_platform)",
+      gives: "Assemblies, bins, Prodigal and Prokka proteins, taxonomy",
+    },
+    {
+      id: "metatdenovo",
+      x: 150,
+      y: 460,
+      side: "below",
+      blurb: "De novo assembly and annotation of metatranscriptomes. All samples go into one co-assembly.",
+      takes: "Samplesheet: sample, fastq_1, fastq_2; --assembler; --orf_caller",
+      gives: "One assembly, ORFs and proteins, counts per sample",
+    },
+    {
+      id: "proteinfold",
+      x: 850,
+      y: 200,
+      side: "below",
+      blurb: "Predicts protein structures with AlphaFold2, ColabFold, ESMFold and others.",
+      takes: "Samplesheet: id, fasta (or sequence); --split_fasta for a multi-FASTA",
+      gives: "Predicted structures, reports",
+    },
+    {
+      id: "proteinannotator",
+      x: 850,
+      y: 460,
+      side: "below",
+      blurb: "Protein statistics and functional annotation, with InterProScan and other tools.",
+      takes: "Samplesheet: id, fasta",
+      gives: "Annotations per protein",
+    },
+  ],
+  E: [
+    {
+      f: "mag",
+      t: "proteinfamilies",
+      line: "reads",
+      st: "conversion",
+      via: "Annotation/Prodigal/<assembler>/<sample>/*_prodigal.faa.gz into sample, fasta",
+      note: 'Contig ids repeat across MEGAHIT assemblies, so <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/mag_to_proteinfamilies.py" target="_blank" rel="noopener">mag_to_proteinfamilies.py</a> pools the proteins into one FASTA with sample-prefixed headers. Ran in the SIG benchmark: 2.5 million proteins, 5,864 families.',
+    },
+    {
+      f: "metatdenovo",
+      t: "proteinfamilies",
+      line: "reads",
+      st: "conversion",
+      via: "--orf_caller prodigal: prodigal/<assembly>.prodigal.faa.gz into sample, fasta",
+      note: 'One row, as metatdenovo makes one co-assembly. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/metatdenovo_to_proteinfamilies.py" target="_blank" rel="noopener">metatdenovo_to_proteinfamilies.py</a> writes it; ran in the SIG benchmark.',
+    },
+    {
+      f: "proteinfamilies",
+      t: "proteinfold",
+      line: "out",
+      st: "native",
+      via: "--skip_proteinfold_samplesheet false: proteinfold/samplesheet.csv into --input",
+      note: "Points at the family representatives, one multi-FASTA, so add --split_fasta. Needs proteinfold 2.0.0 or later. Not yet run.",
+    },
+    {
+      f: "proteinfamilies",
+      t: "proteinannotator",
+      line: "out",
+      st: "native",
+      via: "--skip_proteinannotator_samplesheet false: proteinannotator/samplesheet.csv into --input",
+      note: "proteinannotator 1.1.0 read it unchanged in the SIG benchmark. The fasta paths are absolute, so leave the proteinfamilies results where they are.",
+    },
+  ],
+});

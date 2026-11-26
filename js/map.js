@@ -5,7 +5,11 @@ narrow.addEventListener("change", () => location.reload());
 const F = narrow.matches ? 1.8 : 1;
 const ST = {
   native: { label: "Native", note: "both pipelines support it in code; the chain has not been run end to end" },
-  planned: { label: "Planned", note: "needs a hand-built samplesheet, a change in a pipeline, or a release" },
+  conversion: {
+    label: "Conversion",
+    note: "works today once the output is turned into the next samplesheet or params, by hand or with a script",
+  },
+  planned: { label: "Planned", note: "needs a change in a pipeline or a release, or nobody has checked it yet" },
 };
 const LN = { reads: "Input data", res: "Resources", out: "Results out" };
 const NS = "http://www.w3.org/2000/svg";
@@ -292,7 +296,7 @@ function renderMap(M, from) {
     highlight([e.node, byId[e.f].node, byId[e.t].node]);
     card.innerHTML = `<div class="kicker">Handoff · ${LN[e.line]}</div>
     <h2>${e.f} → ${e.t}</h2><div>${pill(e.st)}</div>
-    <dl><dt>Through</dt><dd class="mono">${e.via}</dd><dt>Note</dt><dd>${e.note}</dd></dl>`;
+    <dl><dt>Through</dt><dd class="mono">${esc(e.via)}</dd><dt>Note</dt><dd>${e.note}</dd></dl>`;
   }
   function reset() {
     highlight([]);
@@ -307,7 +311,7 @@ function renderMap(M, from) {
     if (ev.target === svg) reset();
   };
 
-  // Legend: colour is the line, opacity is the status.
+  // Legend: colour is the line, dashes and opacity are the status.
   const sw = (cls, color) =>
     `<svg width="38" height="10" aria-hidden="true"><line x1="5" y1="5" x2="33" y2="5" class="line ${cls}" style="stroke:${color};stroke-width:5"/></svg>`;
   document.getElementById("legend").innerHTML =
@@ -344,7 +348,7 @@ function renderMap(M, from) {
     .replaceChildren(
       ...E.map((e) =>
         row(
-          `<td>${e.f}</td><td>${e.t}</td><td>${pill(e.st)}</td><td class="mono">${e.via}</td><td>${e.note}</td>`,
+          `<td>${e.f}</td><td>${e.t}</td><td>${pill(e.st)}</td><td class="mono">${esc(e.via)}</td><td>${e.note}</td>`,
           () => selectEdge(e),
         ),
       ),

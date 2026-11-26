@@ -120,6 +120,25 @@ registerMap({
       takes: "Samplesheet: sample, group, short_reads_1, short_reads_2, short_reads_platform (or long_reads)",
       gives: "Assemblies, bins, taxonomy",
     },
+    {
+      id: "detaxizer",
+      x: 760,
+      y: 80,
+      side: "above",
+      blurb:
+        "Finds host or contaminant reads (human by default) with kraken2 or bbduk and filters them out. With --generate_downstream_samplesheets it writes sheets for taxprofiler and mag.",
+      takes: "Samplesheet: sample, short_reads_fastq_1, short_reads_fastq_2, long_reads_fastq_1 (gzipped FASTQ)",
+      gives: "Filtered FASTQ, downstream_samplesheets/taxprofiler.csv and mag-pe.csv",
+    },
+    {
+      id: "viralmetagenome",
+      x: 880,
+      y: 240,
+      side: "below",
+      blurb: "Reconstructs viral genomes from metagenomic reads and calls variants against them.",
+      takes: "Samplesheet: sample, fastq_1, fastq_2 (gzipped)",
+      gives: "Viral contigs, consensus genomes, variants",
+    },
   ],
   E: [
     {
@@ -190,9 +209,9 @@ registerMap({
       f: "fetchngs",
       t: "mag",
       line: "out",
-      st: "planned",
+      st: "conversion",
       via: "--nf_core_pipeline mag, then rename fastq_1, fastq_2 to short_reads_1, short_reads_2 and fill group",
-      note: "fetchngs 1.13.0 still writes fastq_1 and fastq_2, while mag 5.5.0 reads short_reads_1 and short_reads_2. It sets short_reads_platform but leaves group, which mag requires, empty.",
+      note: 'fetchngs 1.13.0 still writes fastq_1 and fastq_2, while mag 5.5.0 reads short_reads_1 and short_reads_2. It sets short_reads_platform but leaves group, which mag requires, empty (nf-core/fetchngs#401). <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> --target mag does the conversion.',
     },
     {
       f: "fetchngs",
@@ -209,6 +228,22 @@ registerMap({
       st: "planned",
       via: "samplesheet/samplesheet.csv, then --input",
       note: "No --nf_core_pipeline needed: every fetchngs sheet starts with sample, fastq_1, fastq_2. Not yet run with the extra metadata columns.",
+    },
+    {
+      f: "fetchngs",
+      t: "detaxizer",
+      line: "out",
+      st: "conversion",
+      via: "samplesheet/samplesheet.csv, then rename fastq_1, fastq_2 to short_reads_fastq_1, short_reads_fastq_2",
+      note: '--nf_core_pipeline has no detaxizer option. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> --target detaxizer does the rename, and detaxizer ran on its sheet in the meta-omics SIG benchmark.',
+    },
+    {
+      f: "fetchngs",
+      t: "viralmetagenome",
+      line: "out",
+      st: "conversion",
+      via: "samplesheet/samplesheet.csv, cut to sample, fastq_1, fastq_2",
+      note: '--nf_core_pipeline has no viralmetagenome option, but viralmetagenome takes the first three columns fetchngs writes. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> also renames the samples, which fetchngs names after the ENA experiment.',
     },
   ],
 });

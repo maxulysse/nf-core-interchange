@@ -1,0 +1,73 @@
+// Interchange map for nf-core/viralmetagenome. Stations (S) are pipelines and resources; edges (E) are handoffs between them.
+registerMap({
+  id: "viralmetagenome",
+  title: "Viralmetagenome Interchange",
+  checked: "2026-11-26",
+  overview:
+    'Where nf-core/viralmetagenome gets its reads, and which pipelines take its viral contigs. Handoffs come from the <a href="https://vagkaratzas.github.io/meta-omics-sig/" target="_blank" rel="noopener">meta-omics SIG benchmark</a>, rechecked against the latest releases.',
+  S: [
+    {
+      id: "viralmetagenome",
+      x: 500,
+      y: 330,
+      hub: true,
+      side: "inside",
+      blurb: "Reconstructs viral genomes from metagenomic reads and calls variants against them.",
+      takes: "Samplesheet: sample, fastq_1, fastq_2 (gzipped)",
+      gives: "Viral contigs, consensus genomes, variants",
+    },
+    {
+      id: "fetchngs",
+      x: 150,
+      y: 330,
+      side: "below",
+      blurb: "Downloads FASTQ for SRA, ENA, DDBJ or GEO ids and writes a samplesheet for the next pipeline.",
+      takes: "ids.csv: one accession per line",
+      gives: "FASTQ, samplesheet/samplesheet.csv (--nf_core_pipeline picks the columns)",
+    },
+    {
+      id: "phageannotator",
+      x: 850,
+      y: 200,
+      side: "below",
+      blurb: "Identifies and annotates phage sequences in assembled contigs. No release yet.",
+      takes: "Samplesheet: sample, group, fastq_1, fasta (gzipped)",
+      gives: "Phage annotations",
+    },
+    {
+      id: "phyloplace",
+      x: 850,
+      y: 460,
+      side: "below",
+      blurb: "Places query sequences on a reference phylogeny.",
+      takes: "--phyloplace_input: sample, queryseqfile, refseqfile, refphylogeny, model",
+      gives: "Placements, classifications",
+    },
+  ],
+  E: [
+    {
+      f: "fetchngs",
+      t: "viralmetagenome",
+      line: "reads",
+      st: "conversion",
+      via: "samplesheet/samplesheet.csv, cut to sample, fastq_1, fastq_2",
+      note: '--nf_core_pipeline has no viralmetagenome option, but viralmetagenome takes the first three columns fetchngs writes. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> also renames the samples, which fetchngs names after the ENA experiment.',
+    },
+    {
+      f: "viralmetagenome",
+      t: "phageannotator",
+      line: "out",
+      st: "conversion",
+      via: "per-assembler contigs (gzipped) and their reads into sample, group, fastq_1, fasta",
+      note: "The reads come from upstream and group from you. The combined contigs are not gzipped, and phageannotator rejects them. phageannotator has no release yet.",
+    },
+    {
+      f: "viralmetagenome",
+      t: "phyloplace",
+      line: "out",
+      st: "conversion",
+      via: "contigs into queryseqfile",
+      note: "Each row also needs refseqfile, refphylogeny and model. No pipeline here makes them, and they depend on the clade.",
+    },
+  ],
+});
