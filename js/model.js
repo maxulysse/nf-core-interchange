@@ -21,142 +21,127 @@ TREE.children.forEach((g, i) =>
 const byField = (a, b) =>
   (FIELD[a] ?? Infinity) - (FIELD[b] ?? Infinity) || (LAST[a] ?? 0) - (LAST[b] ?? 0) || a.localeCompare(b);
 
-// Places stations on the star around the hub, at most six a side (the most a hub face takes before its lines
-// crowd). Inputs fan in from the left, resources from the top, outputs fan out to the right; each spills to the
-// next side only when full; outputs too many for the right share it evenly with the bottom (and the top). Inputs run in
-// field order down the left; outputs in field order clockwise from the top. A stop between sources and the
-// hub (seqinspector) takes the left. A map's own `at` places a station by hand; a side holding one takes nothing else.
-// A hub face holds about five lines on a side (the left and right faces are short) and eight along the top or
-// bottom, and a side about six labels; past that a station goes to the side with most room.
-const MAX_SIDE = 6;
-// A top or bottom row holds five, the most that stay aligned, readable and entered vertically; a busy map puts
-// the rest on the side columns, up to eight each.
-const HOLD = { l: 8, r: 8, t: 5, b: 5 };
-const LINES = { l: 5, r: 5, t: 8, b: 8 };
+// Places stations on the star around the hub: inputs fan in from the left, resources from the top, outputs fan
+// out to the right, each in field order. A side takes `n` stations and `lines` hub lines; once outputs would fill
+// the right they share it evenly with the bottom, the top (when no resource uses it, or when both are full) and
+// the left (when no input uses it). A very busy map (twelve outputs or more) moves its resources to the left with
+// the inputs and lets each side fill to `max`. A stop between sources and the hub (seqinspector) sits left of the
+// hub, level with it. A map's own `at` places a station by hand; a side holding one takes nothing else.
+const SIDE = {
+  l: { n: 6, max: 8, lines: 5 },
+  r: { n: 6, max: 8, lines: 5 },
+  t: { n: 5, max: 5, lines: 8 },
+  b: { n: 5, max: 5, lines: 8 },
+};
+// The order each role tries sides in, and the order outputs run clockwise from the top.
 const PREFER = { in: ["l", "b", "t", "r"], res: ["t", "r", "l", "b"], out: ["r", "b", "t", "l"] };
+const RING = { in: PREFER.in, res: PREFER.res, out: ["t", "r", "b", "l"] };
 function layout(M, E) {
-  // A stop between sources and the hub (seqinspector) sits left of the hub, its sources on the left side beyond it.
   const stop = E.find((e) => e.f !== M.id && e.t !== M.id && E.some((h) => h.f === e.t && h.t === M.id))?.t;
   const feeders = stop ? E.filter((e) => e.t === stop && e.f !== M.id).map((e) => e.f) : [];
   const ids = [...new Set(E.flatMap((e) => [e.f, e.t]))].filter(
     (id) => id !== M.id && !M.at?.[id] && id !== stop && !feeders.includes(id),
   );
   const into = (id, res) => E.some((e) => e.f === id && e.t === M.id && !!e.res === res);
+  const lines = (id) => E.filter((e) => [e.f, e.t].includes(id) && [e.f, e.t].includes(M.id)).length;
   const ins = ids.filter((id) => into(id, false)).sort(byField),
     res = ids.filter((id) => !ins.includes(id) && into(id, true)).sort(byField),
     outs = ids.filter((id) => !ins.includes(id) && !res.includes(id)).sort(byField);
+  const outLines = outs.reduce((n, id) => n + lines(id), 0);
+
+  // 1. How many stations of each role go on each side.
   const closed = new Set(
     Object.values(M.at ?? {}).map(({ x, y }) =>
       x <= 200 ? "l" : x >= 800 ? "r" : y <= 150 ? "t" : y >= 550 ? "b" : null,
     ),
   );
-  const lines = (id) => E.filter((e) => [e.f, e.t].includes(id) && [e.f, e.t].includes(M.id)).length;
+  const busy = outs.length >= 12 && !stop;
+  const limit = (k) => (busy ? { n: SIDE[k].max, lines: Math.max(SIDE[k].lines, SIDE[k].max) } : SIDE[k]);
+  const share =
+    outLines >= SIDE.r.lines || outs.length >= SIDE.r.n
+      ? ["r", "b"]
+          .concat(!res.length || outLines > SIDE.r.lines + SIDE.b.lines - 3 || outs.length > 11 ? ["t"] : [])
+          .concat(!ins.length && !stop ? ["l"] : [])
+      : [];
   const count = { t: 0, r: 0, b: 0, l: 0 },
     used = { t: 0, r: 0, b: 0, l: 0 },
-    per = { in: { t: 0, r: 0, b: 0, l: 0 }, res: { t: 0, r: 0, b: 0, l: 0 }, out: { t: 0, r: 0, b: 0, l: 0 } };
-  // Next to a stop, the left keeps room for two more inputs, above and below its fan.
-  if (stop) {
-    count.l = MAX_SIDE - 2;
-    used.l = LINES.l - 2;
-  }
-  // Outputs that would fill the right share it evenly with the bottom, with the top when no resource uses it or
-  // both are full, and with the left when no input uses it.
-  const outLines = outs.reduce((n, id) => n + lines(id), 0);
-  // On a very busy map the resources join the inputs on the left and the top goes to the outputs; the left and
-  // right then hold up to eight lines.
-  const busy = outs.length >= 2 * MAX_SIDE && !stop,
-    room = busy ? { ...LINES, l: HOLD.l, r: HOLD.r } : LINES;
-  const share =
-    outLines >= LINES.r || outs.length >= MAX_SIDE
-      ? [
-          "r",
-          "b",
-          ...(!res.length || outLines > LINES.r + LINES.b - 3 || outs.length > 2 * MAX_SIDE - 1 ? ["t"] : []),
-          ...(!ins.length && !stop ? ["l"] : []),
-        ]
-      : null;
+    per = { in: { ...count }, res: { ...count }, out: { ...count } };
+  // A stop's fan takes the middle of the left, leaving room for two more inputs above and below it.
+  if (stop) [count.l, used.l] = [SIDE.l.n - 2, SIDE.l.lines - 2];
+  const pick = (role, w) => {
+    const order = (busy && role === "res" ? ["l", "t", "r", "b"] : PREFER[role]).filter(
+      (k) => !closed.has(k) && !(role === "out" && k === "l" && count.l),
+    );
+    const open = order.filter((k) => count[k] < limit(k).n && used[k] + w <= limit(k).lines);
+    const shared = role === "out" && open.filter((k) => share.includes(k)).sort((a, b) => used[a] - used[b])[0];
+    const roomiest = order
+      .filter((k) => count[k] < SIDE[k].max)
+      .sort((a, b) => used[a] / SIDE[a].lines - used[b] / SIDE[b].lines)[0];
+    return shared || open[0] || roomiest;
+  };
   for (const [role, list] of [
     ["in", ins],
     ["res", res],
     ["out", outs],
   ])
     for (const id of list) {
-      const w = lines(id);
-      // Outputs never join inputs or resources on the left.
-      const prefer = (busy && role === "res" ? ["l", "t", "r", "b"] : PREFER[role]).filter(
-        (k) => !(role === "out" && k === "l" && count.l),
-      );
-      const open = prefer.filter(
-        (k) => !closed.has(k) && count[k] < Math.min(busy ? HOLD[k] : MAX_SIDE, HOLD[k]) && used[k] + w <= room[k],
-      );
-      const roomiest = prefer
-        .filter((k) => !closed.has(k) && count[k] < HOLD[k])
-        .sort((a, b) => used[a] / LINES[a] - used[b] / LINES[b])[0];
-      const split =
-        role === "out" && share && open.filter((k) => share.includes(k)).sort((a, b) => used[a] - used[b])[0];
-      const side = split || open[0] || roomiest;
-      count[side]++;
-      used[side] += w;
-      per[role][side]++;
+      const k = pick(role, lines(id));
+      count[k]++;
+      used[k] += lines(id);
+      per[role][k]++;
     }
-  const cut = (list) => {
-    let k = 0;
-    return (m) => list.slice(k, (k += m));
-  };
-  const inAt = cut(ins),
-    resAt = cut(res),
-    outAt = cut(outs);
-  const inL = inAt(per.in.l),
-    inB = inAt(per.in.b),
-    inT = inAt(per.in.t),
-    inR = inAt(per.in.r);
-  const resT = resAt(per.res.t),
-    resR = resAt(per.res.r),
-    resL = resAt(per.res.l),
-    resB = resAt(per.res.b);
-  const outT = outAt(per.out.t),
-    outR = outAt(per.out.r),
-    outB = outAt(per.out.b),
-    outL = outAt(per.out.l);
-  // Each side read left to right or top to bottom.
-  const top = [...inT, ...resT, ...outT],
-    right = [...inR, ...resR, ...outR],
-    bottom = [...inB, ...resB, ...outB.reverse()],
-    left = [...resL, ...inL, ...outL.reverse()];
-  // Spread m stations evenly around the middle of a side; two sit wide apart, as a mirrored pair.
-  const spread = (m, step, pair) => [...Array(m)].map((_, i) => (i - (m - 1) / 2) * (m === 2 ? pair : step));
-  const along = (m, span, pair) => spread(m, m > 1 ? Math.min(span[0], span[1] / (m - 1)) : 0, pair);
-  // On a side column, the one station with more lines to the hub than any other sits level with it, so its
-  // bundle runs straight; the others keep their order either side of it. A tie spreads evenly, mirrored.
-  const offsets = (list, span, pair, centre = false) => {
-    const w = list.map(lines),
+
+  // 2. Which stations: each role's sorted list, cut along its ring of sides.
+  const side = { t: {}, r: {}, b: {}, l: {} };
+  for (const [role, list] of [
+    ["in", ins],
+    ["res", res],
+    ["out", outs],
+  ])
+    for (const k of RING[role]) side[k][role] = list.splice(0, per[role][k]);
+  // Each side read left to right or top to bottom; outputs on the bottom and left run back, clockwise.
+  const top = [...side.t.in, ...side.t.res, ...side.t.out],
+    right = [...side.r.in, ...side.r.res, ...side.r.out],
+    bottom = [...side.b.in, ...side.b.res, ...side.b.out.reverse()],
+    left = [...side.l.res, ...side.l.in, ...side.l.out.reverse()];
+
+  // 3. Where: offsets from the middle of a side, `step` apart; two stations sit `pair` apart. On a side column
+  // the one station with more hub lines than any other sits level with the hub, so its bundle runs straight.
+  const place = (list, step, pair, centre = false) => {
+    const m = list.length,
+      w = list.map(lines),
       k = w.indexOf(Math.max(...w));
-    const busiest = w[k] > 1 && w.filter((n) => n === w[k]).length === 1;
-    if (!centre || list.length < 2 || !busiest) return along(list.length, span, pair);
-    const step = Math.min(span[0], span[1] / 2 / Math.max(k, list.length - 1 - k));
-    return list.map((_, i) => (i - k) * step);
+    if (centre && m > 1 && w[k] > 1 && w.filter((n) => n === w[k]).length === 1)
+      return list.map((_, i) => (i - k) * step);
+    return list.map((_, i) => (i - (m - 1) / 2) * (m === 2 ? pair : step));
   };
-  const at = {};
+  // A row of up to three stays within reach of the hub's top or bottom face, so its lines arrive vertically; a row
+  // of four or five sits further out, at most 120 apart and within 200 of the middle, for the same reason.
+  const row = (m) =>
+    m <= 3
+      ? { step: m > 1 ? Math.min(124, 248 / (m - 1)) : 0, out: 0 }
+      : { step: Math.min(120, 400 / (m - 1)), out: 30 };
   // Both side columns use one step, set by the fuller one, so the two sides read alike.
   const tall = Math.max(left.length, right.length),
-    column = [Math.min(135, (tall > 6 ? 480 : 400) / Math.max(tall - 1, 1)), 10000];
-  // A row of up to three stays within reach of the hub's top or bottom face, so its lines arrive vertically.
-  // A row of four or five sits further out, at most 120 apart and within 200 of the middle, so its outer lines
-  // still arrive vertically.
-  const row = (m) => (m <= 3 ? [124, 248, 248, 0] : [120, 400, 248, 30]);
-  const [ts, tw, tp, tf] = row(top.length),
-    [bs, bw, bp, bf] = row(bottom.length);
-  offsets(top, [ts, tw], tp).forEach((d, i) => (at[top[i]] = { x: 500 + d, y: 80 - tf, side: "above" }));
-  offsets(bottom, [bs, bw], bp).forEach((d, i) => (at[bottom[i]] = { x: 500 + d, y: 600 + bf, side: "below" }));
+    column = Math.min(135, (tall > 6 ? 480 : 400) / Math.max(tall - 1, 1));
+  const at = {};
+  const set = (list, offs, xy) => list.forEach((id, i) => (at[id] = xy(offs[i])));
+  set(top, place(top, row(top.length).step, 248), (d) => ({ x: 500 + d, y: 80 - row(top.length).out, side: "above" }));
+  set(bottom, place(bottom, row(bottom.length).step, 248), (d) => ({
+    x: 500 + d,
+    y: 600 + row(bottom.length).out,
+    side: "below",
+  }));
   if (stop) {
     // The stop sits level with the hub, so source, stop and hub run as one straight line; the other inputs sit
     // above and below it, further out when the stop fans in two sources.
     const wide = feeders.length > 1 ? 200 : 135;
-    left.forEach((id, i) => (at[id] = { x: 120, y: 340 + (i ? wide : -wide), side: "below" }));
+    set(left, [-wide, wide], (d) => ({ x: 120, y: 340 + d, side: "below" }));
     at[stop] = { x: 300, y: 340, side: "below", tag: "optional" };
-    along(feeders.length, [100, 520], 200).forEach((d, i) => (at[feeders[i]] = { x: 120, y: 340 + d, side: "below" }));
-  } else offsets(left, column, 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
-  offsets(right, column, 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
+    const fan = feeders.length > 1 ? Math.min(100, 520 / (feeders.length - 1)) : 0;
+    set(feeders, place(feeders, fan, 200), (d) => ({ x: 120, y: 340 + d, side: "below" }));
+  } else set(left, place(left, column, 270, true), (d) => ({ x: 120, y: 340 + d, side: "below" }));
+  set(right, place(right, column, 270, true), (d) => ({ x: 880, y: 340 + d, side: "below" }));
   return { ...at, ...M.at };
 }
 
