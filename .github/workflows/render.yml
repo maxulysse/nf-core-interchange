@@ -2,6 +2,8 @@ name: Render
 
 on:
   pull_request:
+  # The weekly catalogue PR is opened with GITHUB_TOKEN, which starts no pull_request runs: it dispatches these.
+  workflow_dispatch:
   push:
     branches: [main]
 
