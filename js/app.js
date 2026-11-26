@@ -34,6 +34,8 @@ const groupLinks = (id) =>
   PARENTS[id].map((g) => `<a href="#${g.id}">${pathTo(g).slice(1).map(label).join(" › ")}</a>`).join(", ");
 const plural = (k, w) => `${k} ${w}${k === 1 ? "" : "s"}`;
 const info = (id) => CATALOGUE[id] ?? { desc: "", rel: null };
+// The repository URL lives once, in the GitHub link in the page header.
+const REPO = document.querySelector("a.gh").href;
 
 // Spiral placement in axial hex coordinates: the centre, then each ring outward.
 const DIRS = [
@@ -134,7 +136,7 @@ function selectTile(p) {
   const { desc, rel } = info(p.id);
   pcard.innerHTML = `<div class="kicker">Pipeline · ${rel ? esc(rel) : "in development"}</div><h2>${p.id}</h2>
     ${desc ? `<p>${esc(desc)}</p>` : ""}
-    <p style="color:var(--muted)">No interchange map yet. To add one, see <a href="https://github.com/maxulysse/nf-core-interchange/blob/main/docs/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a>.</p>
+    <p style="color:var(--muted)">No interchange map yet. To add one, see <a href="${REPO}/blob/main/docs/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a>.</p>
     <dl><dt>${PARENTS[p.id].length > 1 ? "Groups" : "Group"}</dt><dd>${groupLinks(p.id)}</dd>
     <dt>Link</dt><dd><a href="https://nf-co.re/${p.id}" target="_blank" rel="noopener">nf-co.re/${p.id}</a></dd></dl>`;
 }
