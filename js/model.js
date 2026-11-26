@@ -48,6 +48,7 @@ function layout(M, E) {
     res = ids.filter((id) => !ins.includes(id) && into(id, true)).sort(byField),
     outs = ids.filter((id) => !ins.includes(id) && !res.includes(id)).sort(byField);
   const outLines = outs.reduce((n, id) => n + lines(id), 0);
+  const roles = { in: ins, res, out: outs };
 
   // 1. How many stations of each role go on each side.
   const closed = new Set(
@@ -56,12 +57,11 @@ function layout(M, E) {
     ),
   );
   const busy = outs.length >= 12 && !stop;
-  const limit = (k) => (busy ? { n: SIDE[k].max, lines: Math.max(SIDE[k].lines, SIDE[k].max) } : SIDE[k]);
+  // A busy map packs every hub face to the eight lines the longest face holds.
+  const limit = (k) => (busy ? { n: SIDE[k].max, lines: 8 } : SIDE[k]);
   const share =
     outLines >= SIDE.r.lines || outs.length >= SIDE.r.n
-      ? ["r", "b"]
-          .concat(!res.length || outLines > SIDE.r.lines + SIDE.b.lines - 3 || outs.length > 11 ? ["t"] : [])
-          .concat(!ins.length && !stop ? ["l"] : [])
+      ? ["r", "b"].concat(!res.length || busy ? ["t"] : []).concat(!ins.length && !stop ? ["l"] : [])
       : [];
   const count = { t: 0, r: 0, b: 0, l: 0 },
     used = { t: 0, r: 0, b: 0, l: 0 },
@@ -79,11 +79,7 @@ function layout(M, E) {
       .sort((a, b) => used[a] / SIDE[a].lines - used[b] / SIDE[b].lines)[0];
     return shared || open[0] || roomiest;
   };
-  for (const [role, list] of [
-    ["in", ins],
-    ["res", res],
-    ["out", outs],
-  ])
+  for (const [role, list] of Object.entries(roles))
     for (const id of list) {
       const k = pick(role, lines(id));
       count[k]++;
@@ -93,11 +89,7 @@ function layout(M, E) {
 
   // 2. Which stations: each role's sorted list, cut along its ring of sides.
   const side = { t: {}, r: {}, b: {}, l: {} };
-  for (const [role, list] of [
-    ["in", ins],
-    ["res", res],
-    ["out", outs],
-  ])
+  for (const [role, list] of Object.entries(roles))
     for (const k of RING[role]) side[k][role] = list.splice(0, per[role][k]);
   // Each side read left to right or top to bottom; outputs on the bottom and left run back, clockwise.
   const top = [...side.t.in, ...side.t.res, ...side.t.out],
