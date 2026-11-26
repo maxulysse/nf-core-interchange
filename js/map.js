@@ -77,7 +77,6 @@ function renderMap(M, from) {
       dy = s.y - HUB.y;
     e.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "r" : "l") : dy > 0 ? "b" : "t";
   });
-  E.forEach((e) => (e.shift = [0, 0]));
   // Each far station gets one slot on its hub face; lines to the same station sit PAR apart in that slot, as at the
   // station, so the bundle runs parallel all the way.
   // Centre-to-centre spacing of lines in a bundle, on straight runs and diagonals alike (see offset).
@@ -87,16 +86,11 @@ function renderMap(M, from) {
     const len = across(es[0].face) === "y" ? HEX_R : HEX_R * Math.sqrt(3);
     const slots = groupBy(es, (e) => far(e).id);
     slots.forEach((g, j) =>
-      g.forEach((e, i) => (e.off = ((j + 0.5) / slots.length - 0.5) * len + (i - (g.length - 1) / 2) * PAR)),
+      g.forEach((e, i) => {
+        e.lane = (i - (g.length - 1) / 2) * PAR;
+        e.off = ((j + 0.5) / slots.length - 0.5) * len + e.lane;
+      }),
     );
-  });
-  // At the far station they sit PAR apart too, in the same order as at the hub, so they meet the station as one bundle.
-  groupBy(hubEdges, (e) => [e.f, e.t].sort().join()).forEach((es) => {
-    es.sort((a, b) => a.off - b.off);
-    es.forEach((e, i) => {
-      const d = (i - (es.length - 1) / 2) * PAR;
-      e.shift = across(e.face) === "y" ? [0, d] : [d, 0];
-    });
   });
   // A line to a station level with its hub face runs straight: its port moves to the station's height (or x)
   // when the lines beside it still fit, and the others step aside to stay PAR apart.
@@ -107,7 +101,7 @@ function renderMap(M, from) {
       gap = Math.min(PAR, (2 * half) / Math.max(es.length - 1, 1));
     es.sort((a, b) => a.off - b.off);
     es.forEach((e, i) => {
-      const want = far(e)[k] + e.shift[k === "y" ? 1 : 0] - HUB[k];
+      const want = far(e)[k] + e.lane - HUB[k];
       e.level = want >= -half + i * gap && want <= half - (es.length - 1 - i) * gap;
       if (e.level) e.off = want;
     });
@@ -116,10 +110,6 @@ function renderMap(M, from) {
     for (let i = es.length - 2; i >= 0; i--)
       if (!es[i].level) es[i].off = Math.max(-half, Math.min(es[i].off, es[i + 1].off - gap));
   });
-  function port(s, e) {
-    if (!s.hub) return [s.x + e.shift[0], s.y + e.shift[1]];
-    return hubPort(e.face, e.off);
-  }
   function hubPort(face, off) {
     if (face === "t" || face === "b")
       return [HUB.x + off, HUB.y + (face === "b" ? 1 : -1) * (HEX_R - Math.abs(off) / Math.sqrt(3))];
@@ -195,7 +185,8 @@ function renderMap(M, from) {
   }
   // A hub line is drawn from the middle of its bundle, offset to its own place, so a bundle keeps one spacing.
   function pathFor(e) {
-    if (e.f !== HUB.id && e.t !== HUB.id) return rounded(route(port(byId[e.f], e), port(byId[e.t], e)));
+    const [a, b] = [byId[e.f], byId[e.t]];
+    if (!a.hub && !b.hub) return rounded(route([a.x, a.y], [b.x, b.y]));
     const s = far(e),
       bundle = hubEdges.filter((h) => far(h) === s),
       mid = bundle.reduce((t, h) => t + h.off, 0) / bundle.length;
@@ -244,18 +235,11 @@ function renderMap(M, from) {
 
   // Which half of the loop a ball runs: 1 or 2 on a two-leg route through a station, 0 (the whole loop) otherwise.
   const via = E.filter((e) => e.f !== HUB.id && e.t !== HUB.id);
-  const legOf = (e) =>
-    e.t === HUB.id
-      ? via.some((v) => v.t === e.f)
-        ? 2
-        : 0
-      : e.f === HUB.id
-        ? via.some((v) => v.f === e.t)
-          ? 1
-          : 0
-        : E.some((h) => h.f === e.t && h.t === HUB.id)
-          ? 1
-          : 2;
+  const legOf = (e) => {
+    if (e.t === HUB.id) return via.some((v) => v.t === e.f) ? 2 : 0;
+    if (e.f === HUB.id) return via.some((v) => v.f === e.t) ? 1 : 0;
+    return E.some((h) => h.f === e.t && h.t === HUB.id) ? 1 : 2;
+  };
   const LEG = {
     1: { keyPoints: "0;1;1", keyTimes: "0;0.5;1", calcMode: "linear" },
     2: { keyPoints: "0;0;1", keyTimes: "0;0.5;1", calcMode: "linear" },
