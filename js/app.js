@@ -134,7 +134,7 @@ function selectTile(p) {
   const { desc, rel } = info(p.id);
   pcard.innerHTML = `<div class="kicker">Pipeline · ${rel ? esc(rel) : "in development"}</div><h2>${p.id}</h2>
     ${desc ? `<p>${esc(desc)}</p>` : ""}
-    <p style="color:var(--muted)">No interchange map yet. Add one in <code>maps/${p.id}.js</code> and it opens from this tile.</p>
+    <p style="color:var(--muted)">No interchange map yet. To add one, see <a href="https://github.com/maxulysse/nf-core-interchange/blob/main/docs/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a>.</p>
     <dl><dt>${PARENTS[p.id].length > 1 ? "Groups" : "Group"}</dt><dd>${groupLinks(p.id)}</dd>
     <dt>Link</dt><dd><a href="https://nf-co.re/${p.id}" target="_blank" rel="noopener">nf-co.re/${p.id}</a></dd></dl>`;
 }

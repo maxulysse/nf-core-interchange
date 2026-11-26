@@ -272,8 +272,8 @@ function renderMap(M, from) {
     card.innerHTML = `<div class="kicker">${s.ext ? "Resource" : `Pipeline · ${esc(release(s))}${s.tag ? ` (${s.tag})` : ""}`}</div>
     <h2>${s.id}</h2><p>${s.blurb}</p>
     <dl>${s.takes ? `<dt>Takes</dt><dd>${s.takes}</dd>` : ""}<dt>Gives</dt><dd>${s.gives}</dd>
-    ${ins.length ? `<dt>From</dt><dd>${ins.map((e) => e.f).join(", ")}</dd>` : ""}
-    ${outs.length ? `<dt>To</dt><dd>${outs.map((e) => e.t).join(", ")}</dd>` : ""}
+    ${ins.length ? `<dt>From</dt><dd>${[...new Set(ins.map((e) => e.f))].join(", ")}</dd>` : ""}
+    ${outs.length ? `<dt>To</dt><dd>${[...new Set(outs.map((e) => e.t))].join(", ")}</dd>` : ""}
     <dt>Link</dt><dd>${link(s)}</dd></dl>
     ${!s.hub && MAPS[s.id] ? `<button class="open" type="button">Open the ${s.id} interchange →</button>` : ""}`;
     card.querySelector(".open")?.addEventListener("click", () => openMap(s));
