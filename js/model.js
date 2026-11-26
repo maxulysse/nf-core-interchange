@@ -57,6 +57,10 @@ function layout(M, E) {
   // Outputs that would fill the right share it evenly with the bottom, with the top when no resource uses it or
   // both are full, and with the left when no input uses it.
   const outLines = outs.reduce((n, id) => n + lines(id), 0);
+  // On a very busy map the resources join the inputs on the left, which then holds up to eight lines, and the
+  // top goes to the outputs.
+  const busy = outs.length >= 2 * MAX_SIDE && !stop,
+    room = busy ? { ...LINES, l: HOLD.l } : LINES;
   const share =
     outLines >= LINES.r || outs.length >= MAX_SIDE
       ? [
@@ -73,10 +77,11 @@ function layout(M, E) {
   ])
     for (const id of list) {
       const w = lines(id);
-      const open = PREFER[role].filter(
-        (k) => !closed.has(k) && count[k] < Math.min(MAX_SIDE, HOLD[k]) && used[k] + w <= LINES[k],
+      const prefer = busy && role === "res" ? ["l", "t", "r", "b"] : PREFER[role];
+      const open = prefer.filter(
+        (k) => !closed.has(k) && count[k] < Math.min(busy ? HOLD[k] : MAX_SIDE, HOLD[k]) && used[k] + w <= room[k],
       );
-      const roomiest = PREFER[role]
+      const roomiest = prefer
         .filter((k) => !closed.has(k) && count[k] < HOLD[k])
         .sort((a, b) => used[a] / LINES[a] - used[b] / LINES[b])[0];
       const split =
