@@ -3,7 +3,7 @@ const ST = {
   native: { label: "Native", note: "the output goes straight in: no conversion needed" },
   conversion: {
     label: "Conversion",
-    note: "works today once the output is turned into the next samplesheet or params, by hand or with a script",
+    note: "you reshape the output first: build the next samplesheet, or pass the files as params",
   },
 };
 
