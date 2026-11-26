@@ -15,3 +15,5 @@ A station on any map that has its own map opens it on a second click, or from th
 ## Checks
 
 The Render workflow runs on each pull request. It checks that every catalogue pipeline sits in the tree and that every map has one hub, unique stations and handoffs between them, then loads the honeycomb, every group and every map in headless Chrome and fails on script errors.
+
+The Linting workflow runs [prek](https://github.com/j178/prek) with the hooks in `.pre-commit-config.yaml`: Prettier, whitespace and end-of-file fixes, and ruff for `bin/`. Run them before each commit with `prek install`, or once with `prek run --all-files`.

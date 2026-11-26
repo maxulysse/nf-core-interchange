@@ -1,73 +1,126 @@
 <!doctype html>
 <html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>nf-core/interchange</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Overpass:wght@600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="style.css">
-<script>
-// data-theme always holds the active theme: the stored choice, else the system setting. It is set before paint.
-let stored = null;
-try { stored = localStorage.getItem("theme"); } catch {}
-document.documentElement.dataset.theme = stored ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-</script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>nf-core/interchange</title>
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Overpass:wght@600;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+  />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // data-theme always holds the active theme: the stored choice, else the system setting. It is set before paint.
+    let stored = null;
+    try {
+      stored = localStorage.getItem("theme");
+    } catch {}
+    document.documentElement.dataset.theme =
+      stored ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  </script>
 
-<div class="wrap">
-  <header>
-    <div class="title">
-      <h1>nf-core/interchange</h1>
-      <a class="gh" href="https://github.com/maxulysse/nf-core-interchange" aria-label="Source on GitHub" title="Source on GitHub">
-        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-      </a>
-    </div>
-    <button class="theme" id="theme" type="button"></button>
-  </header>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>nf-core/interchange</h1>
+        <a
+          class="gh"
+          href="https://github.com/maxulysse/nf-core-interchange"
+          aria-label="Source on GitHub"
+          title="Source on GitHub"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+            />
+          </svg>
+        </a>
+      </div>
+      <button class="theme" id="theme" type="button"></button>
+    </header>
 
-  <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
+    <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
 
-  <section class="view" id="v-pave">
-    <p class="lede" id="lede">nf-core pipelines, grouped by field or by the data you start from, then by what you want to do with it. Open a group to go one level down, and a pipeline to see its interchange: where its inputs and resources come from, and where its results go next.</p>
-    <div class="main">
-      <div class="map pave"><svg id="pave" role="group" aria-label="Honeycomb of groups and pipelines"></svg></div>
-      <aside class="card" id="pcard" aria-live="polite"></aside>
-    </div>
-  </section>
+    <section class="view" id="v-pave">
+      <p class="lede" id="lede">
+        nf-core pipelines, grouped by field or by the data you start from, then by what you want to do with it. Open a
+        group to go one level down, and a pipeline to see its interchange: where its inputs and resources come from, and
+        where its results go next.
+      </p>
+      <div class="main">
+        <div class="map pave"><svg id="pave" role="group" aria-label="Honeycomb of groups and pipelines"></svg></div>
+        <aside class="card" id="pcard" aria-live="polite"></aside>
+      </div>
+    </section>
 
-  <section class="view" id="v-map" hidden>
-    <h2 id="map-title" style="font-size:24px"></h2>
-    <p class="lede" id="map-groups" style="margin-top:-12px"></p>
-    <div class="main">
-      <div class="map"><svg id="map" viewBox="0 0 1000 680" role="group"></svg><div class="legend" id="legend"></div></div>
-      <aside class="card" id="card" aria-live="polite"></aside>
-    </div>
-    <details>
-      <summary>Stations</summary>
-      <div class="scroller"><table><thead><tr><th>Pipeline</th><th>Release</th><th>Takes</th><th>Gives</th></tr></thead><tbody id="t-st"></tbody></table></div>
-    </details>
-    <details open>
-      <summary>Handoffs</summary>
-      <div class="scroller"><table><thead><tr><th>From</th><th>To</th><th>Status</th><th>Connects through</th><th>Note</th></tr></thead><tbody id="t-e"></tbody></table></div>
-    </details>
+    <section class="view" id="v-map" hidden>
+      <h2 id="map-title" style="font-size: 24px"></h2>
+      <p class="lede" id="map-groups" style="margin-top: -12px"></p>
+      <div class="main">
+        <div class="map">
+          <svg id="map" viewBox="0 0 1000 680" role="group"></svg>
+          <div class="legend" id="legend"></div>
+        </div>
+        <aside class="card" id="card" aria-live="polite"></aside>
+      </div>
+      <details>
+        <summary>Stations</summary>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr>
+                <th>Pipeline</th>
+                <th>Release</th>
+                <th>Takes</th>
+                <th>Gives</th>
+              </tr>
+            </thead>
+            <tbody id="t-st"></tbody>
+          </table>
+        </div>
+      </details>
+      <details open>
+        <summary>Handoffs</summary>
+        <div class="scroller">
+          <table>
+            <thead>
+              <tr>
+                <th>From</th>
+                <th>To</th>
+                <th>Status</th>
+                <th>Connects through</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="t-e"></tbody>
+          </table>
+        </div>
+      </details>
+      <footer>
+        <p>
+          Draft, checked on <span id="map-checked"></span> against each pipeline's latest release
+          (<code>nextflow_schema.json</code>, <code>assets/schema_input.json</code>, workflow code).
+        </p>
+        <p id="map-credits"></p>
+      </footer>
+    </section>
+
     <footer>
-      <p>Draft, checked on <span id="map-checked"></span> against each pipeline's latest release (<code>nextflow_schema.json</code>, <code>assets/schema_input.json</code>, workflow code).</p>
-      <p id="map-credits"></p>
+      <p>
+        Inspired by the <a href="https://nf-co.re/">nf-core</a> community and the contributors of every pipeline on the
+        map.
+      </p>
     </footer>
-  </section>
+  </div>
 
-  <footer>
-    <p>Inspired by the <a href="https://nf-co.re/">nf-core</a> community and the contributors of every pipeline on the map.</p>
-  </footer>
-</div>
-
-<script src="catalogue.js"></script>
-<script src="pipelines.js"></script>
-<!-- One line per map. A tile opens a map once its file is listed here. -->
-<script src="maps/sarek.js"></script>
-<script src="maps/createpanelrefs.js"></script>
-<script src="maps/bamtofastq.js"></script>
-<script src="maps/fetchngs.js"></script>
-<script src="maps/references.js"></script>
-<script src="maps/rnavar.js"></script>
-<script src="js/map.js"></script>
-<script src="js/app.js"></script>
+  <script src="catalogue.js"></script>
+  <script src="pipelines.js"></script>
+  <!-- One line per map. A tile opens a map once its file is listed here. -->
+  <script src="maps/sarek.js"></script>
+  <script src="maps/createpanelrefs.js"></script>
+  <script src="maps/bamtofastq.js"></script>
+  <script src="maps/fetchngs.js"></script>
+  <script src="maps/references.js"></script>
+  <script src="maps/rnavar.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/app.js"></script>
 </html>
