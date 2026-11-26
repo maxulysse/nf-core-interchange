@@ -1,5 +1,6 @@
 // Every station drawn on a map: what it is, what it takes and what it gives. Releases come from catalogue.js;
-// url is only for resources; a pipeline station links to nf-co.re/<id>.
+// url is only for resources; a pipeline station links to nf-co.re/<id>. intercepts lists read sources whose
+// handoffs to a hub run through this station instead, when it hands that hub the same reads.
 const STATIONS = {
   "ENA / SRA": {
     ext: true,
@@ -207,6 +208,7 @@ const STATIONS = {
     gives: "Run folder (or tar.gz), SampleSheet.csv",
   },
   seqinspector: {
+    intercepts: ["fetchngs", "demultiplex"],
     blurb:
       "QC of sequencing runs and FASTQ, with MultiQC reports per run and per group. Bundles: illumina, ont, fastq, bam, minimal.",
     takes: "Samplesheet: sample, fastq_1, fastq_2, rundir, tags",

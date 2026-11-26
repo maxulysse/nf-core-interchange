@@ -57,10 +57,6 @@ for (const M of Object.values(MAPS)) {
     .forEach((p) => fail(`${M.id}: skip names unknown handoff ${p}`));
   if (hand.includes(M.id)) fail(`${M.id}: places its hub, which always sits in the middle`);
   const { S, E } = mapModel(M);
-  // A station linked only through also has no side of its own: the map must place it by hand.
-  S.filter(
-    (s) => !s.hub && !hand.includes(s.id) && !E.some((e) => [e.f, e.t].includes(s.id) && [e.f, e.t].includes(M.id)),
-  ).forEach((s) => fail(`${M.id}: ${s.id} only connects through also, so place it in at`));
   E.filter((e) => !e.line).forEach((e) =>
     fail(`${M.id}: ${pair(e)} touches no station on a hub line, so it has no colour`),
   );

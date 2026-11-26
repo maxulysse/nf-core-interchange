@@ -125,7 +125,8 @@ function renderMap(M, from) {
   }
   // Octilinear routing, like a subway map: straight runs joined by one 45-degree diagonal,
   // with rounded corners at each bend. Leaves the station along its main axis.
-  const BEND_R = 18;
+  const BEND_R = 18,
+    LEAD = 32;
   function route([x1, y1], [x2, y2]) {
     const dx = x2 - x1,
       dy = y2 - y1,
@@ -138,8 +139,24 @@ function renderMap(M, from) {
         [x1, y1],
         [x2, y2],
       ];
-    // The diagonal sits in the middle, with equal straight runs either side.
+    // The diagonal sits in the middle, with equal straight runs either side. Near 45 degrees those runs vanish,
+    // so the line leaves straight, then turns, and enters the station straight from the side: never only a diagonal.
     const r = Math.abs(ax - ay) / 2;
+    const d = Math.min(ax, ay) - LEAD;
+    if (r < LEAD && d > 0)
+      return ax >= ay
+        ? [
+            [x1, y1],
+            [x1 + sx * (ax - d), y1],
+            [x2, y2 - sy * LEAD],
+            [x2, y2],
+          ]
+        : [
+            [x1, y1],
+            [x1, y1 + sy * (ay - d)],
+            [x2 - sx * LEAD, y2],
+            [x2, y2],
+          ];
     const pts =
       ax >= ay
         ? [

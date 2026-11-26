@@ -16,15 +16,20 @@ TREE.children.forEach((g, i) =>
 );
 const byField = (a, b) => (FIELD[a] ?? Infinity) - (FIELD[b] ?? Infinity) || a.localeCompare(b);
 
-// Places stations on the star around the hub, every side about as full as the others (at most six, the most a
-// hub face takes before its lines crowd). Inputs start on the left and spill to the bottom then the top;
-// resources start on the top and spill to the right; outputs fill what is left, from the right. Inputs run in
-// field order down the left, then along the bottom and top; outputs in field order clockwise from the top.
-// A map's own `at` places a station by hand, and a side holding one takes nothing else.
+// Places stations on the star around the hub, at most six a side (the most a hub face takes before its lines
+// crowd). Inputs fan in from the left, resources from the top; each spills to the next side only when full.
+// Outputs share the right, bottom and top evenly, and go to the left only once those are full. Inputs run in
+// field order down the left; outputs in field order clockwise from the top. A stop between sources and the
+// hub (seqinspector) takes the left. A map's own `at` places a station by hand; a side holding one takes nothing else.
 const MAX_SIDE = 6;
 const PREFER = { in: ["l", "b", "t", "r"], res: ["t", "r", "l", "b"], out: ["r", "b", "t", "l"] };
 function layout(M, E) {
-  const ids = [...new Set(E.flatMap((e) => [e.f, e.t]))].filter((id) => id !== M.id && !M.at?.[id]);
+  // A stop between sources and the hub (seqinspector) sits left of the hub, its sources on the left side beyond it.
+  const stop = E.find((e) => e.f !== M.id && e.t !== M.id && E.some((h) => h.f === e.t && h.t === M.id))?.t;
+  const feeders = stop ? E.filter((e) => e.t === stop && e.f !== M.id).map((e) => e.f) : [];
+  const ids = [...new Set(E.flatMap((e) => [e.f, e.t]))].filter(
+    (id) => id !== M.id && !M.at?.[id] && id !== stop && !feeders.includes(id),
+  );
   const into = (id, res) => E.some((e) => e.f === id && e.t === M.id && !!e.res === res);
   const ins = ids.filter((id) => into(id, false)).sort(byField),
     res = ids.filter((id) => !ins.includes(id) && into(id, true)).sort(byField),
@@ -34,7 +39,7 @@ function layout(M, E) {
       x <= 200 ? "l" : x >= 800 ? "r" : y <= 150 ? "t" : y >= 550 ? "b" : null,
     ),
   );
-  const target = Math.ceil(ids.length / (4 - [..."lrtb"].filter((k) => closed.has(k)).length));
+  if (stop) closed.add("l");
   const count = { t: 0, r: 0, b: 0, l: 0 },
     per = { in: { t: 0, r: 0, b: 0, l: 0 }, res: { t: 0, r: 0, b: 0, l: 0 }, out: { t: 0, r: 0, b: 0, l: 0 } };
   for (const [role, list] of [
@@ -44,7 +49,8 @@ function layout(M, E) {
   ])
     for (let i = 0; i < list.length; i++) {
       const open = PREFER[role].filter((k) => !closed.has(k) && count[k] < MAX_SIDE);
-      const side = open.find((k) => count[k] < target) ?? open[0];
+      const even = role === "out" && open.filter((k) => k !== "l").sort((a, b) => count[a] - count[b])[0];
+      const side = even || open[0];
       count[side]++;
       per[role][side]++;
     }
@@ -80,6 +86,10 @@ function layout(M, E) {
   along(bottom.length, [250, 500], 254).forEach((d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }));
   along(left.length, [135, 520], 270).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
   along(right.length, [135, 520], 270).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
+  if (stop) {
+    at[stop] = { x: 300, y: 340, side: "below", tag: "optional" };
+    along(feeders.length, [100, 520], 200).forEach((d, i) => (at[feeders[i]] = { x: 120, y: 340 + d, side: "below" }));
+  }
   return { ...at, ...M.at };
 }
 
@@ -89,6 +99,14 @@ function mapModel(M) {
   const also = new Set(M.also),
     skip = new Set(M.skip);
   const pair = (h) => `${h.f}>${h.t}`;
+  // A source that a station intercepts reaches the hub through it: source -> station -> hub.
+  const has = (f, t) => HANDOFFS.some((h) => h.f === f && h.t === t);
+  for (const [id, s] of Object.entries(STATIONS))
+    for (const src of s.intercepts ?? [])
+      if (has(id, M.id) && has(src, M.id) && has(src, id)) {
+        skip.add(`${src}>${M.id}`);
+        also.add(`${src}>${id}`);
+      }
   const drawn = (h) => !skip.has(pair(h)) && (h.f === M.id || h.t === M.id || also.has(pair(h)));
   // Copies, so rendering twice never stacks state on the shared data.
   const E = HANDOFFS.filter(drawn).map((h) => ({ ...h, handoff: h }));
