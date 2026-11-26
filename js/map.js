@@ -80,7 +80,7 @@ function renderMap(M, from) {
   E.forEach((e) => (e.shift = [0, 0]));
   // Each far station gets one slot on its hub face; lines to the same station sit PAR apart in that slot, as at the
   // station, so the bundle runs parallel all the way.
-  // 8px lines PAR apart stay apart on a diagonal too, where the gap shrinks to PAR / √2.
+  // Centre-to-centre spacing of lines in a bundle, on straight runs and diagonals alike (see offset).
   const PAR = 14;
   groupBy(hubEdges, (e) => e.face).forEach((es) => {
     es.sort((a, b) => far(a)[across(a.face)] - far(b)[across(b.face)]);
@@ -116,50 +116,73 @@ function renderMap(M, from) {
   });
   function port(s, e) {
     if (!s.hub) return [s.x + e.shift[0], s.y + e.shift[1]];
-    if (e.face === "t" || e.face === "b")
-      return [s.x + e.off, s.y + (e.face === "b" ? 1 : -1) * (HEX_R - Math.abs(e.off) / Math.sqrt(3))];
-    return [s.x + ((e.face === "r" ? 1 : -1) * HEX_R * Math.sqrt(3)) / 2, s.y + e.off];
+    return hubPort(e.face, e.off);
+  }
+  function hubPort(face, off) {
+    if (face === "t" || face === "b")
+      return [HUB.x + off, HUB.y + (face === "b" ? 1 : -1) * (HEX_R - Math.abs(off) / Math.sqrt(3))];
+    return [HUB.x + ((face === "r" ? 1 : -1) * HEX_R * Math.sqrt(3)) / 2, HUB.y + off];
   }
   // Octilinear routing, like a subway map: straight runs joined by one 45-degree diagonal,
   // with rounded corners at each bend. Leaves the station along its main axis.
   const BEND_R = 18;
-  function pathFor(e) {
-    const [x1, y1] = port(byId[e.f], e),
-      [x2, y2] = port(byId[e.t], e);
+  function route([x1, y1], [x2, y2]) {
     const dx = x2 - x1,
       dy = y2 - y1,
       ax = Math.abs(dx),
       ay = Math.abs(dy);
     const sx = Math.sign(dx),
       sy = Math.sign(dy);
-    let pts;
     if (ax < 1 || ay < 1)
-      pts = [
+      return [
         [x1, y1],
         [x2, y2],
       ];
-    else {
-      // The diagonal sits in the middle, with equal straight runs either side.
-      if (ax >= ay) {
-        const r = (ax - ay) / 2;
-        pts = [
-          [x1, y1],
-          [x1 + sx * r, y1],
-          [x2 - sx * r, y2],
-          [x2, y2],
-        ];
-      } else {
-        const r = (ay - ax) / 2;
-        pts = [
-          [x1, y1],
-          [x1, y1 + sy * r],
-          [x2, y2 - sy * r],
-          [x2, y2],
-        ];
-      }
-      pts = pts.filter((p, i) => i === 0 || Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) > 0.5);
-    }
-    return rounded(pts);
+    // The diagonal sits in the middle, with equal straight runs either side.
+    const r = Math.abs(ax - ay) / 2;
+    const pts =
+      ax >= ay
+        ? [
+            [x1, y1],
+            [x1 + sx * r, y1],
+            [x2 - sx * r, y2],
+            [x2, y2],
+          ]
+        : [
+            [x1, y1],
+            [x1, y1 + sy * r],
+            [x2, y2 - sy * r],
+            [x2, y2],
+          ];
+    return pts.filter((p, i) => i === 0 || Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) > 0.5);
+  }
+  // Moves a polyline sideways by d, keeping d at every bend (a mitre join), so parallel lines stay d apart
+  // on diagonals too. d is along the face at the first point: +y on a left or right face, +x on a top or bottom one.
+  function offset(pts, d, face) {
+    const dir = pts.slice(1).map(([x, y], i) => {
+      const [px, py] = pts[i],
+        l = Math.hypot(x - px, y - py);
+      return [(x - px) / l, (y - py) / l];
+    });
+    const along = across(face) === "y" ? [0, 1] : [1, 0];
+    const side = Math.sign(-dir[0][1] * along[0] + dir[0][0] * along[1]) || 1;
+    const n = dir.map(([ux, uy]) => [-uy * side, ux * side]);
+    return pts.map(([x, y], i) => {
+      const a = n[Math.max(0, i - 1)],
+        b = n[Math.min(n.length - 1, i)],
+        k = d / (1 + a[0] * b[0] + a[1] * b[1]);
+      return [x + (a[0] + b[0]) * k, y + (a[1] + b[1]) * k];
+    });
+  }
+  // A hub line is drawn from the middle of its bundle, offset to its own place, so a bundle keeps one spacing.
+  function pathFor(e) {
+    if (e.f !== HUB.id && e.t !== HUB.id) return rounded(route(port(byId[e.f], e), port(byId[e.t], e)));
+    const s = far(e),
+      bundle = hubEdges.filter((h) => far(h) === s),
+      mid = bundle.reduce((t, h) => t + h.off, 0) / bundle.length;
+    const pts = offset(route(hubPort(e.face, mid), [s.x, s.y]), e.off - mid, e.face);
+    pts[0] = hubPort(e.face, e.off);
+    return rounded(e.f === HUB.id ? pts : pts.reverse());
   }
   function rounded(pts) {
     let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
