@@ -120,8 +120,7 @@ code,
   stroke: var(--out);
 }
 .line.conversion {
-  stroke-dasharray: 14 8;
-  stroke-linecap: butt;
+  stroke-opacity: 0.35;
 }
 .hit {
   fill: none;
@@ -189,6 +188,9 @@ code,
   stroke: var(--fg);
   stroke-width: 2;
   pointer-events: none;
+}
+.dot.conversion {
+  opacity: 0.5;
 }
 svg.focus .line,
 svg.focus .stn,

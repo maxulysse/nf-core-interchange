@@ -1,5 +1,6 @@
 // Every station drawn on a map: what it is, what it takes and what it gives. Releases come from catalogue.js;
-// url and rel are only for stations outside the nf-core catalogue, which otherwise link to nf-co.re/<id>.
+// url is only for resources; a pipeline station links to nf-co.re/<id>. intercepts lists read sources whose
+// handoffs to a hub run through this station instead, when it hands that hub the same reads.
 const STATIONS = {
   "ENA / SRA": {
     ext: true,
@@ -16,8 +17,8 @@ const STATIONS = {
   "annotation-cache": {
     ext: true,
     url: "https://annotation-cache.github.io/",
-    blurb: "Public S3 bucket of VEP and snpEff caches, read by sarek with --download_cache.",
-    takes: "Caches built by downloadvepcache and downloadsnpeffcache",
+    blurb: "Public S3 bucket of Ensembl VEP and snpEff caches, read by sarek and rnavar.",
+    takes: "",
     gives: "VEP cache, snpEff cache",
   },
   atacseq: {
@@ -59,21 +60,6 @@ const STATIONS = {
     takes: "--input: sample and condition columns; --matrix; --contrasts",
     gives: "Differential tables, report",
   },
-  downloadsnpeffcache: {
-    url: "https://github.com/annotation-cache/downloadsnpeffcache",
-    rel: "99",
-    blurb:
-      "Downloads snpEff databases for the annotation-cache bucket. Stays on 99: snpEff 5.2 and later have no 105 databases.",
-    takes: "snpEff genome and version",
-    gives: "snpEff cache (GRCh38.99)",
-  },
-  downloadvepcache: {
-    url: "https://github.com/annotation-cache/downloadvepcache",
-    rel: "116",
-    blurb: "Downloads Ensembl VEP caches for the annotation-cache bucket.",
-    takes: "Species, assembly, VEP version",
-    gives: "VEP cache (Ensembl 116)",
-  },
   epitopeprediction: {
     blurb: "Predicts which mutated peptides bind the patient's HLA alleles, for MHC class I or II.",
     takes: "Samplesheet: sample, alleles, mhc_class, filename (raw somatic VCF), germline_vcf, tumor_sample",
@@ -97,7 +83,7 @@ const STATIONS = {
     takes: "Samplesheet: sample, fastq_1, fastq_2 or bam, seq_type",
     gives: "HLA genotype: OptiType TSV, HLA-HD result",
   },
-  igenomes: {
+  "AWS iGenomes": {
     ext: true,
     url: "https://ewels.github.io/AWS-iGenomes/",
     blurb:
@@ -214,7 +200,15 @@ const STATIONS = {
     takes: "Samplesheet: patient, sex, status, sample, lane, fastq_1, fastq_2 (or spring, bam, cram, vcf)",
     gives: "BAM/CRAM, VCFs per caller, annotated VCFs, MultiQC report, restart CSVs",
   },
+  "sequencing run": {
+    ext: true,
+    url: "https://nf-co.re/demultiplex/1.8.0/docs/usage/",
+    blurb: "The run folder a sequencer writes: base calls for every cluster, with the flowcell SampleSheet.csv.",
+    takes: "",
+    gives: "Run folder (or tar.gz), SampleSheet.csv",
+  },
   seqinspector: {
+    intercepts: ["fetchngs", "demultiplex"],
     blurb:
       "QC of sequencing runs and FASTQ, with MultiQC reports per run and per group. Bundles: illumina, ont, fastq, bam, minimal.",
     takes: "Samplesheet: sample, fastq_1, fastq_2, rundir, tags",

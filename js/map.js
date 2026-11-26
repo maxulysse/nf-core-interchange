@@ -14,9 +14,6 @@ const el = (n, a = {}, txt) => {
   return e;
 };
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const HEX_R = 72;
-const groupBy = (xs, key) => Object.values(xs.reduce((g, x) => ((g[key(x)] ??= []).push(x), g), {}));
-const across = (face) => (face === "l" || face === "r" ? "y" : "x");
 const hexPoints = (x, y, R) =>
   [-90, -30, 30, 90, 150, 210]
     .map((a) => {
@@ -62,127 +59,18 @@ const around = (s, w, full) => {
 function renderMap(M, from) {
   const { HUB, S, E, checked } = mapModel(M);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
-  // Releases come from catalogue.js; rel in stations.js is only for stations outside the nf-core catalogue.
-  const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? s.rel ?? "in development"));
-  const far = (e) => byId[e.f === HUB.id ? e.t : e.f];
-  document.getElementById("map-title").textContent = M.title;
+  // Releases come from catalogue.js.
+  const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
+  document.getElementById("map-title").textContent = mapTitle(M.id);
   document.getElementById("map-checked").textContent =
     checked[0] === checked[1] ? `on ${checked[0]}` : `between ${checked[0]} and ${checked[1]}`;
   document.getElementById("map-credits").innerHTML =
     `Thanks to the <a href="https://github.com/nf-core/${HUB.id}/graphs/contributors">contributors of nf-core/${HUB.id}</a>.`;
-  const hubEdges = E.filter((e) => e.f === HUB.id || e.t === HUB.id);
-  hubEdges.forEach((e) => {
-    const s = far(e),
-      dx = s.x - HUB.x,
-      dy = s.y - HUB.y;
-    e.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "r" : "l") : dy > 0 ? "b" : "t";
-  });
-  E.forEach((e) => (e.shift = [0, 0]));
-  groupBy(hubEdges, (e) => e.face).forEach((es) => {
-    es.sort((a, b) => far(a)[across(a.face)] - far(b)[across(b.face)]);
-    const len = across(es[0].face) === "y" ? HEX_R : HEX_R * Math.sqrt(3);
-    es.forEach((e, i) => (e.off = ((i + 0.5) / es.length - 0.5) * len));
-  });
-  // At the far station they sit a fixed PAR apart, in the same order as at the hub, so they meet the station as one bundle.
-  const PAR = 10;
-  groupBy(hubEdges, (e) => [e.f, e.t].sort().join()).forEach((es) => {
-    es.sort((a, b) => a.off - b.off);
-    es.forEach((e, i) => {
-      const d = (i - (es.length - 1) / 2) * PAR;
-      e.shift = across(e.face) === "y" ? [0, d] : [d, 0];
-    });
-  });
-  // A line to a station level with its hub face runs straight: its port moves to the station's height (or x)
-  // when the lines beside it still fit, and the others step aside to stay PAR apart.
-  groupBy(hubEdges, (e) => e.face).forEach((es) => {
-    const k = across(es[0].face),
-      half = (k === "y" ? HEX_R : HEX_R * Math.sqrt(3)) / 2;
-    es.sort((a, b) => a.off - b.off);
-    es.forEach((e, i) => {
-      const want = far(e)[k] + e.shift[k === "y" ? 1 : 0] - HUB[k];
-      e.level = want >= -half + i * PAR && want <= half - (es.length - 1 - i) * PAR;
-      if (e.level) e.off = want;
-    });
-    for (let i = 1; i < es.length; i++)
-      if (!es[i].level) es[i].off = Math.min(half, Math.max(es[i].off, es[i - 1].off + PAR));
-    for (let i = es.length - 2; i >= 0; i--)
-      if (!es[i].level) es[i].off = Math.max(-half, Math.min(es[i].off, es[i + 1].off - PAR));
-  });
-  function port(s, e) {
-    if (!s.hub) return [s.x + e.shift[0], s.y + e.shift[1]];
-    if (e.face === "t" || e.face === "b")
-      return [s.x + e.off, s.y + (e.face === "b" ? 1 : -1) * (HEX_R - Math.abs(e.off) / Math.sqrt(3))];
-    return [s.x + ((e.face === "r" ? 1 : -1) * HEX_R * Math.sqrt(3)) / 2, s.y + e.off];
-  }
-  // Octilinear routing, like a subway map: straight runs joined by one 45-degree diagonal,
-  // with rounded corners at each bend. Leaves the station along its main axis.
-  const BEND_R = 18;
-  function pathFor(e) {
-    const [x1, y1] = port(byId[e.f], e),
-      [x2, y2] = port(byId[e.t], e);
-    const dx = x2 - x1,
-      dy = y2 - y1,
-      ax = Math.abs(dx),
-      ay = Math.abs(dy);
-    const sx = Math.sign(dx),
-      sy = Math.sign(dy);
-    let pts;
-    if (ax < 1 || ay < 1)
-      pts = [
-        [x1, y1],
-        [x2, y2],
-      ];
-    else {
-      // The diagonal sits in the middle, with equal straight runs either side.
-      if (ax >= ay) {
-        const r = (ax - ay) / 2;
-        pts = [
-          [x1, y1],
-          [x1 + sx * r, y1],
-          [x2 - sx * r, y2],
-          [x2, y2],
-        ];
-      } else {
-        const r = (ay - ax) / 2;
-        pts = [
-          [x1, y1],
-          [x1, y1 + sy * r],
-          [x2, y2 - sy * r],
-          [x2, y2],
-        ];
-      }
-      pts = pts.filter((p, i) => i === 0 || Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) > 0.5);
-    }
-    return rounded(pts);
-  }
-  function rounded(pts) {
-    let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
-    for (let i = 1; i < pts.length - 1; i++) {
-      const [px, py] = pts[i - 1],
-        [cx, cy] = pts[i],
-        [nx, ny] = pts[i + 1];
-      const l1 = Math.hypot(cx - px, cy - py),
-        l2 = Math.hypot(nx - cx, ny - cy);
-      const r = Math.min(BEND_R, l1 / 2, l2 / 2);
-      if (r < 0.5) {
-        d += ` L${cx.toFixed(1)},${cy.toFixed(1)}`;
-        continue;
-      }
-      const ax = cx - ((cx - px) / l1) * r,
-        ay = cy - ((cy - py) / l1) * r;
-      const bx = cx + ((nx - cx) / l2) * r,
-        by = cy + ((ny - cy) / l2) * r;
-      d += ` L${ax.toFixed(1)},${ay.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${bx.toFixed(1)},${by.toFixed(1)}`;
-    }
-    const [lx, ly] = pts[pts.length - 1];
-    return d + ` L${lx.toFixed(1)},${ly.toFixed(1)}`;
-  }
-
   const svg = document.getElementById("map");
   svg.replaceChildren();
   svg.setAttribute("aria-label", `Map of pipelines connected to nf-core/${HUB.id}`);
   const pad = 100 * (F - 1),
-    full = [-pad, -pad / 2, 1000 + 2 * pad, 680 + pad];
+    full = [-pad, -pad / 2, MAP_W + 2 * pad, MAP_H + pad];
   svg.classList.toggle("narrow", narrow.matches);
   svg.classList.remove("zooming");
   // Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
@@ -194,29 +82,44 @@ function renderMap(M, from) {
     gS = el("g");
   svg.append(gL, gD, gS);
 
+  // Leg 1 runs in the first half of the loop, leg 2 in the second.
+  const LEG = {
+    1: { keyPoints: "0;1;1", keyTimes: "0;0.5;1", calcMode: "linear" },
+    2: { keyPoints: "0;0;1", keyTimes: "0;0.5;1", calcMode: "linear" },
+  };
   // Each station and edge keeps its own SVG node, so selection needs no DOM lookups.
   E.forEach((e, i) => {
     e.id = "e" + i;
-    const d = pathFor(e);
-    e.node = el("path", { id: e.id, d, class: `line ${e.line} ${e.st}` });
-    const hit = el("path", { d, class: "hit" });
+    e.node = el("path", { id: e.id, d: e.d, class: `line ${e.line} ${e.st}` });
+    const hit = el("path", { d: e.d, class: "hit" });
     hit.append(el("title", {}, `${e.f} to ${e.t}: ${ST[e.st].label}`));
     hit.addEventListener("click", () => selectEdge(e));
     gL.append(e.node, hit);
     if (!reduced) {
       const c = el("circle", { r: 4, class: `dot ${e.st}` });
-      // Balls flowing into the same station share one timing, so they leave and arrive together.
-      const k = S.indexOf(byId[e.t]);
-      const am = el("animateMotion", { dur: `${5 + (k % 4)}s`, repeatCount: "indefinite", begin: `${-k * 0.7}s` });
+      // Every ball shares one 5 s loop, so at each station the balls arrive and leave together. On a route
+      // through a station (fetchngs, seqinspector, sarek) one ball runs the first leg, then the next one the second.
+      const am = el("animateMotion", { dur: "5s", repeatCount: "indefinite", ...LEG[e.leg] });
       const mp = el("mpath");
       mp.setAttribute("href", "#" + e.id);
       am.append(mp);
       c.append(am);
+      if (e.leg)
+        c.append(
+          el("animate", {
+            attributeName: "visibility",
+            values: e.leg === 1 ? "visible;hidden" : "hidden;visible",
+            keyTimes: "0;0.5",
+            calcMode: "discrete",
+            dur: "5s",
+            repeatCount: "indefinite",
+          }),
+        );
       gD.append(c);
     }
   });
 
-  const LBL = { left: [-18, 5, "end"], above: [0, -32, "middle"], below: [0, 32, "middle"], inside: [0, 0, "middle"] };
+  const LBL = { above: [0, -32, "middle"], below: [0, 32, "middle"], inside: [0, 0, "middle"] };
   const mark = (s) =>
     s.hub
       ? el("polygon", { points: hexPoints(s.x, s.y, HEX_R) })
@@ -229,7 +132,7 @@ function renderMap(M, from) {
       role: "button",
       "aria-label": s.id,
     });
-    const [dx, dy, anc] = LBL[s.side];
+    const [dx, dy, anc] = LBL[s.label];
     // The hub label sits inside the fixed-size hexagon, so it keeps its size.
     const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F})` });
     // A long hub name shrinks to fit the hexagon; 0.56em is about one Overpass character.
@@ -304,7 +207,7 @@ function renderMap(M, from) {
     if (ev.target === svg) reset();
   };
 
-  // Legend: colour is the line, dashes are the status.
+  // Legend: colour is the line, opacity is the status.
   const sw = (cls, color) =>
     `<svg width="38" height="10" aria-hidden="true"><line x1="5" y1="5" x2="33" y2="5" class="line ${cls}" style="stroke:${color};stroke-width:5"/></svg>`;
   document.getElementById("legend").innerHTML =

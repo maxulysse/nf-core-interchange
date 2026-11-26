@@ -28,10 +28,10 @@ Object.keys(CATALOGUE)
   .forEach((id) => fail(`pipelines.js: ${id} is not in TREE`));
 [...leaves].filter((id) => !CATALOGUE[id]).forEach((id) => fail(`pipelines.js: ${id} is not in catalogue.js`));
 
-// A station that is not a resource is an nf-core pipeline, unless it says where it lives.
+// A station that is not a resource is an nf-core pipeline.
 Object.entries(STATIONS)
-  .filter(([id, s]) => !s.ext && !CATALOGUE[id] && !s.url)
-  .forEach(([id]) => fail(`stations.js: ${id} is not in catalogue.js and has no url`));
+  .filter(([id, s]) => !s.ext && !CATALOGUE[id])
+  .forEach(([id]) => fail(`stations.js: ${id} is not a resource and not in catalogue.js`));
 
 for (const h of HANDOFFS) {
   [h.f, h.t].filter((id) => !STATIONS[id]).forEach((id) => fail(`handoffs.js: ${pair(h)} names unknown station ${id}`));
@@ -40,31 +40,21 @@ for (const h of HANDOFFS) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(h.checked)) fail(`handoffs.js: ${pair(h)} has no checked date`);
 }
 
-// Every map is loaded, places its hub and known stations, and draws each placed station with a coloured line.
-fs.readdirSync("maps")
-  .filter((f) => !scripts.includes(`maps/${f}`))
-  .forEach((f) => fail(`index.html: maps/${f} is not loaded`));
+// Every map names known handoffs, keeps its stations apart, and draws each handoff with a route and a colour.
 const placed = new Set(),
   drawn = new Set();
 for (const M of Object.values(MAPS)) {
-  const ids = Object.keys(M.at);
-  ids.filter((id) => !STATIONS[id]).forEach((id) => fail(`${M.id}: places unknown station ${id}`));
   (M.also ?? [])
     .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
     .forEach((p) => fail(`${M.id}: also names unknown handoff ${p}`));
-  if (!M.at[M.id]) {
-    fail(`${M.id}: the hub is not placed`);
-    continue;
-  }
-  const { E } = mapModel(M);
-  E.flatMap((e) => [e.f, e.t])
-    .filter((id) => !M.at[id])
-    .forEach((id) => fail(`${M.id}: draws a handoff to ${id}, which it does not place`));
+  const { S, E } = mapModel(M);
+  E.filter((e) => e.d.includes("NaN")).forEach((e) => fail(`${M.id}: ${pair(e)} has no route`));
   E.filter((e) => !e.line).forEach((e) =>
     fail(`${M.id}: ${pair(e)} touches no station on a hub line, so it has no colour`),
   );
-  ids.filter((id) => !E.some((e) => e.f === id || e.t === id)).forEach((id) => fail(`${M.id}: ${id} has no line`));
-  ids.forEach((id) => placed.add(id));
+  const at = S.map((s) => `${s.x},${s.y}`);
+  at.filter((xy, i) => at.indexOf(xy) !== i).forEach((xy) => fail(`${M.id}: two stations sit at ${xy}`));
+  S.forEach((s) => placed.add(s.id));
   E.forEach((e) => drawn.add(e.handoff));
 }
 Object.keys(STATIONS)
