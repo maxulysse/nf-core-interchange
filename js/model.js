@@ -117,16 +117,16 @@ function layout(M, E) {
     // the lines into the hub mirror each other.
     const slots = [...left];
     slots.splice(Math.ceil(left.length / 2), 0, stop);
-    // A lone source lines up with its stop, which sits on the straight run its line to the hub would take; the
-    // whole column moves further out so the source and the stop keep their labels apart.
+    // A lone source lines up with its stop, which sits on the straight run its line to the hub would take, as
+    // far in as that run allows; the stop's label goes above so the two labels keep apart.
     const one = feeders.length === 1,
-      column = one ? 50 : 120,
+      column = 120,
       wide = one ? 135 : 200;
     along(slots.length, [wide, 400], wide * 2).forEach(
       (d, i) => (at[slots[i]] = { x: column, y: 340 + d, side: "below" }),
     );
     const y = at[stop].y;
-    at[stop] = { x: one ? 150 : 300, y, side: one ? "above" : "below", tag: "optional", stop: true, column };
+    at[stop] = { x: one ? 205 : 300, y, side: one ? "above" : "below", tag: "optional", stop: true, column };
     along(feeders.length, [100, 520], 200).forEach((d, i) => (at[feeders[i]] = { x: column, y: y + d, side: "below" }));
   } else offsets(left, [135, 400], 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
   offsets(right, [135, 400], 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
