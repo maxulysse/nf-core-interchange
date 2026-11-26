@@ -1,6 +1,6 @@
 // Handoff statuses. What a pipeline still lacks goes in the handoff's note.
 const ST = {
-  native: { label: "Native", note: "both pipelines support it in code; the chain has not been run end to end" },
+  native: { label: "Native", note: "the output goes straight in: no conversion needed" },
   conversion: {
     label: "Conversion",
     note: "works today once the output is turned into the next samplesheet or params, by hand or with a script",
