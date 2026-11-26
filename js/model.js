@@ -24,6 +24,9 @@ const byField = (a, b) => (FIELD[a] ?? Infinity) - (FIELD[b] ?? Infinity) || a.l
 // A hub face holds about five lines on a side (the left and right faces are short) and eight along the top or
 // bottom, and a side about six labels; past that a station goes to the side with most room.
 const MAX_SIDE = 6;
+// A top or bottom row holds five, the most that stay aligned, readable and entered vertically; a busy map puts
+// the rest on the side columns, up to eight each.
+const HOLD = { l: 8, r: 8, t: 5, b: 5 };
 const LINES = { l: 5, r: 5, t: 8, b: 8 };
 const PREFER = { in: ["l", "b", "t", "r"], res: ["t", "r", "l", "b"], out: ["r", "b", "t", "l"] };
 function layout(M, E) {
@@ -70,9 +73,11 @@ function layout(M, E) {
   ])
     for (const id of list) {
       const w = lines(id);
-      const open = PREFER[role].filter((k) => !closed.has(k) && count[k] < MAX_SIDE && used[k] + w <= LINES[k]);
+      const open = PREFER[role].filter(
+        (k) => !closed.has(k) && count[k] < Math.min(MAX_SIDE, HOLD[k]) && used[k] + w <= LINES[k],
+      );
       const roomiest = PREFER[role]
-        .filter((k) => !closed.has(k))
+        .filter((k) => !closed.has(k) && count[k] < HOLD[k])
         .sort((a, b) => used[a] / LINES[a] - used[b] / LINES[b])[0];
       const split =
         role === "out" && share && open.filter((k) => share.includes(k)).sort((a, b) => used[a] - used[b])[0];
@@ -119,10 +124,13 @@ function layout(M, E) {
     return list.map((_, i) => (i - k) * step);
   };
   const at = {};
+  // Both side columns use one step, set by the fuller one, so the two sides read alike.
+  const tall = Math.max(left.length, right.length),
+    column = [Math.min(135, (tall > 6 ? 480 : 400) / Math.max(tall - 1, 1)), 10000];
   // A row of up to three stays within reach of the hub's top or bottom face, so its lines arrive vertically.
-  // A row of four sits further out, 120 apart, so its outer lines still arrive vertically; five or more spread
-  // to the full width.
-  const row = (m) => (m <= 3 ? [124, 248, 248, 0] : m === 4 ? [120, 360, 248, 30] : [250, 500, 254, 0]);
+  // A row of four or five sits further out, at most 120 apart and within 200 of the middle, so its outer lines
+  // still arrive vertically.
+  const row = (m) => (m <= 3 ? [124, 248, 248, 0] : [120, 400, 248, 30]);
   const [ts, tw, tp, tf] = row(top.length),
     [bs, bw, bp, bf] = row(bottom.length);
   offsets(top, [ts, tw], tp).forEach((d, i) => (at[top[i]] = { x: 500 + d, y: 80 - tf, side: "above" }));
@@ -134,8 +142,8 @@ function layout(M, E) {
     left.forEach((id, i) => (at[id] = { x: 120, y: 340 + (i ? wide : -wide), side: "below" }));
     at[stop] = { x: 300, y: 340, side: "below", tag: "optional" };
     along(feeders.length, [100, 520], 200).forEach((d, i) => (at[feeders[i]] = { x: 120, y: 340 + d, side: "below" }));
-  } else offsets(left, [135, 400], 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
-  offsets(right, [135, 400], 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
+  } else offsets(left, column, 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
+  offsets(right, column, 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
   return { ...at, ...M.at };
 }
 

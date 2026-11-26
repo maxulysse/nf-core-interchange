@@ -100,19 +100,21 @@ function renderMap(M, from) {
   });
   // A line to a station level with its hub face runs straight: its port moves to the station's height (or x)
   // when the lines beside it still fit, and the others step aside to stay PAR apart.
+  // A face with more lines than fit PAR apart squeezes them evenly instead.
   groupBy(hubEdges, (e) => e.face).forEach((es) => {
     const k = across(es[0].face),
-      half = (k === "y" ? HEX_R : HEX_R * Math.sqrt(3)) / 2;
+      half = (k === "y" ? HEX_R : HEX_R * Math.sqrt(3)) / 2,
+      gap = Math.min(PAR, (2 * half) / Math.max(es.length - 1, 1));
     es.sort((a, b) => a.off - b.off);
     es.forEach((e, i) => {
       const want = far(e)[k] + e.shift[k === "y" ? 1 : 0] - HUB[k];
-      e.level = want >= -half + i * PAR && want <= half - (es.length - 1 - i) * PAR;
+      e.level = want >= -half + i * gap && want <= half - (es.length - 1 - i) * gap;
       if (e.level) e.off = want;
     });
     for (let i = 1; i < es.length; i++)
-      if (!es[i].level) es[i].off = Math.min(half, Math.max(es[i].off, es[i - 1].off + PAR));
+      if (!es[i].level) es[i].off = Math.min(half, Math.max(es[i].off, es[i - 1].off + gap));
     for (let i = es.length - 2; i >= 0; i--)
-      if (!es[i].level) es[i].off = Math.max(-half, Math.min(es[i].off, es[i + 1].off - PAR));
+      if (!es[i].level) es[i].off = Math.max(-half, Math.min(es[i].off, es[i + 1].off - gap));
   });
   function port(s, e) {
     if (!s.hub) return [s.x + e.shift[0], s.y + e.shift[1]];
