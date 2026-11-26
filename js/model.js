@@ -3,7 +3,7 @@ const ST = {
   native: { label: "Native", note: "the output goes straight in: no conversion needed" },
   conversion: {
     label: "Conversion",
-    note: "you reshape the output first: build the next samplesheet, or pass the files as params",
+    note: "the output must be reshaped first, into the next pipeline's samplesheet or params",
   },
 };
 
