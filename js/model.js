@@ -42,11 +42,15 @@ function layout(M, E) {
       x <= 200 ? "l" : x >= 800 ? "r" : y <= 150 ? "t" : y >= 550 ? "b" : null,
     ),
   );
-  if (stop) closed.add("l");
   const lines = (id) => E.filter((e) => [e.f, e.t].includes(id) && [e.f, e.t].includes(M.id)).length;
   const count = { t: 0, r: 0, b: 0, l: 0 },
     used = { t: 0, r: 0, b: 0, l: 0 },
     per = { in: { t: 0, r: 0, b: 0, l: 0 }, res: { t: 0, r: 0, b: 0, l: 0 }, out: { t: 0, r: 0, b: 0, l: 0 } };
+  // Next to a stop, the left keeps room for two more inputs, above and below its fan.
+  if (stop) {
+    count.l = MAX_SIDE - 2;
+    used.l = LINES.l - 2;
+  }
   for (const [role, list] of [
     ["in", ins],
     ["res", res],
@@ -108,7 +112,8 @@ function layout(M, E) {
   offsets(bottom, row(bottom.length).slice(0, 2), row(bottom.length)[2]).forEach(
     (d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }),
   );
-  offsets(left, [135, 400], 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
+  if (stop) left.forEach((id, i) => (at[id] = { x: 120, y: 340 + (i ? 200 : -200), side: "below" }));
+  else offsets(left, [135, 400], 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
   offsets(right, [135, 400], 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
   if (stop) {
     at[stop] = { x: 300, y: 340, side: "below", tag: "optional" };

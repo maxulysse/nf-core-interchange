@@ -121,18 +121,10 @@ const HANDOFFS = [
   {
     f: "createpanelrefs",
     t: "raredisease",
-    checked: "2026-11-25",
+    checked: "2026-11-26",
     st: "conversion",
-    via: "germlinecnvcaller/determinecontigploidy/cohort-model into --ploidy_model; <name>-model shards listed in a TSV (header: models) into --gcnvcaller_model",
-    note: "raredisease's docs point to createpanelrefs for these. It also needs --readcount_intervals, the preprocessed intervals, which createpanelrefs does not publish: rebuild them with GATK PreprocessIntervals and the same --gcnv_bin_length and --gcnv_padding.",
-  },
-  {
-    f: "createpanelrefs",
-    t: "raredisease",
-    checked: "2026-11-25",
-    st: "native",
-    via: "gens/createreadcountpanelofnormals/<name>.hdf5 into --gens_pon_female, --gens_pon_male",
-    note: "One panel per run: run createpanelrefs twice, on female and on male normals, with --tools gens. Give raredisease the same --gens_interval_list the panels were built with.",
+    via: "germlinecnvcaller/determinecontigploidy/cohort-model into --ploidy_model, the <name>-model shards listed in a TSV (header: models) into --gcnvcaller_model; gens/createreadcountpanelofnormals/<name>.hdf5 into --gens_pon_female, --gens_pon_male",
+    note: "raredisease's docs point to createpanelrefs for both. The GATK gCNV models also need --readcount_intervals, which createpanelrefs does not publish: rebuild them with GATK PreprocessIntervals and the same --gcnv_bin_length and --gcnv_padding. The Gens panels go in as they are: one run on female and one on male normals, with --tools gens and the same --gens_interval_list raredisease gets.",
   },
   {
     f: "createpanelrefs",
