@@ -197,7 +197,12 @@ function renderMap(M, from) {
     const s = far(e),
       bundle = hubEdges.filter((h) => far(h) === s),
       mid = bundle.reduce((t, h) => t + h.off, 0) / bundle.length;
-    const pts = offset(route(hubPort(e.face, mid), [s.x, s.y]), e.off - mid, e.face);
+    // A stop's line is the line its sources would take to the hub, cut at the stop, so it mirrors its neighbours.
+    let line = route(hubPort(e.face, mid), [s.stop ? 120 : s.x, s.y]);
+    if (s.stop && line.length > 2 && line.at(-2)[1] === s.y && line.at(-2)[0] >= s.x)
+      line[line.length - 1] = [s.x, s.y];
+    else if (s.stop) line = route(hubPort(e.face, mid), [s.x, s.y]);
+    const pts = offset(line, e.off - mid, e.face);
     pts[0] = hubPort(e.face, e.off);
     return rounded(e.f === HUB.id ? pts : pts.reverse());
   }

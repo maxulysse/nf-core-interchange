@@ -112,13 +112,25 @@ function layout(M, E) {
   offsets(bottom, row(bottom.length).slice(0, 2), row(bottom.length)[2]).forEach(
     (d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }),
   );
-  if (stop) left.forEach((id, i) => (at[id] = { x: 120, y: 340 + (i ? 200 : -200), side: "below" }));
-  else offsets(left, [135, 400], 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
-  offsets(right, [135, 400], 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
   if (stop) {
-    at[stop] = { x: 300, y: 340, side: "below", tag: "optional" };
-    along(feeders.length, [100, 520], 200).forEach((d, i) => (at[feeders[i]] = { x: 120, y: 340 + d, side: "below" }));
-  }
+    // The stop and its sources take one slot of the left column, in the middle when inputs sit either side, so
+    // the lines into the hub mirror each other.
+    const slots = [...left];
+    slots.splice(Math.ceil(left.length / 2), 0, stop);
+    const wide = feeders.length > 1 ? 200 : 135;
+    along(slots.length, [wide, 400], wide * 2).forEach(
+      (d, i) => (at[slots[i]] = { x: 120, y: 340 + d, side: "below" }),
+    );
+    const y = at[stop].y;
+    // One source lines up with its stop, which sits on the straight run its line to the hub would take.
+    const one = feeders.length === 1;
+    at[stop] = { x: one ? 200 : 300, y, side: one ? "above" : "below", tag: "optional", stop: true };
+    // A lone source sits further out, so it and its stop keep their labels apart.
+    along(feeders.length, [100, 520], 200).forEach(
+      (d, i) => (at[feeders[i]] = { x: one ? 50 : 120, y: y + d, side: "below" }),
+    );
+  } else offsets(left, [135, 400], 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
+  offsets(right, [135, 400], 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
   return { ...at, ...M.at };
 }
 
