@@ -16,42 +16,68 @@ TREE.children.forEach((g, i) =>
 );
 const byField = (a, b) => (FIELD[a] ?? Infinity) - (FIELD[b] ?? Infinity) || a.localeCompare(b);
 
-// Places stations on the star around the hub: inputs on the left, resources along the top, outputs in field
-// order clockwise over the slots left (top, right, bottom, then under the inputs). Sides fill evenly, at most
-// six each, the most a hub face takes before its lines crowd. A map's own `at` places a station by hand.
+// Places stations on the star around the hub, every side about as full as the others (at most six, the most a
+// hub face takes before its lines crowd). Inputs start on the left and spill to the bottom then the top;
+// resources start on the top and spill to the right; outputs fill what is left, from the right. Inputs run in
+// field order down the left, then along the bottom and top; outputs in field order clockwise from the top.
+// A map's own `at` places a station by hand, and a side holding one takes nothing else.
 const MAX_SIDE = 6;
+const PREFER = { in: ["l", "b", "t", "r"], res: ["t", "r", "l", "b"], out: ["r", "b", "t", "l"] };
 function layout(M, E) {
   const ids = [...new Set(E.flatMap((e) => [e.f, e.t]))].filter((id) => id !== M.id && !M.at?.[id]);
   const into = (id, res) => E.some((e) => e.f === id && e.t === M.id && !!e.res === res);
   const ins = ids.filter((id) => into(id, false)).sort(byField),
     res = ids.filter((id) => !ins.includes(id) && into(id, true)).sort(byField),
     outs = ids.filter((id) => !ins.includes(id) && !res.includes(id)).sort(byField);
-  const n = { t: res.length, r: 0, b: 0, l: ins.length };
-  // A side that holds a hand-placed station takes no outputs, so nothing lands on top of it.
-  for (const { x, y } of Object.values(M.at ?? {})) {
-    const side = x <= 200 ? "l" : x >= 800 ? "r" : y <= 150 ? "t" : y >= 550 ? "b" : null;
-    if (side) n[side] = MAX_SIDE;
-  }
-  // Outputs share the right, bottom and top evenly, and go under the inputs only once those are full.
-  const extra = { t: 0, r: 0, b: 0, l: 0 };
-  for (let i = 0; i < outs.length; i++) {
-    const open = ["r", "b", "t"].filter((k) => n[k] < MAX_SIDE);
-    const side = open.length ? open.sort((a, b) => n[a] - n[b])[0] : "l";
-    n[side]++;
-    extra[side]++;
-  }
-  let k = 0;
-  const take = (m) => outs.slice(k, (k += m));
-  const top = [...res, ...take(extra.t)],
-    right = take(extra.r),
-    bottom = take(extra.b).reverse(),
-    left = [...ins, ...take(extra.l).reverse()];
+  const closed = new Set(
+    Object.values(M.at ?? {}).map(({ x, y }) =>
+      x <= 200 ? "l" : x >= 800 ? "r" : y <= 150 ? "t" : y >= 550 ? "b" : null,
+    ),
+  );
+  const target = Math.ceil(ids.length / (4 - [..."lrtb"].filter((k) => closed.has(k)).length));
+  const count = { t: 0, r: 0, b: 0, l: 0 },
+    per = { in: { t: 0, r: 0, b: 0, l: 0 }, res: { t: 0, r: 0, b: 0, l: 0 }, out: { t: 0, r: 0, b: 0, l: 0 } };
+  for (const [role, list] of [
+    ["in", ins],
+    ["res", res],
+    ["out", outs],
+  ])
+    for (let i = 0; i < list.length; i++) {
+      const open = PREFER[role].filter((k) => !closed.has(k) && count[k] < MAX_SIDE);
+      const side = open.find((k) => count[k] < target) ?? open[0];
+      count[side]++;
+      per[role][side]++;
+    }
+  const cut = (list) => {
+    let k = 0;
+    return (m) => list.slice(k, (k += m));
+  };
+  const inAt = cut(ins),
+    resAt = cut(res),
+    outAt = cut(outs);
+  const inL = inAt(per.in.l),
+    inB = inAt(per.in.b),
+    inT = inAt(per.in.t),
+    inR = inAt(per.in.r);
+  const resT = resAt(per.res.t),
+    resR = resAt(per.res.r),
+    resL = resAt(per.res.l),
+    resB = resAt(per.res.b);
+  const outT = outAt(per.out.t),
+    outR = outAt(per.out.r),
+    outB = outAt(per.out.b),
+    outL = outAt(per.out.l);
+  // Each side read left to right or top to bottom.
+  const top = [...inT, ...resT, ...outT],
+    right = [...inR, ...resR, ...outR],
+    bottom = [...inB, ...resB, ...outB.reverse()],
+    left = [...resL, ...inL, ...outL.reverse()];
   // Spread m stations evenly around the middle of a side; two sit wide apart, as a mirrored pair.
   const spread = (m, step, pair) => [...Array(m)].map((_, i) => (i - (m - 1) / 2) * (m === 2 ? pair : step));
   const along = (m, span, pair) => spread(m, m > 1 ? Math.min(span[0], span[1] / (m - 1)) : 0, pair);
   const at = {};
-  along(top.length, [127, 500], 254).forEach((d, i) => (at[top[i]] = { x: 500 + d, y: 80, side: "above" }));
-  along(bottom.length, [127, 500], 254).forEach((d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }));
+  along(top.length, [250, 500], 254).forEach((d, i) => (at[top[i]] = { x: 500 + d, y: 80, side: "above" }));
+  along(bottom.length, [250, 500], 254).forEach((d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }));
   along(left.length, [135, 520], 270).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
   along(right.length, [135, 520], 270).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
   return { ...at, ...M.at };
