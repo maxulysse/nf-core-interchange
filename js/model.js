@@ -51,11 +51,11 @@ function layout(M, E) {
     count.l = MAX_SIDE - 2;
     used.l = LINES.l - 2;
   }
-  // Outputs too many for the right share it evenly with the bottom, with the top when no resource uses it or
+  // Outputs that would fill the right share it evenly with the bottom, with the top when no resource uses it or
   // both are full, and with the left when no input uses it.
   const outLines = outs.reduce((n, id) => n + lines(id), 0);
   const share =
-    outLines > LINES.r || outs.length > MAX_SIDE
+    outLines >= LINES.r || outs.length >= MAX_SIDE
       ? [
           "r",
           "b",
