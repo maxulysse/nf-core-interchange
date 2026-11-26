@@ -113,17 +113,12 @@ function layout(M, E) {
     (d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }),
   );
   if (stop) {
-    // The stop and its sources take one slot of the left column, in the middle when inputs sit either side, so
-    // the lines into the hub mirror each other.
-    const slots = [...left];
-    slots.splice(Math.ceil(left.length / 2), 0, stop);
+    // The stop sits level with the hub, so source, stop and hub run as one straight line; the other inputs sit
+    // above and below it, further out when the stop fans in two sources.
     const wide = feeders.length > 1 ? 200 : 135;
-    along(slots.length, [wide, 400], wide * 2).forEach(
-      (d, i) => (at[slots[i]] = { x: 120, y: 340 + d, side: "below" }),
-    );
-    const y = at[stop].y;
-    at[stop] = { x: 300, y, side: "below", tag: "optional" };
-    along(feeders.length, [100, 520], 200).forEach((d, i) => (at[feeders[i]] = { x: 120, y: y + d, side: "below" }));
+    left.forEach((id, i) => (at[id] = { x: 120, y: 340 + (i ? wide : -wide), side: "below" }));
+    at[stop] = { x: 300, y: 340, side: "below", tag: "optional" };
+    along(feeders.length, [100, 520], 200).forEach((d, i) => (at[feeders[i]] = { x: 120, y: 340 + d, side: "below" }));
   } else offsets(left, [135, 400], 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
   offsets(right, [135, 400], 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
   return { ...at, ...M.at };
