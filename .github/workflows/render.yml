@@ -21,20 +21,29 @@ jobs:
             if (missing.length) console.log("Not in TREE:", missing.join(" "));
             if (unknown.length) console.log("Not in catalogue.js:", unknown.join(" "));
             process.exit(missing.length || unknown.length ? 1 : 0);'
-      - name: Check every map has one hub, unique stations and handoffs between them
+      - name: Check every map places known stations and draws every handoff of its hub
         run: |
           node -e '
             const fs = require("fs"), maps = [];
             globalThis.registerMap = m => maps.push(m);
+            eval(fs.readFileSync("stations.js", "utf8") + fs.readFileSync("handoffs.js", "utf8") + ";globalThis.ST = STATIONS; globalThis.H = HANDOFFS; globalThis.SRC = SOURCES");
             for (const f of fs.readdirSync("maps")) eval(fs.readFileSync("maps/" + f, "utf8"));
             let bad = 0;
             const fail = msg => { console.log(msg); bad = 1; };
+            const pair = h => `${h.f}>${h.t}`, used = new Set(), drawn = new Set();
+            H.flatMap(h => [h.f, h.t]).filter(id => !ST[id]).forEach(id => fail(`handoffs.js names unknown station ${id}`));
+            H.filter(h => h.src && !SRC[h.src]).forEach(h => fail(`${pair(h)}: unknown src ${h.src}`));
             for (const m of maps) {
-              const ids = m.S.map(s => s.id), hubs = m.S.filter(s => s.hub).map(s => s.id);
-              if (hubs.length !== 1 || hubs[0] !== m.id) fail(`${m.id}: hub must be the one station ${m.id}, found ${hubs.join(" ") || "none"}`);
-              ids.filter((id, i) => ids.indexOf(id) !== i).forEach(id => fail(`${m.id}: station ${id} is listed twice`));
-              m.E.flatMap(e => [e.f, e.t]).filter(id => !ids.includes(id)).forEach(id => fail(`${m.id}: handoff names unknown station ${id}`));
+              const at = Object.keys(m.at), shown = H.filter(h => h.f === m.id || h.t === m.id || m.also?.includes(pair(h)));
+              if (!m.at[m.id]) fail(`${m.id}: the hub is not placed`);
+              at.forEach(id => (ST[id] ? used.add(id) : fail(`${m.id}: unknown station ${id}`)));
+              shown.flatMap(h => [h.f, h.t]).filter(id => !m.at[id]).forEach(id => fail(`${m.id}: draws a handoff to ${id}, which it does not place`));
+              (m.also ?? []).filter(p => !H.some(h => pair(h) === p)).forEach(p => fail(`${m.id}: also names unknown handoff ${p}`));
+              at.filter(id => !shown.some(h => h.f === id || h.t === id)).forEach(id => fail(`${m.id}: ${id} has no line`));
+              shown.forEach(h => drawn.add(h));
             }
+            Object.keys(ST).filter(id => !used.has(id)).forEach(id => fail(`stations.js: ${id} is on no map`));
+            H.filter(h => !drawn.has(h)).forEach(h => fail(`handoffs.js: ${pair(h)} is on no map`));
             process.exit(bad);'
       - name: Load every group and every map in headless Chrome and fail on script errors
         run: |

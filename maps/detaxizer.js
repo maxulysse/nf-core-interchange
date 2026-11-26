@@ -1,111 +1,15 @@
-// Interchange map for nf-core/detaxizer. Stations (S) are pipelines and resources; edges (E) are handoffs between them.
+// Interchange map for nf-core/detaxizer: where each station sits. Station text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "detaxizer",
   title: "Detaxizer Interchange",
   checked: "2026-11-26",
-  overview:
-    'Where nf-core/detaxizer gets its reads, and which pipelines read the filtered reads back. Handoffs come from the <a href="https://vagkaratzas.github.io/meta-omics-sig/" target="_blank" rel="noopener">meta-omics SIG benchmark</a>, rechecked against the latest releases.',
-  S: [
-    {
-      id: "detaxizer",
-      x: 500,
-      y: 330,
-      hub: true,
-      side: "inside",
-      blurb:
-        "Finds host or contaminant reads (human by default) with kraken2 or bbduk and filters them out. With --generate_downstream_samplesheets it writes sheets for taxprofiler and mag.",
-      takes: "Samplesheet: sample, short_reads_fastq_1, short_reads_fastq_2, long_reads_fastq_1 (gzipped FASTQ)",
-      gives: "Filtered FASTQ, downstream_samplesheets/taxprofiler.csv and mag-pe.csv",
-    },
-    {
-      id: "fetchngs",
-      x: 150,
-      y: 330,
-      side: "below",
-      blurb: "Downloads FASTQ for SRA, ENA, DDBJ or GEO ids and writes a samplesheet for the next pipeline.",
-      takes: "ids.csv: one accession per line",
-      gives: "FASTQ, samplesheet/samplesheet.csv (--nf_core_pipeline picks the columns)",
-    },
-    {
-      id: "ampliseq",
-      x: 850,
-      y: 110,
-      side: "below",
-      blurb: "Amplicon sequencing analysis (16S, ITS, COI and more) with DADA2 and QIIME2.",
-      takes: "Samplesheet: sample, fastq_1, fastq_2, run; --primer_fwd, --primer_rev; --metadata",
-      gives: "ASVs, taxonomy, abundance tables, diversity",
-    },
-    {
-      id: "taxprofiler",
-      x: 850,
-      y: 260,
-      side: "below",
-      blurb:
-        "Taxonomic classification and profiling of shotgun short- and long-read metagenomic data, with several classifiers in one run.",
-      takes:
-        "Samplesheet: sample, run_accession, instrument_platform, fastq_1, fastq_2, fasta; --databases: tool, db_name, db_params, db_path",
-      gives: "Taxonomic profiles, merged tables",
-    },
-    {
-      id: "mag",
-      x: 850,
-      y: 410,
-      side: "below",
-      blurb: "Assembles metagenomes and bins the contigs into metagenome-assembled genomes (MAGs).",
-      takes:
-        "Samplesheet: sample, group, short_reads_1, short_reads_2, short_reads_platform (or long_reads, long_reads_platform)",
-      gives: "Assemblies, bins, Prodigal and Prokka proteins, taxonomy",
-    },
-    {
-      id: "metatdenovo",
-      x: 850,
-      y: 560,
-      side: "below",
-      blurb: "De novo assembly and annotation of metatranscriptomes. All samples go into one co-assembly.",
-      takes: "Samplesheet: sample, fastq_1, fastq_2; --assembler; --orf_caller",
-      gives: "One assembly, ORFs and proteins, counts per sample",
-    },
-  ],
-  E: [
-    {
-      f: "fetchngs",
-      t: "detaxizer",
-      line: "reads",
-      st: "conversion",
-      via: "samplesheet/samplesheet.csv, then rename fastq_1, fastq_2 to short_reads_fastq_1, short_reads_fastq_2",
-      note: '--nf_core_pipeline has no detaxizer option. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> --target detaxizer does the rename, and detaxizer ran on its sheet in the SIG benchmark.',
-    },
-    {
-      f: "detaxizer",
-      t: "ampliseq",
-      line: "out",
-      st: "conversion",
-      via: "filtered FASTQ into sample, fastq_1, fastq_2",
-      note: "--generate_pipeline_samplesheets only takes taxprofiler and mag, so build this sheet by hand.",
-    },
-    {
-      f: "detaxizer",
-      t: "taxprofiler",
-      line: "out",
-      st: "native",
-      via: "--generate_downstream_samplesheets: downstream_samplesheets/taxprofiler.csv into --input",
-      note: "taxprofiler 2.0.1 read it unchanged in the SIG benchmark. taxprofiler still needs a --databases sheet, which detaxizer does not write.",
-    },
-    {
-      f: "detaxizer",
-      t: "mag",
-      line: "out",
-      st: "native",
-      via: "--generate_downstream_samplesheets: downstream_samplesheets/mag-pe.csv into --input",
-      note: "detaxizer 1.4.0 writes the group and short_reads_platform columns that 1.3.0 left out (nf-core/detaxizer#100). Not yet run with a 1.4.0 sheet.",
-    },
-    {
-      f: "detaxizer",
-      t: "metatdenovo",
-      line: "out",
-      st: "conversion",
-      via: "filtered FASTQ into sample, fastq_1, fastq_2",
-      note: '--generate_pipeline_samplesheets has no metatdenovo option. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/detaxizer_to_reads_samplesheet.py" target="_blank" rel="noopener">detaxizer_to_reads_samplesheet.py</a> builds the sheet. Both mates are filtered with the same read list, so pairs stay in sync.',
-    },
-  ],
+  overview: "Where nf-core/detaxizer gets its reads, and which pipelines read the filtered reads back.",
+  at: {
+    detaxizer: { x: 500, y: 330 },
+    fetchngs: { x: 150, y: 330, side: "below" },
+    ampliseq: { x: 850, y: 110, side: "below" },
+    taxprofiler: { x: 850, y: 260, side: "below" },
+    mag: { x: 850, y: 410, side: "below" },
+    metatdenovo: { x: 850, y: 560, side: "below" },
+  },
 });

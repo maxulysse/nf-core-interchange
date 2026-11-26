@@ -9,9 +9,11 @@ const ST = {
     label: "Conversion",
     note: "works today once the output is turned into the next samplesheet or params, by hand or with a script",
   },
-  planned: { label: "Planned", note: "needs a change in a pipeline or a release, or nobody has checked it yet" },
+  planned: { label: "Planned", note: "needs a change in a pipeline or a release" },
 };
 const LN = { reads: "Input data", res: "Resources", out: "Results out" };
+// Map and catalogue text that is not markup: escape it before it goes into HTML. Notes and overviews are markup.
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const NS = "http://www.w3.org/2000/svg";
 const el = (n, a = {}, txt) => {
   const e = document.createElementNS(NS, n);
@@ -67,11 +69,23 @@ const around = (s, w, full) => {
 
 function renderMap(M, from) {
   // Copies, so rendering twice never stacks state on the shared data.
-  const S = M.S.map((s) => ({ ...s })),
-    E = M.E.map((e) => ({ ...e }));
+  const S = Object.entries(M.at).map(([id, at]) => ({
+    id,
+    ...STATIONS[id],
+    ...at,
+    ...(id === M.id && { hub: true, side: "inside" }),
+  }));
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
-  const HUB = S.find((s) => s.hub);
-  // Releases come from catalogue.js; rel in a map is only for stations outside the nf-core catalogue.
+  const HUB = byId[M.id];
+  const also = new Set(M.also);
+  const drawn = (h) => h.f === HUB.id || h.t === HUB.id || also.has(`${h.f}>${h.t}`);
+  const E = HANDOFFS.filter(drawn).map((h) => ({ ...h }));
+  // Colour by direction: into the hub is input (or a resource), out of it is results. A handoff between two
+  // other stations takes the colour of the hub line at its target, or at its source.
+  E.forEach((e) => (e.line = e.t === HUB.id ? (e.res ? "res" : "reads") : e.f === HUB.id ? "out" : null));
+  const hubLine = (id) => E.find((h) => h.line && (h.f === id || h.t === id))?.line;
+  E.forEach((e) => (e.line ??= e.res ? "res" : (hubLine(e.t) ?? hubLine(e.f))));
+  // Releases come from catalogue.js; rel in stations.js is only for stations outside the nf-core catalogue.
   const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? s.rel ?? "in development"));
   const far = (e) => byId[e.f === HUB.id ? e.t : e.f];
   document.getElementById("map-title").textContent = M.title;
@@ -296,7 +310,8 @@ function renderMap(M, from) {
     highlight([e.node, byId[e.f].node, byId[e.t].node]);
     card.innerHTML = `<div class="kicker">Handoff · ${LN[e.line]}</div>
     <h2>${e.f} → ${e.t}</h2><div>${pill(e.st)}</div>
-    <dl><dt>Through</dt><dd class="mono">${esc(e.via)}</dd><dt>Note</dt><dd>${e.note}</dd></dl>`;
+    <dl><dt>Through</dt><dd class="mono">${esc(e.via)}</dd><dt>Note</dt><dd>${e.note}</dd>
+    ${e.src ? `<dt>Source</dt><dd>${SOURCES[e.src]}</dd>` : ""}</dl>`;
   }
   function reset() {
     highlight([]);

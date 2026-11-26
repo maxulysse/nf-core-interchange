@@ -33,8 +33,6 @@ const pathTo = (n) => (n ? [...pathTo(parentOf(n)), n] : []);
 const groupLinks = (id) =>
   PARENTS[id].map((g) => `<a href="#${g.id}">${pathTo(g).slice(1).map(label).join(" › ")}</a>`).join(", ");
 const plural = (k, w) => `${k} ${w}${k === 1 ? "" : "s"}`;
-// Catalogue text comes from the pipelines' own repositories: escape it before it goes into markup.
-const esc = (t) => String(t).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const info = (id) => CATALOGUE[id] ?? { desc: "", rel: null };
 
 // Spiral placement in axial hex coordinates: the centre, then each ring outward.
@@ -99,7 +97,7 @@ function showGroup(g, from) {
     const sub = grp
       ? plural(n, "pipeline")
       : has
-        ? `${MAPS[c.id].S.length - 1} stations`
+        ? `${Object.keys(MAPS[c.id].at).length - 1} stations`
         : dev
           ? "in development"
           : info(c.id).rel;
