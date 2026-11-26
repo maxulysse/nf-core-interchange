@@ -485,8 +485,8 @@ const HANDOFFS = [
   {
     f: "references",
     t: "igenomes",
-    checked: "2026-11-25",
-    st: "planned",
+    checked: "2026-11-26",
+    st: "conversion",
     via: "<species>/<source>/<genome>/Sequence/... into the bucket",
     note: "The README says it is built mainly to fill AWS iGenomes, and it writes the same folder layout. Which bundles in the bucket come from it is not tracked here.",
   },
@@ -523,15 +523,6 @@ const HANDOFFS = [
     st: "conversion",
     via: "--fasta, --fasta_fai, --dict, --bwamem2 (or --bwa, --dragmap), --intervals, --msisensorpro_scan",
     note: "A --references datasheet param is proposed in nf-core/sarek#2307 and not in sarek 3.12.0. Until then, pass the files one by one.",
-  },
-  {
-    f: "references",
-    t: "sarek",
-    checked: "2026-11-25",
-    res: true,
-    st: "planned",
-    via: "--references, --references_datasheets_path",
-    note: "Not in sarek 3.12.0. Added by nf-core/sarek#2307, still open.",
   },
   {
     f: "references-assets",
@@ -625,8 +616,8 @@ const HANDOFFS = [
   {
     f: "seqinspector",
     t: "sarek",
-    checked: "2026-11-16",
-    st: "planned",
+    checked: "2026-11-26",
+    st: "conversion",
     via: "--continue_with_lint_fail false, then sarek on success",
     note: "Optional: skip seqinspector and pass the sarek sheet straight on. fetchngs writes one with --nf_core_pipeline sarek; demultiplex leaves patient empty. As a gate, 1.1.2 only stops the whole run on a lint failure, and CheckQC never stops it. A per-sample gate needs seqinspector to write a sarek sheet of samples that pass.",
   },

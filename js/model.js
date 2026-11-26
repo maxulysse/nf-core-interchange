@@ -1,3 +1,12 @@
+// Handoff statuses. What a pipeline still lacks goes in the handoff's note.
+const ST = {
+  native: { label: "Native", note: "both pipelines support it in code; the chain has not been run end to end" },
+  conversion: {
+    label: "Conversion",
+    note: "works today once the output is turned into the next samplesheet or params, by hand or with a script",
+  },
+};
+
 // What a map draws, without the DOM: its stations with their text from stations.js, and the handoffs from
 // handoffs.js that it draws, each coloured. renderMap draws it and bin/check.js checks it.
 function mapModel(M) {

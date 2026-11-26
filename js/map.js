@@ -3,14 +3,6 @@
 const narrow = matchMedia("(max-width: 640px)");
 narrow.addEventListener("change", () => location.reload());
 const F = narrow.matches ? 1.8 : 1;
-const ST = {
-  native: { label: "Native", note: "both pipelines support it in code; the chain has not been run end to end" },
-  conversion: {
-    label: "Conversion",
-    note: "works today once the output is turned into the next samplesheet or params, by hand or with a script",
-  },
-  planned: { label: "Planned", note: "needs a change in a pipeline or a release" },
-};
 const LN = { reads: "Input data", res: "Resources", out: "Results out" };
 // Map and catalogue text that is not markup: escape it before it goes into HTML. Notes and overviews are markup.
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -312,7 +304,7 @@ function renderMap(M, from) {
     if (ev.target === svg) reset();
   };
 
-  // Legend: colour is the line, dashes and opacity are the status.
+  // Legend: colour is the line, dashes are the status.
   const sw = (cls, color) =>
     `<svg width="38" height="10" aria-hidden="true"><line x1="5" y1="5" x2="33" y2="5" class="line ${cls}" style="stroke:${color};stroke-width:5"/></svg>`;
   document.getElementById("legend").innerHTML =

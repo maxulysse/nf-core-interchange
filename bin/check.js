@@ -7,8 +7,8 @@ const vm = require("vm");
 const scripts = [...fs.readFileSync("index.html", "utf8").matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
 for (const f of scripts.slice(0, scripts.indexOf("js/map.js")))
   vm.runInThisContext(fs.readFileSync(f, "utf8"), { filename: f });
-const { TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, mapModel } = vm.runInThisContext(
-  "({ TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, mapModel })",
+const { TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel } = vm.runInThisContext(
+  "({ TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel })",
 );
 
 let bad = 0;
@@ -35,6 +35,7 @@ Object.entries(STATIONS)
 
 for (const h of HANDOFFS) {
   [h.f, h.t].filter((id) => !STATIONS[id]).forEach((id) => fail(`handoffs.js: ${pair(h)} names unknown station ${id}`));
+  if (!ST[h.st]) fail(`handoffs.js: ${pair(h)} has unknown status ${h.st}`);
   if (h.src && !SOURCES[h.src]) fail(`handoffs.js: ${pair(h)} has unknown src ${h.src}`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(h.checked)) fail(`handoffs.js: ${pair(h)} has no checked date`);
 }

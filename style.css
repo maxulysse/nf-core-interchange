@@ -123,9 +123,6 @@ code,
   stroke-dasharray: 14 8;
   stroke-linecap: butt;
 }
-.line.planned {
-  stroke-opacity: 0.35;
-}
 .hit {
   fill: none;
   stroke: transparent;
@@ -193,9 +190,6 @@ code,
   stroke-width: 2;
   pointer-events: none;
 }
-.dot.planned {
-  opacity: 0.5;
-}
 svg.focus .line,
 svg.focus .stn,
 svg.focus .dot {
@@ -249,9 +243,6 @@ svg.focus .on {
 }
 .pill.conversion {
   color: var(--out);
-}
-.pill.planned {
-  color: var(--res);
 }
 .card a {
   color: var(--res);
