@@ -1,5 +1,5 @@
 // The honeycomb tree. A node with children is a group and opens into a honeycomb of them. A plain string is a
-// pipeline: it opens its map when maps/<id>.js registers one, else a card from catalogue.js.
+// pipeline: it opens its map when maps.js lists one, else a card from catalogue.js.
 // Group ids must be unique and differ from pipeline names: an id is also the page address (#sarek, #cancer).
 // A pipeline may be listed in several groups; its page shows all of them, and the breadcrumb follows the group
 // you opened it from. Tiles are placed in a spiral from the centre, in the order listed: put the busiest first.

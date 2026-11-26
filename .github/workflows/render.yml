@@ -27,8 +27,7 @@ jobs:
             render "#$id"
             grep -q 'class="tile' dom.html || { echo "group $id did not render"; exit 1; }
           done
-          for f in maps/*.js; do
-            id=$(basename "$f" .js)
+          for id in $(grep -oE '^  [a-z0-9]+: \{' maps.js | cut -d: -f1); do
             render "#$id"
             grep -q 'class="stn' dom.html || { echo "map $id did not render"; exit 1; }
           done

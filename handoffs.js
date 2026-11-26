@@ -1,5 +1,4 @@
-// Every handoff between two stations. A map draws each handoff that touches its hub, plus the ones it lists in also,
-// minus the ones it lists in skip.
+// Every handoff between two stations. A map draws each handoff that touches its hub, plus the ones it lists in also.
 // checked is the day it was last checked against both pipelines' latest releases. res marks a reference or
 // database, not sample data. src names where the handoff was first tested.
 const SOURCES = {

@@ -40,10 +40,7 @@ for (const h of HANDOFFS) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(h.checked)) fail(`handoffs.js: ${pair(h)} has no checked date`);
 }
 
-// Every map is loaded, places its hub and known stations, and draws each placed station with a coloured line.
-fs.readdirSync("maps")
-  .filter((f) => !scripts.includes(`maps/${f}`))
-  .forEach((f) => fail(`index.html: maps/${f} is not loaded`));
+// Every map names known handoffs, keeps its stations apart, and draws each handoff with a route and a colour.
 const placed = new Set(),
   drawn = new Set();
 for (const M of Object.values(MAPS)) {
@@ -51,6 +48,7 @@ for (const M of Object.values(MAPS)) {
     .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
     .forEach((p) => fail(`${M.id}: also names unknown handoff ${p}`));
   const { S, E } = mapModel(M);
+  E.filter((e) => e.d.includes("NaN")).forEach((e) => fail(`${M.id}: ${pair(e)} has no route`));
   E.filter((e) => !e.line).forEach((e) =>
     fail(`${M.id}: ${pair(e)} touches no station on a hub line, so it has no colour`),
   );

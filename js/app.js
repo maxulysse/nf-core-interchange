@@ -220,7 +220,7 @@ function route() {
   }
   mapGroups.innerHTML = m ? `In ${groupLinks(n.id)}` : "";
   renderCrumbs(n);
-  document.title = n === TREE ? "nf-core/interchange" : `${m ? m.title : label(n)} · nf-core/interchange`;
+  document.title = n === TREE ? "nf-core/interchange" : `${m ? mapTitle(m.id) : label(n)} · nf-core/interchange`;
 }
 addEventListener("hashchange", route);
 document.addEventListener("keydown", (ev) => {
