@@ -304,7 +304,7 @@ function renderMap(M, from) {
     if (ev.target === svg) reset();
   };
 
-  // Legend: colour is the line, dashes are the status.
+  // Legend: colour is the line, opacity is the status.
   const sw = (cls, color) =>
     `<svg width="38" height="10" aria-hidden="true"><line x1="5" y1="5" x2="33" y2="5" class="line ${cls}" style="stroke:${color};stroke-width:5"/></svg>`;
   document.getElementById("legend").innerHTML =
