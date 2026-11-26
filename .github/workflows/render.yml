@@ -21,6 +21,21 @@ jobs:
             if (missing.length) console.log("Not in TREE:", missing.join(" "));
             if (unknown.length) console.log("Not in catalogue.js:", unknown.join(" "));
             process.exit(missing.length || unknown.length ? 1 : 0);'
+      - name: Check every map has one hub, unique stations and handoffs between them
+        run: |
+          node -e '
+            const fs = require("fs"), maps = [];
+            globalThis.registerMap = m => maps.push(m);
+            for (const f of fs.readdirSync("maps")) eval(fs.readFileSync("maps/" + f, "utf8"));
+            let bad = 0;
+            const fail = msg => { console.log(msg); bad = 1; };
+            for (const m of maps) {
+              const ids = m.S.map(s => s.id), hubs = m.S.filter(s => s.hub).map(s => s.id);
+              if (hubs.length !== 1 || hubs[0] !== m.id) fail(`${m.id}: hub must be the one station ${m.id}, found ${hubs.join(" ") || "none"}`);
+              ids.filter((id, i) => ids.indexOf(id) !== i).forEach(id => fail(`${m.id}: station ${id} is listed twice`));
+              m.E.flatMap(e => [e.f, e.t]).filter(id => !ids.includes(id)).forEach(id => fail(`${m.id}: handoff names unknown station ${id}`));
+            }
+            process.exit(bad);'
       - name: Load every group and every map in headless Chrome and fail on script errors
         run: |
           render() {
@@ -30,7 +45,7 @@ jobs:
           }
           render ""
           grep -q 'class="tile' dom.html
-          for id in $(grep -o 'id: "[a-z0-9-]*", label' pipelines.js | cut -d'"' -f2); do
+          for id in $(grep -o 'id: "[a-z0-9-]*"' pipelines.js | cut -d'"' -f2); do
             render "#$id"
             grep -q 'class="tile' dom.html || { echo "group $id did not render"; exit 1; }
           done

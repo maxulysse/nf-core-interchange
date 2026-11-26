@@ -1,0 +1,59 @@
+name: Auto-Merge Dependabot PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  verify:
+    permissions:
+      contents: read
+      pull-requests: read
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    outputs:
+      head-sha: ${{ steps.verify.outputs.head-sha }}
+    steps:
+      - name: Verify Dependabot PR
+        id: verify
+        uses: Midnighter/verify-dependabot-pr@78b332efb96437b9bf2f54830d5830972d8dfd52 # v0.4.0
+
+  merge:
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-slim
+    timeout-minutes: 5
+    needs: [verify]
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Enable auto-merge for Dependabot PRs
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --squash --match-head-commit "$HEAD_SHA" "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ needs.verify.outputs.head-sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Approve PR
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
+        run: |
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/reviews" \
+            -f commit_id="$HEAD_SHA" -f event=APPROVE --silent
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ needs.verify.outputs.head-sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
