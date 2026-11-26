@@ -199,6 +199,13 @@ const STATIONS = {
     takes: "Samplesheet: patient, sex, status, sample, lane, fastq_1, fastq_2 (or spring, bam, cram, vcf)",
     gives: "BAM/CRAM, VCFs per caller, annotated VCFs, MultiQC report, restart CSVs",
   },
+  "sequencing run": {
+    ext: true,
+    url: "https://nf-co.re/demultiplex/1.8.0/docs/usage/",
+    blurb: "The run folder a sequencer writes: base calls for every cluster, with the flowcell SampleSheet.csv.",
+    takes: "",
+    gives: "Run folder (or tar.gz), SampleSheet.csv",
+  },
   seqinspector: {
     blurb:
       "QC of sequencing runs and FASTQ, with MultiQC reports per run and per group. Bundles: illumina, ont, fastq, bam, minimal.",

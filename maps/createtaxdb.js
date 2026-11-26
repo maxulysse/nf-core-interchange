@@ -6,5 +6,6 @@ registerMap({
     "reference sequences": { x: 150, y: 340, side: "below" },
     taxprofiler: { x: 880, y: 205, side: "below" },
     seqinspector: { x: 880, y: 475, side: "below" },
+    demultiplex: { x: 880, y: 340, side: "below" },
   },
 });

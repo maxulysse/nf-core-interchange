@@ -18,7 +18,7 @@ registerMap({
     epitopeprediction: { x: 620, y: 620, side: "below" },
     hlatyping: { x: 380, y: 620, side: "below" },
   },
-  // fetchngs reaches sarek through seqinspector here; the fetchngs map draws the direct handoff.
-  skip: ["fetchngs>sarek"],
+  // fetchngs and demultiplex reach sarek through seqinspector here; their own maps draw the direct handoffs.
+  skip: ["fetchngs>sarek", "demultiplex>sarek"],
   also: ["fetchngs>seqinspector", "demultiplex>seqinspector", "hlatyping>epitopeprediction"],
 });

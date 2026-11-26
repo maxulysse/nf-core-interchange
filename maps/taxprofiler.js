@@ -8,6 +8,7 @@ registerMap({
     detaxizer: { x: 150, y: 470, side: "below" },
     createtaxdb: { x: 500, y: 90, side: "above" },
     bamtofastq: { x: 500, y: 600, side: "below" },
+    demultiplex: { x: 310, y: 600, side: "below" },
     differentialabundance: { x: 850, y: 340, side: "below" },
   },
 });
