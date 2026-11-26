@@ -52,6 +52,9 @@ for (const M of Object.values(MAPS)) {
   (M.also ?? [])
     .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
     .forEach((p) => fail(`${M.id}: also names unknown handoff ${p}`));
+  (M.skip ?? [])
+    .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
+    .forEach((p) => fail(`${M.id}: skip names unknown handoff ${p}`));
   if (!M.at[M.id]) {
     fail(`${M.id}: the hub is not placed`);
     continue;

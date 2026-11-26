@@ -18,8 +18,10 @@ function mapModel(M) {
     ...(id === M.id && { hub: true, side: "inside" }),
   }));
   const HUB = S.find((s) => s.hub);
-  const also = new Set(M.also);
-  const drawn = (h) => h.f === M.id || h.t === M.id || also.has(`${h.f}>${h.t}`);
+  const also = new Set(M.also),
+    skip = new Set(M.skip);
+  const pair = (h) => `${h.f}>${h.t}`;
+  const drawn = (h) => !skip.has(pair(h)) && (h.f === M.id || h.t === M.id || also.has(pair(h)));
   const E = HANDOFFS.filter(drawn).map((h) => ({ ...h, handoff: h }));
   // Colour by direction: into the hub is input (or a resource), out of it is results. A handoff between two
   // other stations takes the colour of the hub line at its target, or at its source.

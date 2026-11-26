@@ -1,4 +1,5 @@
-// Every handoff between two stations. A map draws each handoff that touches its hub, plus the ones it lists in also.
+// Every handoff between two stations. A map draws each handoff that touches its hub, plus the ones it lists in also,
+// minus the ones it lists in skip.
 // checked is the day it was last checked against both pipelines' latest releases. res marks a reference or
 // database, not sample data. src names where the handoff was first tested.
 const SOURCES = {
@@ -619,7 +620,7 @@ const HANDOFFS = [
     checked: "2026-11-26",
     st: "conversion",
     via: "--continue_with_lint_fail false, then sarek on success",
-    note: "Optional: skip seqinspector and pass the sarek sheet straight on. fetchngs writes one with --nf_core_pipeline sarek; demultiplex leaves patient empty. As a gate, 1.1.2 only stops the whole run on a lint failure, and CheckQC never stops it. A per-sample gate needs seqinspector to write a sarek sheet of samples that pass.",
+    note: "Optional: skip seqinspector and pass the sarek sheet straight on. fetchngs writes one with --nf_core_pipeline sarek but no lane column, which sarek needs; demultiplex leaves patient empty. As a gate, 1.1.2 only stops the whole run on a lint failure, and CheckQC never stops it. A per-sample gate needs seqinspector to write a sarek sheet of samples that pass.",
   },
   {
     f: "taxprofiler",
