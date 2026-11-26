@@ -94,12 +94,13 @@ function layout(M, E) {
   // Spread m stations evenly around the middle of a side; two sit wide apart, as a mirrored pair.
   const spread = (m, step, pair) => [...Array(m)].map((_, i) => (i - (m - 1) / 2) * (m === 2 ? pair : step));
   const along = (m, span, pair) => spread(m, m > 1 ? Math.min(span[0], span[1] / (m - 1)) : 0, pair);
-  // On a side column, a station with several lines to the hub sits level with it, so its bundle runs straight;
-  // the others keep their order either side of it.
+  // On a side column, the one station with more lines to the hub than any other sits level with it, so its
+  // bundle runs straight; the others keep their order either side of it. A tie spreads evenly, mirrored.
   const offsets = (list, span, pair, centre = false) => {
     const w = list.map(lines),
       k = w.indexOf(Math.max(...w));
-    if (!centre || list.length < 2 || w[k] < 2) return along(list.length, span, pair);
+    const busiest = w[k] > 1 && w.filter((n) => n === w[k]).length === 1;
+    if (!centre || list.length < 2 || !busiest) return along(list.length, span, pair);
     const step = Math.min(span[0], span[1] / 2 / Math.max(k, list.length - 1 - k));
     return list.map((_, i) => (i - k) * step);
   };
