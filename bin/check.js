@@ -47,24 +47,27 @@ fs.readdirSync("maps")
 const placed = new Set(),
   drawn = new Set();
 for (const M of Object.values(MAPS)) {
-  const ids = Object.keys(M.at);
-  ids.filter((id) => !STATIONS[id]).forEach((id) => fail(`${M.id}: places unknown station ${id}`));
+  const hand = Object.keys(M.at ?? {});
+  hand.filter((id) => !STATIONS[id]).forEach((id) => fail(`${M.id}: places unknown station ${id}`));
   (M.also ?? [])
     .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
     .forEach((p) => fail(`${M.id}: also names unknown handoff ${p}`));
   (M.skip ?? [])
     .filter((p) => !HANDOFFS.some((h) => pair(h) === p))
     .forEach((p) => fail(`${M.id}: skip names unknown handoff ${p}`));
-  if (M.at[M.id]) fail(`${M.id}: places its hub, which always sits in the middle`);
-  const { E } = mapModel(M);
-  E.flatMap((e) => [e.f, e.t])
-    .filter((id) => id !== M.id && !M.at[id])
-    .forEach((id) => fail(`${M.id}: draws a handoff to ${id}, which it does not place`));
+  if (hand.includes(M.id)) fail(`${M.id}: places its hub, which always sits in the middle`);
+  const { S, E } = mapModel(M);
+  // A station linked only through also has no side of its own: the map must place it by hand.
+  S.filter(
+    (s) => !s.hub && !hand.includes(s.id) && !E.some((e) => [e.f, e.t].includes(s.id) && [e.f, e.t].includes(M.id)),
+  ).forEach((s) => fail(`${M.id}: ${s.id} only connects through also, so place it in at`));
   E.filter((e) => !e.line).forEach((e) =>
     fail(`${M.id}: ${pair(e)} touches no station on a hub line, so it has no colour`),
   );
-  ids.filter((id) => !E.some((e) => e.f === id || e.t === id)).forEach((id) => fail(`${M.id}: ${id} has no line`));
-  [M.id, ...ids].forEach((id) => placed.add(id));
+  hand.filter((id) => !E.some((e) => e.f === id || e.t === id)).forEach((id) => fail(`${M.id}: ${id} has no line`));
+  const at = S.map((s) => `${s.x},${s.y}`);
+  at.filter((xy, i) => at.indexOf(xy) !== i).forEach((xy) => fail(`${M.id}: two stations sit at ${xy}`));
+  S.forEach((s) => placed.add(s.id));
   E.forEach((e) => drawn.add(e.handoff));
 }
 Object.keys(STATIONS)

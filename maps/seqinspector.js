@@ -1,31 +1,6 @@
-// Interchange map for nf-core/seqinspector: where each station sits around the hub, which is always at (500, 340). Station text is in stations.js, handoffs in handoffs.js.
+// Interchange map for nf-core/seqinspector. Stations are placed around the hub by js/model.js; text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "seqinspector",
   overview:
     "Which pipelines hand nf-core/seqinspector reads to check, which references and databases its QC reads, and where the checked reads go next. Each line is a handoff between two pipelines.",
-  at: {
-    "AWS iGenomes": { x: 120, y: 100, side: "below" },
-    references: { x: 120, y: 196, side: "below" },
-    fetchngs: { x: 120, y: 292, side: "below" },
-    demultiplex: { x: 120, y: 388, side: "below" },
-    bamtofastq: { x: 120, y: 484, side: "below" },
-    createtaxdb: { x: 120, y: 580, side: "below" },
-    sarek: { x: 260, y: 80, side: "above" },
-    raredisease: { x: 356, y: 80, side: "above" },
-    hlatyping: { x: 452, y: 80, side: "above" },
-    longraredisease: { x: 548, y: 80, side: "above" },
-    rnadnavar: { x: 644, y: 80, side: "above" },
-    methylseq: { x: 740, y: 80, side: "above" },
-    rnaseq: { x: 880, y: 100, side: "below" },
-    rnavar: { x: 880, y: 196, side: "below" },
-    atacseq: { x: 880, y: 292, side: "below" },
-    ampliseq: { x: 880, y: 388, side: "below" },
-    taxprofiler: { x: 880, y: 484, side: "below" },
-    detaxizer: { x: 880, y: 580, side: "below" },
-    viralrecon: { x: 692, y: 600, side: "below" },
-    magmap: { x: 596, y: 600, side: "below" },
-    metatdenovo: { x: 500, y: 600, side: "below" },
-    mag: { x: 404, y: 600, side: "below" },
-    viralmetagenome: { x: 308, y: 600, side: "below" },
-  },
 });

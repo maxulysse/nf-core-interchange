@@ -1,22 +1,14 @@
-// Interchange map for nf-core/sarek: where each station sits around the hub, which is always at (500, 340). Station text is in stations.js, handoffs in handoffs.js.
+// Interchange map for nf-core/sarek. Stations are placed around the hub by js/model.js; text is in stations.js, handoffs in handoffs.js.
 registerMap({
   id: "sarek",
   overview:
     "Where nf-core/sarek gets its input data and resources, and where its results go next. Each line is a handoff between two pipelines.",
+  // seqinspector is an optional stop between the read sources and sarek, so this side is placed by hand.
   at: {
     fetchngs: { x: 120, y: 244, side: "left" },
     demultiplex: { x: 120, y: 418, side: "left" },
-    bamtofastq: { x: 120, y: 620, side: "left" },
     seqinspector: { x: 300, y: 331, side: "below", tag: "optional" },
-    "AWS iGenomes": { x: 120, y: 100, side: "above" },
-    references: { x: 380, y: 100, side: "above" },
-    createpanelrefs: { x: 620, y: 100, side: "above" },
-    "annotation-cache": { x: 900, y: 100, side: "above" },
-    variantprioritization: { x: 900, y: 447, side: "below" },
-    variantbenchmarking: { x: 900, y: 273, side: "below" },
-    tumourevo: { x: 900, y: 620, side: "below" },
-    epitopeprediction: { x: 620, y: 620, side: "below" },
-    hlatyping: { x: 380, y: 620, side: "below" },
+    bamtofastq: { x: 120, y: 620, side: "left" },
   },
   // fetchngs and demultiplex reach sarek through seqinspector here; their own maps draw the direct handoffs.
   skip: ["fetchngs>sarek", "demultiplex>sarek"],
