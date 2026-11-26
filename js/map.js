@@ -63,7 +63,7 @@ function renderMap(M, from) {
   const { HUB, S, E, checked } = mapModel(M);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
   // Releases come from catalogue.js; rel in stations.js is only for stations outside the nf-core catalogue.
-  const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? s.rel ?? "in development"));
+  const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? s.rel ?? "dev"));
   const far = (e) => byId[e.f === HUB.id ? e.t : e.f];
   document.getElementById("map-title").textContent = M.title;
   document.getElementById("map-checked").textContent =

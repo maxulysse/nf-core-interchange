@@ -101,7 +101,7 @@ function showGroup(g, from) {
       : has
         ? `${Object.keys(MAPS[c.id].at).length - 1} stations`
         : dev
-          ? "in development"
+          ? "dev"
           : info(c.id).rel;
     c.node = el("g", {
       class: `tile${grp ? " grp" : has ? " has" : dev ? " dev" : ""}`,
@@ -134,7 +134,7 @@ function showGroup(g, from) {
 function selectTile(p) {
   level.children.forEach((t) => t.node.classList.toggle("sel", t === p));
   const { desc, rel } = info(p.id);
-  pcard.innerHTML = `<div class="kicker">Pipeline · ${rel ? esc(rel) : "in development"}</div><h2>${p.id}</h2>
+  pcard.innerHTML = `<div class="kicker">Pipeline · ${rel ? esc(rel) : "dev"}</div><h2>${p.id}</h2>
     ${desc ? `<p>${esc(desc)}</p>` : ""}
     <p style="color:var(--muted)">No interchange map yet. To add one, see <a href="${REPO}/blob/main/docs/CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING</a>.</p>
     <dl><dt>${PARENTS[p.id].length > 1 ? "Groups" : "Group"}</dt><dd>${groupLinks(p.id)}</dd>
