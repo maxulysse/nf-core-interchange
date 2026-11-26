@@ -18,7 +18,7 @@ const byField = (a, b) => (FIELD[a] ?? Infinity) - (FIELD[b] ?? Infinity) || a.l
 
 // Places stations on the star around the hub, at most six a side (the most a hub face takes before its lines
 // crowd). Inputs fan in from the left, resources from the top, outputs fan out to the right; each spills to the
-// next side only when full. Inputs run in
+// next side only when full; outputs too many for the right share it evenly with the bottom (and the top). Inputs run in
 // field order down the left; outputs in field order clockwise from the top. A stop between sources and the
 // hub (seqinspector) takes the left. A map's own `at` places a station by hand; a side holding one takes nothing else.
 // A hub face holds about five lines on a side (the left and right faces are short) and eight along the top or
@@ -51,6 +51,14 @@ function layout(M, E) {
     count.l = MAX_SIDE - 2;
     used.l = LINES.l - 2;
   }
+  // Outputs too many for the right share it evenly with the bottom, and with the top too when both are full.
+  const outLines = outs.reduce((n, id) => n + lines(id), 0);
+  const share =
+    outLines > LINES.r || outs.length > MAX_SIDE
+      ? outLines > LINES.r + LINES.b - 3 || outs.length > 2 * MAX_SIDE - 1
+        ? ["r", "b", "t"]
+        : ["r", "b"]
+      : null;
   for (const [role, list] of [
     ["in", ins],
     ["res", res],
@@ -62,7 +70,9 @@ function layout(M, E) {
       const roomiest = PREFER[role]
         .filter((k) => !closed.has(k))
         .sort((a, b) => used[a] / LINES[a] - used[b] / LINES[b])[0];
-      const side = open[0] || roomiest;
+      const split =
+        role === "out" && share && open.filter((k) => share.includes(k)).sort((a, b) => used[a] - used[b])[0];
+      const side = split || open[0] || roomiest;
       count[side]++;
       used[side] += w;
       per[role][side]++;
