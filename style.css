@@ -427,6 +427,8 @@ header {
 }
 .view {
   display: grid;
+  /* minmax(0, 1fr), not auto: else the view grows to its widest child (tables, cards) and overflows phones. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   animation: fadein 0.35s ease-out;
 }
@@ -511,4 +513,7 @@ header {
 }
 .tile.dev text {
   opacity: 0.75;
+}
+.nowrap {
+  white-space: nowrap;
 }

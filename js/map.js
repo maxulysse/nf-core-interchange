@@ -56,6 +56,50 @@ const around = (s, w, full) => {
   return [s.x - w / 2, s.y - h / 2, w, h];
 };
 
+// Narrow screens scale labels by F, so neighbours can collide. A column too tight for labels below its stations
+// gets them beside, on the side away from the hub; a row whose labels touch staggers them over two or three tiers.
+// Returns the box `full` grown to hold every label.
+function fitNarrow(svg, S, full) {
+  const move = (s, x, y, anchor) =>
+    [...s.label_.children].forEach((t, i) => {
+      t.setAttribute("x", x);
+      t.setAttribute("y", y + i * 15);
+      t.setAttribute("text-anchor", anchor);
+    });
+  const near = (a, b) => Math.abs(a - b) < 1;
+  const stations = S.filter((s) => !s.hub);
+  // Height of a label below its station, in map units: offset, name, version, margin.
+  const below = (32 + 15 + 8) * F;
+  for (const [x, side] of [
+    [CENTRE.x - COL, -1],
+    [CENTRE.x + COL, 1],
+  ]) {
+    const col = stations.filter((s) => near(s.x, x) && s.label === "below").sort((a, b) => a.y - b.y);
+    if (col.slice(1).some((s, i) => s.y - col[i].y < below + 12))
+      col.forEach((s) => move(s, side * 16, -2, side < 0 ? "end" : "start"));
+  }
+  const width = (s) => s.label_.getBBox().width * F;
+  for (const lab of ["above", "below"]) {
+    const rows = {};
+    stations.filter((s) => s.label === lab).forEach((s) => (rows[Math.round(s.y)] ??= []).push(s));
+    for (const row of Object.values(rows)) {
+      row.sort((a, b) => a.x - b.x);
+      // Labels `k` apart share a tier; use the fewest tiers, up to three, that keep each tier clear.
+      const clash = (k) => row.slice(k).some((s, i) => s.x - row[i].x < (width(s) + width(row[i])) / 2 + 8);
+      const tiers = [1, 2, 3].find((k) => !clash(k)) ?? 3;
+      const out = lab === "above" ? -1 : 1;
+      row.forEach((s, i) => i % tiers && move(s, 0, out * (32 + 36 * (i % tiers)), "middle"));
+    }
+  }
+  const b = svg.getBBox(),
+    m = 12,
+    x0 = Math.min(full[0], b.x - m),
+    y0 = Math.min(full[1], b.y - m),
+    x1 = Math.max(full[0] + full[2], b.x + b.width + m),
+    y1 = Math.max(full[1] + full[3], b.y + b.height + m);
+  return [x0, y0, x1 - x0, y1 - y0];
+}
+
 function renderMap(M, from) {
   const { HUB, S, E, checked } = mapModel(M);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
@@ -69,14 +113,10 @@ function renderMap(M, from) {
   const svg = document.getElementById("map");
   svg.replaceChildren();
   svg.setAttribute("aria-label", `Map of pipelines connected to nf-core/${HUB.id}`);
-  const pad = 100 * (F - 1),
-    full = [-pad, -pad / 2, MAP_W + 2 * pad, MAP_H + pad];
+  const pad = 100 * (F - 1);
+  let full = [-pad, -pad / 2, MAP_W + 2 * pad, MAP_H + pad];
   svg.classList.toggle("narrow", narrow.matches);
   svg.classList.remove("zooming");
-  // Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
-  const start = byId[from] ? around(byId[from], 160, full) : around(HUB, HEX_R * 2.4, full);
-  if (reduced) svg.setAttribute("viewBox", full.join(" "));
-  else animateBox(svg, start, full);
   const gL = el("g"),
     gD = el("g"),
     gS = el("g");
@@ -142,10 +182,17 @@ function renderMap(M, from) {
       el("text", { x: dx, y: dy + 15, "text-anchor": anc, class: "ver" }, release(s)),
     );
     s.node.append(mark(s), label);
+    s.label_ = label;
     // A second click on a selected station that has its own map opens that map.
     activate(s.node, () => (s.node.classList.contains("sel") && !s.hub && MAPS[s.id] ? openMap(s) : selectStation(s)));
     gS.append(s.node);
   });
+
+  if (narrow.matches) full = fitNarrow(svg, S, full);
+  // Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
+  const start = byId[from] ? around(byId[from], 160, full) : around(HUB, HEX_R * 2.4, full);
+  if (reduced) svg.setAttribute("viewBox", full.join(" "));
+  else animateBox(svg, start, full);
 
   const card = document.getElementById("card");
   const pill = (st) => `<span class="pill ${st}">${ST[st].label}</span>`;
