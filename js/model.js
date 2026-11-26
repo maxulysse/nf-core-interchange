@@ -11,7 +11,7 @@ function mapModel(M) {
   const HUB = S.find((s) => s.hub);
   const also = new Set(M.also);
   const drawn = (h) => h.f === M.id || h.t === M.id || also.has(`${h.f}>${h.t}`);
-  const E = HANDOFFS.filter(drawn).map((h) => ({ ...h }));
+  const E = HANDOFFS.filter(drawn).map((h) => ({ ...h, handoff: h }));
   // Colour by direction: into the hub is input (or a resource), out of it is results. A handoff between two
   // other stations takes the colour of the hub line at its target, or at its source.
   E.forEach((e) => (e.line = e.t === M.id ? (e.res ? "res" : "reads") : e.f === M.id ? "out" : null));

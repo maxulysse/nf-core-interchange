@@ -59,11 +59,11 @@ for (const M of Object.values(MAPS)) {
   );
   ids.filter((id) => !E.some((e) => e.f === id || e.t === id)).forEach((id) => fail(`${M.id}: ${id} has no line`));
   ids.forEach((id) => placed.add(id));
-  E.forEach((e) => drawn.add(`${pair(e)} ${e.via}`));
+  E.forEach((e) => drawn.add(e.handoff));
 }
 Object.keys(STATIONS)
   .filter((id) => !placed.has(id))
   .forEach((id) => fail(`stations.js: ${id} is on no map`));
-HANDOFFS.filter((h) => !drawn.has(`${pair(h)} ${h.via}`)).forEach((h) => fail(`handoffs.js: ${pair(h)} is on no map`));
+HANDOFFS.filter((h) => !drawn.has(h)).forEach((h) => fail(`handoffs.js: ${pair(h)} is on no map`));
 
 process.exit(bad);

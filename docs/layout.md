@@ -8,6 +8,7 @@
 | `stations.js`        | Every station: what it is, what it takes, what it gives                                                                      |
 | `handoffs.js`        | Every handoff between two stations, with its status, the files or params it goes through, a note, and the day it was checked |
 | `maps/<pipeline>.js` | One interchange map: where each station sits (`at`) and the handoffs it draws besides its hub's (`also`)                     |
+| `js/registry.js`     | `MAPS` and `registerMap`, which every map file calls                                                                         |
 | `js/model.js`        | What a map draws: its stations and handoffs, coloured, without the DOM                                                       |
 | `js/map.js`          | Draws a metro map from a map file                                                                                            |
 | `js/app.js`          | Honeycombs, zooming between levels, breadcrumbs, routing (`#<id>`), theme                                                    |
