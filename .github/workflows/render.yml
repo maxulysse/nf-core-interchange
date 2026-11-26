@@ -9,7 +9,7 @@ jobs:
   render:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Check the tree, the stations, the handoffs and the maps
         run: node bin/check.js
       - name: Load every group and every map in headless Chrome and fail on script errors

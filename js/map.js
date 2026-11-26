@@ -269,7 +269,7 @@ function renderMap(M, from) {
       outs = E.filter((e) => e.f === s.id);
     highlight([s.node, ...[...ins, ...outs].flatMap((e) => [e.node, byId[e.f].node, byId[e.t].node])]);
     s.node.classList.add("sel");
-    card.innerHTML = `<div class="kicker">${s.ext ? "Resource" : `Pipeline · ${release(s)}${s.tag ? ` (${s.tag})` : ""}`}</div>
+    card.innerHTML = `<div class="kicker">${s.ext ? "Resource" : `Pipeline · ${esc(release(s))}${s.tag ? ` (${s.tag})` : ""}`}</div>
     <h2>${s.id}</h2><p>${s.blurb}</p>
     <dl>${s.takes ? `<dt>Takes</dt><dd>${s.takes}</dd>` : ""}<dt>Gives</dt><dd>${s.gives}</dd>
     ${ins.length ? `<dt>From</dt><dd>${ins.map((e) => e.f).join(", ")}</dd>` : ""}
@@ -339,7 +339,7 @@ function renderMap(M, from) {
     .replaceChildren(
       ...S.map((s) =>
         row(
-          `<td><strong>${s.id}</strong></td><td class="mono">${release(s)}</td><td>${s.takes}</td><td>${s.gives}</td>`,
+          `<td><strong>${s.id}</strong></td><td class="mono">${esc(release(s))}</td><td>${s.takes}</td><td>${s.gives}</td>`,
           () => selectStation(s),
         ),
       ),

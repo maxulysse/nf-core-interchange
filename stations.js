@@ -1,5 +1,5 @@
 // Every station drawn on a map: what it is, what it takes and what it gives. Releases come from catalogue.js;
-// rel is only for resources outside the nf-core catalogue.
+// url and rel are only for stations outside the nf-core catalogue, which otherwise link to nf-co.re/<id>.
 const STATIONS = {
   "ENA / SRA": {
     ext: true,
@@ -60,6 +60,7 @@ const STATIONS = {
     gives: "Differential tables, report",
   },
   downloadsnpeffcache: {
+    url: "https://github.com/annotation-cache/downloadsnpeffcache",
     rel: "99",
     blurb:
       "Downloads snpEff databases for the annotation-cache bucket. Stays on 99: snpEff 5.2 and later have no 105 databases.",
@@ -67,6 +68,7 @@ const STATIONS = {
     gives: "snpEff cache (GRCh38.99)",
   },
   downloadvepcache: {
+    url: "https://github.com/annotation-cache/downloadvepcache",
     rel: "116",
     blurb: "Downloads Ensembl VEP caches for the annotation-cache bucket.",
     takes: "Species, assembly, VEP version",
