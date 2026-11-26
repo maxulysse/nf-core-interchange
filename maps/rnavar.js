@@ -7,7 +7,7 @@ registerMap({
     rnavar: { x: 500, y: 330 },
     fetchngs: { x: 130, y: 200, side: "below" },
     rnaseq: { x: 130, y: 470, side: "below" },
-    igenomes: { x: 300, y: 80, side: "above" },
+    "AWS iGenomes": { x: 300, y: 80, side: "above" },
     references: { x: 500, y: 60, side: "above" },
     "annotation-cache": { x: 760, y: 80, side: "above" },
     variantprioritization: { x: 870, y: 330, side: "below" },

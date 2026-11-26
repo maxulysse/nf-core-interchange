@@ -5,7 +5,7 @@ registerMap({
     "Where nf-core/createpanelrefs gets its cohort of normal alignments and its reference genome, and which pipelines read the panels and models it builds. Each line is a handoff between two pipelines.",
   at: {
     createpanelrefs: { x: 500, y: 330 },
-    igenomes: { x: 300, y: 80, side: "above" },
+    "AWS iGenomes": { x: 300, y: 80, side: "above" },
     references: { x: 700, y: 80, side: "above" },
     longraredisease: { x: 130, y: 330, side: "below" },
     sarek: { x: 870, y: 200, side: "below" },

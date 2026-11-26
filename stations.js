@@ -82,7 +82,7 @@ const STATIONS = {
     takes: "Samplesheet: sample, fastq_1, fastq_2 or bam, seq_type",
     gives: "HLA genotype: OptiType TSV, HLA-HD result",
   },
-  igenomes: {
+  "AWS iGenomes": {
     ext: true,
     url: "https://ewels.github.io/AWS-iGenomes/",
     blurb:

@@ -9,7 +9,7 @@ registerMap({
     demultiplex: { x: 140, y: 398, side: "left" },
     bamtofastq: { x: 140, y: 600, side: "left" },
     seqinspector: { x: 320, y: 311, side: "below", tag: "optional" },
-    igenomes: { x: 140, y: 80, side: "above" },
+    "AWS iGenomes": { x: 140, y: 80, side: "above" },
     references: { x: 400, y: 80, side: "above" },
     createpanelrefs: { x: 640, y: 80, side: "above" },
     "annotation-cache": { x: 880, y: 80, side: "above" },

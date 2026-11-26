@@ -271,7 +271,7 @@ const HANDOFFS = [
     note: "Join the OptiType alleles into one string (A*01:01;B*07:02;...) or a .txt file with one allele per line. HLA-HD, for class II, ships without its licence.",
   },
   {
-    f: "igenomes",
+    f: "AWS iGenomes",
     t: "bamtofastq",
     checked: "2026-11-25",
     res: true,
@@ -280,7 +280,7 @@ const HANDOFFS = [
     note: "Gives the FASTA and fai, which only CRAM input needs, and only when the reference in the CRAM header is out of reach. BAM converts without a reference.",
   },
   {
-    f: "igenomes",
+    f: "AWS iGenomes",
     t: "createpanelrefs",
     checked: "2026-11-25",
     res: true,
@@ -289,7 +289,7 @@ const HANDOFFS = [
     note: "Gives the FASTA, fai and dict. The per-tool files (CNVkit targets, gCNV ploidy priors and intervals, Gens interval list, Mutect2 target BED) only ship for the chr21 test genome: pass your own for real runs.",
   },
   {
-    f: "igenomes",
+    f: "AWS iGenomes",
     t: "rnavar",
     checked: "2026-11-25",
     res: true,
@@ -298,7 +298,7 @@ const HANDOFFS = [
     note: "The GRCh38 bundle gives the FASTA, STAR index, GTF and BED12, and sets the VEP and snpEff versions. The fai, dict and exon BED are built from them.",
   },
   {
-    f: "igenomes",
+    f: "AWS iGenomes",
     t: "sarek",
     checked: "2026-11-16",
     res: true,
@@ -467,7 +467,7 @@ const HANDOFFS = [
   },
   {
     f: "references",
-    t: "igenomes",
+    t: "AWS iGenomes",
     checked: "2026-11-26",
     st: "conversion",
     via: "<species>/<source>/<genome>/Sequence/... into the bucket",

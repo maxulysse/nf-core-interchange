@@ -6,7 +6,7 @@ registerMap({
   at: {
     references: { x: 500, y: 330 },
     "references-assets": { x: 130, y: 330, side: "below" },
-    igenomes: { x: 500, y: 60, side: "above" },
+    "AWS iGenomes": { x: 500, y: 60, side: "above" },
     sarek: { x: 870, y: 130, side: "below" },
     rnaseq: { x: 870, y: 330, side: "below" },
     rnavar: { x: 870, y: 530, side: "below" },
