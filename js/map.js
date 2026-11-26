@@ -200,6 +200,24 @@ function renderMap(M, from) {
     gS = el("g");
   svg.append(gL, gD, gS);
 
+  // Which half of the loop a ball runs: 1 or 2 on a two-leg route through a station, 0 (the whole loop) otherwise.
+  const via = E.filter((e) => e.f !== HUB.id && e.t !== HUB.id);
+  const legOf = (e) =>
+    e.t === HUB.id
+      ? via.some((v) => v.t === e.f)
+        ? 2
+        : 0
+      : e.f === HUB.id
+        ? via.some((v) => v.f === e.t)
+          ? 1
+          : 0
+        : E.some((h) => h.f === e.t && h.t === HUB.id)
+          ? 1
+          : 2;
+  const LEG = {
+    1: { keyPoints: "0;1;1", keyTimes: "0;0.5;1", calcMode: "linear" },
+    2: { keyPoints: "0;0;1", keyTimes: "0;0.5;1", calcMode: "linear" },
+  };
   // Each station and edge keeps its own SVG node, so selection needs no DOM lookups.
   E.forEach((e, i) => {
     e.id = "e" + i;
@@ -211,12 +229,25 @@ function renderMap(M, from) {
     gL.append(e.node, hit);
     if (!reduced) {
       const c = el("circle", { r: 4, class: `dot ${e.st}` });
-      // Every ball shares one timing, so at each station the balls arrive and leave together.
-      const am = el("animateMotion", { dur: "5s", repeatCount: "indefinite" });
+      // Every ball shares one 5 s loop, so at each station the balls arrive and leave together. On a route
+      // through a station (fetchngs, seqinspector, sarek) one ball runs the first leg, then the next one the second.
+      const leg = legOf(e);
+      const am = el("animateMotion", { dur: "5s", repeatCount: "indefinite", ...(leg && LEG[leg]) });
       const mp = el("mpath");
       mp.setAttribute("href", "#" + e.id);
       am.append(mp);
       c.append(am);
+      if (leg)
+        c.append(
+          el("animate", {
+            attributeName: "visibility",
+            values: leg === 1 ? "visible;hidden" : "hidden;visible",
+            keyTimes: "0;0.5",
+            calcMode: "discrete",
+            dur: "5s",
+            repeatCount: "indefinite",
+          }),
+        );
       gD.append(c);
     }
   });
