@@ -3,7 +3,8 @@ registerMap({
   id: "detaxizer",
   overview: "Where nf-core/detaxizer gets its reads, and which pipelines read the filtered reads back.",
   at: {
-    fetchngs: { x: 150, y: 340, side: "below" },
+    fetchngs: { x: 150, y: 210, side: "below" },
+    seqinspector: { x: 150, y: 470, side: "below" },
     ampliseq: { x: 850, y: 120, side: "below" },
     taxprofiler: { x: 850, y: 270, side: "below" },
     mag: { x: 850, y: 420, side: "below" },

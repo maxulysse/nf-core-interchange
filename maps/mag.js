@@ -4,6 +4,7 @@ registerMap({
   overview: "Where nf-core/mag gets its shotgun reads, and which pipelines take its contigs, bins and proteins.",
   at: {
     fetchngs: { x: 120, y: 205, side: "below" },
+    seqinspector: { x: 120, y: 340, side: "below" },
     detaxizer: { x: 120, y: 475, side: "below" },
     seqsubmit: { x: 373, y: 80, side: "above" },
     magmap: { x: 627, y: 80, side: "above" },

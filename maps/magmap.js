@@ -4,6 +4,7 @@ registerMap({
   overview: "Which genomes nf-core/magmap maps reads to, and where its counts go.",
   at: {
     mag: { x: 150, y: 340, side: "below" },
+    seqinspector: { x: 150, y: 470, side: "below" },
     differentialabundance: { x: 850, y: 340, side: "below" },
   },
 });

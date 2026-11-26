@@ -3,7 +3,8 @@ registerMap({
   id: "viralmetagenome",
   overview: "Where nf-core/viralmetagenome gets its reads, and which pipelines take its viral contigs.",
   at: {
-    fetchngs: { x: 150, y: 340, side: "below" },
+    fetchngs: { x: 150, y: 210, side: "below" },
+    seqinspector: { x: 150, y: 470, side: "below" },
     phageannotator: { x: 850, y: 210, side: "below" },
     phyloplace: { x: 850, y: 470, side: "below" },
   },
