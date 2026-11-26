@@ -211,8 +211,9 @@ function renderMap(M, from) {
     gL.append(e.node, hit);
     if (!reduced) {
       const c = el("circle", { r: 4, class: `dot ${e.st}` });
-      // Balls flowing into the same station share one timing, so they leave and arrive together.
-      const k = S.indexOf(byId[e.t]);
+      // Balls on hub lines share one timing, so they arrive at and leave the hub together; balls flowing into
+      // another station share that station's timing.
+      const k = e.f === HUB.id || e.t === HUB.id ? S.indexOf(HUB) : S.indexOf(byId[e.t]);
       const am = el("animateMotion", { dur: `${5 + (k % 4)}s`, repeatCount: "indefinite", begin: `${-k * 0.7}s` });
       const mp = el("mpath");
       mp.setAttribute("href", "#" + e.id);
