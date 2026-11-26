@@ -2,7 +2,7 @@
 
 ## Update the pipeline list
 
-Regenerate `catalogue.js` from the nf-core website's `public/pipelines.json` (see `bin/update-catalogue.py`), then place any new pipeline in `pipelines.js`. The Render check fails while a catalogue pipeline is missing from the tree.
+The Update catalogue workflow regenerates `catalogue.js` every Monday and opens a pull request when a pipeline, description or release changed. To do it by hand, regenerate it from the nf-core website's `public/pipelines.json` (see `bin/update-catalogue.py`), then place any new pipeline in `pipelines.js`. The Render check fails while a catalogue pipeline is missing from the tree.
 
 ## Add a pipeline
 
