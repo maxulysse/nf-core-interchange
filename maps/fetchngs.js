@@ -217,7 +217,7 @@ registerMap({
       f: "fetchngs",
       t: "sarek",
       line: "out",
-      st: "planned",
+      st: "conversion",
       via: "--nf_core_pipeline sarek, then add a lane column",
       note: 'fetchngs sets patient to the sample accession but writes no lane, and sarek 3.12.0 stops on a FASTQ row without one ("Missing or unknown field"). Paired-end runs only: sarek takes no single-end FASTQ.',
     },
