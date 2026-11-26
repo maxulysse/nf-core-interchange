@@ -17,11 +17,14 @@ TREE.children.forEach((g, i) =>
 const byField = (a, b) => (FIELD[a] ?? Infinity) - (FIELD[b] ?? Infinity) || a.localeCompare(b);
 
 // Places stations on the star around the hub, at most six a side (the most a hub face takes before its lines
-// crowd). Inputs fan in from the left, resources from the top; each spills to the next side only when full.
-// Outputs share the right, bottom and top evenly, and go to the left only once those are full. Inputs run in
+// crowd). Inputs fan in from the left, resources from the top, outputs fan out to the right; each spills to the
+// next side only when full. Inputs run in
 // field order down the left; outputs in field order clockwise from the top. A stop between sources and the
 // hub (seqinspector) takes the left. A map's own `at` places a station by hand; a side holding one takes nothing else.
+// A hub face holds about five lines on a side (the left and right faces are short) and eight along the top or
+// bottom, and a side about six labels; past that a station goes to the side with most room.
 const MAX_SIDE = 6;
+const LINES = { l: 5, r: 5, t: 8, b: 8 };
 const PREFER = { in: ["l", "b", "t", "r"], res: ["t", "r", "l", "b"], out: ["r", "b", "t", "l"] };
 function layout(M, E) {
   // A stop between sources and the hub (seqinspector) sits left of the hub, its sources on the left side beyond it.
@@ -40,18 +43,24 @@ function layout(M, E) {
     ),
   );
   if (stop) closed.add("l");
+  const lines = (id) => E.filter((e) => [e.f, e.t].includes(id) && [e.f, e.t].includes(M.id)).length;
   const count = { t: 0, r: 0, b: 0, l: 0 },
+    used = { t: 0, r: 0, b: 0, l: 0 },
     per = { in: { t: 0, r: 0, b: 0, l: 0 }, res: { t: 0, r: 0, b: 0, l: 0 }, out: { t: 0, r: 0, b: 0, l: 0 } };
   for (const [role, list] of [
     ["in", ins],
     ["res", res],
     ["out", outs],
   ])
-    for (let i = 0; i < list.length; i++) {
-      const open = PREFER[role].filter((k) => !closed.has(k) && count[k] < MAX_SIDE);
-      const even = role === "out" && open.filter((k) => k !== "l").sort((a, b) => count[a] - count[b])[0];
-      const side = even || open[0];
+    for (const id of list) {
+      const w = lines(id);
+      const open = PREFER[role].filter((k) => !closed.has(k) && count[k] < MAX_SIDE && used[k] + w <= LINES[k]);
+      const roomiest = PREFER[role]
+        .filter((k) => !closed.has(k))
+        .sort((a, b) => used[a] / LINES[a] - used[b] / LINES[b])[0];
+      const side = open[0] || roomiest;
       count[side]++;
+      used[side] += w;
       per[role][side]++;
     }
   const cut = (list) => {
@@ -81,11 +90,26 @@ function layout(M, E) {
   // Spread m stations evenly around the middle of a side; two sit wide apart, as a mirrored pair.
   const spread = (m, step, pair) => [...Array(m)].map((_, i) => (i - (m - 1) / 2) * (m === 2 ? pair : step));
   const along = (m, span, pair) => spread(m, m > 1 ? Math.min(span[0], span[1] / (m - 1)) : 0, pair);
+  // On a side column, a station with several lines to the hub sits level with it, so its bundle runs straight;
+  // the others keep their order either side of it.
+  const offsets = (list, span, pair, centre = false) => {
+    const w = list.map(lines),
+      k = w.indexOf(Math.max(...w));
+    if (!centre || list.length < 2 || w[k] < 2) return along(list.length, span, pair);
+    const step = Math.min(span[0], span[1] / 2 / Math.max(k, list.length - 1 - k));
+    return list.map((_, i) => (i - k) * step);
+  };
   const at = {};
-  along(top.length, [250, 500], 254).forEach((d, i) => (at[top[i]] = { x: 500 + d, y: 80, side: "above" }));
-  along(bottom.length, [250, 500], 254).forEach((d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }));
-  along(left.length, [135, 520], 270).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
-  along(right.length, [135, 520], 270).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
+  // A row of up to three stays within reach of the hub's top or bottom face, so its lines arrive vertically.
+  const row = (m) => (m <= 3 ? [124, 248, 248] : [250, 500, 254]);
+  offsets(top, row(top.length).slice(0, 2), row(top.length)[2]).forEach(
+    (d, i) => (at[top[i]] = { x: 500 + d, y: 80, side: "above" }),
+  );
+  offsets(bottom, row(bottom.length).slice(0, 2), row(bottom.length)[2]).forEach(
+    (d, i) => (at[bottom[i]] = { x: 500 + d, y: 600, side: "below" }),
+  );
+  offsets(left, [135, 400], 270, true).forEach((d, i) => (at[left[i]] = { x: 120, y: 340 + d, side: "below" }));
+  offsets(right, [135, 400], 270, true).forEach((d, i) => (at[right[i]] = { x: 880, y: 340 + d, side: "below" }));
   if (stop) {
     at[stop] = { x: 300, y: 340, side: "below", tag: "optional" };
     along(feeders.length, [100, 520], 200).forEach((d, i) => (at[feeders[i]] = { x: 120, y: 340 + d, side: "below" }));
