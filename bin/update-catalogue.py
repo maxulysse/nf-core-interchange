@@ -12,13 +12,20 @@ import json
 import pathlib
 import sys
 
+# Released, but still shown as in development.
+DEV = {"references"}
+
 src = json.loads(pathlib.Path(sys.argv[1]).read_text())["remote_workflows"]
 out = {}
 for p in sorted(src, key=lambda p: p["name"]):
     if p.get("archived"):
         continue
     rels = [r for r in p.get("releases", []) if r["tag_name"] != "dev"]
-    latest = max(rels, key=lambda r: r["published_at"])["tag_name"] if rels else None
+    latest = (
+        max(rels, key=lambda r: r["published_at"])["tag_name"]
+        if rels and p["name"] not in DEV
+        else None
+    )
     out[p["name"]] = {"desc": (p.get("description") or "").strip(), "rel": latest}
 
 stamp = datetime.date.today().isoformat()
