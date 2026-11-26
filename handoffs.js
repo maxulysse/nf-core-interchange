@@ -586,8 +586,7 @@ const HANDOFFS = [
   {
     f: "references-assets",
     t: "references",
-    checked: "2026-11-25",
-    res: true,
+    checked: "2026-11-26",
     st: "native",
     via: "--input: a sheet from references-assets",
     note: "The repository the README points to for its assets: ready sheets for common genomes, by source.",
