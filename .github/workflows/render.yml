@@ -2,6 +2,8 @@ name: Render
 
 on:
   pull_request:
+  # The weekly catalogue PR is opened with GITHUB_TOKEN, which starts no pull_request runs: it dispatches these.
+  workflow_dispatch:
   push:
     branches: [main]
 
@@ -9,33 +11,9 @@ jobs:
   render:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - name: Check every catalogue pipeline sits in the tree
-        run: |
-          node -e '
-            const fs = require("fs");
-            eval(fs.readFileSync("catalogue.js", "utf8") + fs.readFileSync("pipelines.js", "utf8") + ";globalThis.T = TREE; globalThis.C = CATALOGUE");
-            const seen = new Set();
-            (function walk(n) { typeof n === "string" ? seen.add(n) : n.children.forEach(walk); })(T);
-            const missing = Object.keys(C).filter(k => !seen.has(k)), unknown = [...seen].filter(k => !C[k]);
-            if (missing.length) console.log("Not in TREE:", missing.join(" "));
-            if (unknown.length) console.log("Not in catalogue.js:", unknown.join(" "));
-            process.exit(missing.length || unknown.length ? 1 : 0);'
-      - name: Check every map has one hub, unique stations and handoffs between them
-        run: |
-          node -e '
-            const fs = require("fs"), maps = [];
-            globalThis.registerMap = m => maps.push(m);
-            for (const f of fs.readdirSync("maps")) eval(fs.readFileSync("maps/" + f, "utf8"));
-            let bad = 0;
-            const fail = msg => { console.log(msg); bad = 1; };
-            for (const m of maps) {
-              const ids = m.S.map(s => s.id), hubs = m.S.filter(s => s.hub).map(s => s.id);
-              if (hubs.length !== 1 || hubs[0] !== m.id) fail(`${m.id}: hub must be the one station ${m.id}, found ${hubs.join(" ") || "none"}`);
-              ids.filter((id, i) => ids.indexOf(id) !== i).forEach(id => fail(`${m.id}: station ${id} is listed twice`));
-              m.E.flatMap(e => [e.f, e.t]).filter(id => !ids.includes(id)).forEach(id => fail(`${m.id}: handoff names unknown station ${id}`));
-            }
-            process.exit(bad);'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Check the tree, the stations, the handoffs and the maps
+        run: node bin/check.js
       - name: Load every group and every map in headless Chrome and fail on script errors
         run: |
           render() {
@@ -51,7 +29,6 @@ jobs:
           done
           for f in maps/*.js; do
             id=$(basename "$f" .js)
-            grep -q "src=\"$f\"" index.html || { echo "$f is not loaded in index.html"; exit 1; }
             render "#$id"
             grep -q 'class="stn' dom.html || { echo "map $id did not render"; exit 1; }
           done

@@ -119,6 +119,10 @@ code,
 .line.out {
   stroke: var(--out);
 }
+.line.conversion {
+  stroke-dasharray: 14 8;
+  stroke-linecap: butt;
+}
 .line.planned {
   stroke-opacity: 0.35;
 }
@@ -242,6 +246,9 @@ svg.focus .on {
 }
 .pill.native {
   color: var(--reads);
+}
+.pill.conversion {
+  color: var(--out);
 }
 .pill.planned {
   color: var(--res);

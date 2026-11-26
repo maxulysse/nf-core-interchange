@@ -5,9 +5,15 @@ narrow.addEventListener("change", () => location.reload());
 const F = narrow.matches ? 1.8 : 1;
 const ST = {
   native: { label: "Native", note: "both pipelines support it in code; the chain has not been run end to end" },
-  planned: { label: "Planned", note: "needs a hand-built samplesheet, a change in a pipeline, or a release" },
+  conversion: {
+    label: "Conversion",
+    note: "works today once the output is turned into the next samplesheet or params, by hand or with a script",
+  },
+  planned: { label: "Planned", note: "needs a change in a pipeline or a release" },
 };
 const LN = { reads: "Input data", res: "Resources", out: "Results out" };
+// Map and catalogue text that is not markup: escape it before it goes into HTML. Notes and overviews are markup.
+const esc = (t) => String(t).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const NS = "http://www.w3.org/2000/svg";
 const el = (n, a = {}, txt) => {
   const e = document.createElementNS(NS, n);
@@ -62,16 +68,14 @@ const around = (s, w, full) => {
 };
 
 function renderMap(M, from) {
-  // Copies, so rendering twice never stacks state on the shared data.
-  const S = M.S.map((s) => ({ ...s })),
-    E = M.E.map((e) => ({ ...e }));
+  const { HUB, S, E, checked } = mapModel(M);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
-  const HUB = S.find((s) => s.hub);
-  // Releases come from catalogue.js; rel in a map is only for stations outside the nf-core catalogue.
+  // Releases come from catalogue.js; rel in stations.js is only for stations outside the nf-core catalogue.
   const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? s.rel ?? "in development"));
   const far = (e) => byId[e.f === HUB.id ? e.t : e.f];
   document.getElementById("map-title").textContent = M.title;
-  document.getElementById("map-checked").textContent = M.checked;
+  document.getElementById("map-checked").textContent =
+    checked[0] === checked[1] ? `on ${checked[0]}` : `between ${checked[0]} and ${checked[1]}`;
   document.getElementById("map-credits").innerHTML =
     `Thanks to the <a href="https://github.com/nf-core/${HUB.id}/graphs/contributors">contributors of nf-core/${HUB.id}</a>.`;
   const hubEdges = E.filter((e) => e.f === HUB.id || e.t === HUB.id);
@@ -265,11 +269,11 @@ function renderMap(M, from) {
       outs = E.filter((e) => e.f === s.id);
     highlight([s.node, ...[...ins, ...outs].flatMap((e) => [e.node, byId[e.f].node, byId[e.t].node])]);
     s.node.classList.add("sel");
-    card.innerHTML = `<div class="kicker">${s.ext ? "Resource" : `Pipeline · ${release(s)}${s.tag ? ` (${s.tag})` : ""}`}</div>
+    card.innerHTML = `<div class="kicker">${s.ext ? "Resource" : `Pipeline · ${esc(release(s))}${s.tag ? ` (${s.tag})` : ""}`}</div>
     <h2>${s.id}</h2><p>${s.blurb}</p>
     <dl>${s.takes ? `<dt>Takes</dt><dd>${s.takes}</dd>` : ""}<dt>Gives</dt><dd>${s.gives}</dd>
-    ${ins.length ? `<dt>From</dt><dd>${ins.map((e) => e.f).join(", ")}</dd>` : ""}
-    ${outs.length ? `<dt>To</dt><dd>${outs.map((e) => e.t).join(", ")}</dd>` : ""}
+    ${ins.length ? `<dt>From</dt><dd>${[...new Set(ins.map((e) => e.f))].join(", ")}</dd>` : ""}
+    ${outs.length ? `<dt>To</dt><dd>${[...new Set(outs.map((e) => e.t))].join(", ")}</dd>` : ""}
     <dt>Link</dt><dd>${link(s)}</dd></dl>
     ${!s.hub && MAPS[s.id] ? `<button class="open" type="button">Open the ${s.id} interchange →</button>` : ""}`;
     card.querySelector(".open")?.addEventListener("click", () => openMap(s));
@@ -292,7 +296,8 @@ function renderMap(M, from) {
     highlight([e.node, byId[e.f].node, byId[e.t].node]);
     card.innerHTML = `<div class="kicker">Handoff · ${LN[e.line]}</div>
     <h2>${e.f} → ${e.t}</h2><div>${pill(e.st)}</div>
-    <dl><dt>Through</dt><dd class="mono">${e.via}</dd><dt>Note</dt><dd>${e.note}</dd></dl>`;
+    <dl><dt>Through</dt><dd class="mono">${esc(e.via)}</dd><dt>Note</dt><dd>${e.note}</dd>
+    ${e.src ? `<dt>Source</dt><dd>${SOURCES[e.src]}</dd>` : ""}</dl>`;
   }
   function reset() {
     highlight([]);
@@ -307,7 +312,7 @@ function renderMap(M, from) {
     if (ev.target === svg) reset();
   };
 
-  // Legend: colour is the line, opacity is the status.
+  // Legend: colour is the line, dashes and opacity are the status.
   const sw = (cls, color) =>
     `<svg width="38" height="10" aria-hidden="true"><line x1="5" y1="5" x2="33" y2="5" class="line ${cls}" style="stroke:${color};stroke-width:5"/></svg>`;
   document.getElementById("legend").innerHTML =
@@ -334,7 +339,7 @@ function renderMap(M, from) {
     .replaceChildren(
       ...S.map((s) =>
         row(
-          `<td><strong>${s.id}</strong></td><td class="mono">${release(s)}</td><td>${s.takes}</td><td>${s.gives}</td>`,
+          `<td><strong>${s.id}</strong></td><td class="mono">${esc(release(s))}</td><td>${s.takes}</td><td>${s.gives}</td>`,
           () => selectStation(s),
         ),
       ),
@@ -344,7 +349,7 @@ function renderMap(M, from) {
     .replaceChildren(
       ...E.map((e) =>
         row(
-          `<td>${e.f}</td><td>${e.t}</td><td>${pill(e.st)}</td><td class="mono">${e.via}</td><td>${e.note}</td>`,
+          `<td>${e.f}</td><td>${e.t}</td><td>${pill(e.st)}</td><td class="mono">${esc(e.via)}</td><td>${e.note}</td>`,
           () => selectEdge(e),
         ),
       ),

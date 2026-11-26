@@ -239,7 +239,3 @@ const TREE = {
     { id: "economics", label: "Economics", children: ["spinningjenny"] },
   ],
 };
-const MAPS = {};
-const registerMap = (m) => {
-  MAPS[m.id] = m;
-};

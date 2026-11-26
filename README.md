@@ -19,3 +19,5 @@ No build step: open `index.html` in a browser.
 Inspired by the [nf-core](https://nf-co.re/) community and the contributors of every pipeline on the map.
 
 Thanks to [Evangelos Karatzas](https://github.com/vagkaratzas), [Famke](https://github.com/famosab), [Rike](https://github.com/FriederikeHanssen) and [James Fellows Yates](https://github.com/jfy133) for contributing to the idea.
+
+The meta-omics maps (detaxizer, createtaxdb, ampliseq, taxprofiler, mag, magmap, metatdenovo, viralmetagenome, proteinfamilies) start from the [nf-core meta-omics SIG benchmark](https://github.com/vagkaratzas/meta-omics-sig).
