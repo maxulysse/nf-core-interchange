@@ -11,7 +11,7 @@ registerMap({
     "AWS iGenomes": { x: 120, y: 100, side: "above" },
     references: { x: 380, y: 100, side: "above" },
     createpanelrefs: { x: 620, y: 100, side: "above" },
-    "annotation-cache": { x: 860, y: 100, side: "above" },
+    "annotation-cache": { x: 900, y: 100, side: "above" },
     variantprioritization: { x: 900, y: 475, side: "below" },
     variantbenchmarking: { x: 900, y: 331, side: "below" },
     tumourevo: { x: 900, y: 620, side: "below" },
