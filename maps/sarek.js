@@ -12,9 +12,7 @@ registerMap({
     igenomes: { x: 140, y: 80, side: "above" },
     references: { x: 400, y: 80, side: "above" },
     createpanelrefs: { x: 640, y: 80, side: "above" },
-    "annotation-cache": { x: 770, y: 138, side: "below" },
-    downloadvepcache: { x: 920, y: 80, side: "above" },
-    downloadsnpeffcache: { x: 920, y: 196, side: "below" },
+    "annotation-cache": { x: 880, y: 80, side: "above" },
     variantprioritization: { x: 920, y: 455, side: "below" },
     variantbenchmarking: { x: 920, y: 311, side: "below" },
     tumourevo: { x: 920, y: 600, side: "below" },
@@ -23,11 +21,5 @@ registerMap({
   },
   // fetchngs reaches sarek through seqinspector here; the fetchngs map draws the direct handoff.
   skip: ["fetchngs>sarek"],
-  also: [
-    "fetchngs>seqinspector",
-    "demultiplex>seqinspector",
-    "downloadvepcache>annotation-cache",
-    "downloadsnpeffcache>annotation-cache",
-    "hlatyping>epitopeprediction",
-  ],
+  also: ["fetchngs>seqinspector", "demultiplex>seqinspector", "hlatyping>epitopeprediction"],
 });

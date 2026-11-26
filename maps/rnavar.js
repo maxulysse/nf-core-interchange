@@ -9,10 +9,7 @@ registerMap({
     rnaseq: { x: 130, y: 470, side: "below" },
     igenomes: { x: 300, y: 80, side: "above" },
     references: { x: 500, y: 60, side: "above" },
-    "annotation-cache": { x: 720, y: 150, side: "below" },
-    downloadvepcache: { x: 880, y: 80, side: "above" },
-    downloadsnpeffcache: { x: 880, y: 210, side: "below" },
+    "annotation-cache": { x: 760, y: 80, side: "above" },
     variantprioritization: { x: 870, y: 330, side: "below" },
   },
-  also: ["downloadvepcache>annotation-cache", "downloadsnpeffcache>annotation-cache"],
 });

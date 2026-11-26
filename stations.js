@@ -1,5 +1,5 @@
 // Every station drawn on a map: what it is, what it takes and what it gives. Releases come from catalogue.js;
-// url and rel are only for stations outside the nf-core catalogue, which otherwise link to nf-co.re/<id>.
+// url is only for resources; a pipeline station links to nf-co.re/<id>.
 const STATIONS = {
   "ENA / SRA": {
     ext: true,
@@ -16,8 +16,8 @@ const STATIONS = {
   "annotation-cache": {
     ext: true,
     url: "https://annotation-cache.github.io/",
-    blurb: "Public S3 bucket of VEP and snpEff caches, read by sarek with --download_cache.",
-    takes: "Caches built by downloadvepcache and downloadsnpeffcache",
+    blurb: "Public S3 bucket of Ensembl VEP and snpEff caches, read by sarek and rnavar.",
+    takes: "",
     gives: "VEP cache, snpEff cache",
   },
   atacseq: {
@@ -58,21 +58,6 @@ const STATIONS = {
     blurb: "Differential abundance analysis between conditions, with a report.",
     takes: "--input: sample and condition columns; --matrix; --contrasts",
     gives: "Differential tables, report",
-  },
-  downloadsnpeffcache: {
-    url: "https://github.com/annotation-cache/downloadsnpeffcache",
-    rel: "99",
-    blurb:
-      "Downloads snpEff databases for the annotation-cache bucket. Stays on 99: snpEff 5.2 and later have no 105 databases.",
-    takes: "snpEff genome and version",
-    gives: "snpEff cache (GRCh38.99)",
-  },
-  downloadvepcache: {
-    url: "https://github.com/annotation-cache/downloadvepcache",
-    rel: "116",
-    blurb: "Downloads Ensembl VEP caches for the annotation-cache bucket.",
-    takes: "Species, assembly, VEP version",
-    gives: "VEP cache (Ensembl 116)",
   },
   epitopeprediction: {
     blurb: "Predicts which mutated peptides bind the patient's HLA alleles, for MHC class I or II.",

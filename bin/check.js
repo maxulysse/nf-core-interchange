@@ -28,10 +28,10 @@ Object.keys(CATALOGUE)
   .forEach((id) => fail(`pipelines.js: ${id} is not in TREE`));
 [...leaves].filter((id) => !CATALOGUE[id]).forEach((id) => fail(`pipelines.js: ${id} is not in catalogue.js`));
 
-// A station that is not a resource is an nf-core pipeline, unless it says where it lives.
+// A station that is not a resource is an nf-core pipeline.
 Object.entries(STATIONS)
-  .filter(([id, s]) => !s.ext && !CATALOGUE[id] && !s.url)
-  .forEach(([id]) => fail(`stations.js: ${id} is not in catalogue.js and has no url`));
+  .filter(([id, s]) => !s.ext && !CATALOGUE[id])
+  .forEach(([id]) => fail(`stations.js: ${id} is not a resource and not in catalogue.js`));
 
 for (const h of HANDOFFS) {
   [h.f, h.t].filter((id) => !STATIONS[id]).forEach((id) => fail(`handoffs.js: ${pair(h)} names unknown station ${id}`));
