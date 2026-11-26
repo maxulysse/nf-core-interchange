@@ -78,13 +78,18 @@ function renderMap(M, from) {
     e.face = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "r" : "l") : dy > 0 ? "b" : "t";
   });
   E.forEach((e) => (e.shift = [0, 0]));
+  // Each far station gets one slot on its hub face; lines to the same station sit PAR apart in that slot, as at the
+  // station, so the bundle runs parallel all the way.
+  const PAR = 10;
   groupBy(hubEdges, (e) => e.face).forEach((es) => {
     es.sort((a, b) => far(a)[across(a.face)] - far(b)[across(b.face)]);
     const len = across(es[0].face) === "y" ? HEX_R : HEX_R * Math.sqrt(3);
-    es.forEach((e, i) => (e.off = ((i + 0.5) / es.length - 0.5) * len));
+    const slots = groupBy(es, (e) => far(e).id);
+    slots.forEach((g, j) =>
+      g.forEach((e, i) => (e.off = ((j + 0.5) / slots.length - 0.5) * len + (i - (g.length - 1) / 2) * PAR)),
+    );
   });
-  // At the far station they sit a fixed PAR apart, in the same order as at the hub, so they meet the station as one bundle.
-  const PAR = 10;
+  // At the far station they sit PAR apart too, in the same order as at the hub, so they meet the station as one bundle.
   groupBy(hubEdges, (e) => [e.f, e.t].sort().join()).forEach((es) => {
     es.sort((a, b) => a.off - b.off);
     es.forEach((e, i) => {
