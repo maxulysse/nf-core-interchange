@@ -12,7 +12,7 @@ registerMap({
     "annotation-cache": { x: 720, y: 150, side: "below" },
     downloadvepcache: { x: 880, y: 80, side: "above" },
     downloadsnpeffcache: { x: 880, y: 210, side: "below" },
-    variantprioritization: { x: 870, y: 400, side: "below" },
+    variantprioritization: { x: 870, y: 330, side: "below" },
   },
   also: ["downloadvepcache>annotation-cache", "downloadsnpeffcache>annotation-cache"],
 });
