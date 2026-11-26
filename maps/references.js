@@ -12,5 +12,6 @@ registerMap({
     methylseq: { x: 880, y: 475, side: "below" },
     bamtofastq: { x: 627, y: 600, side: "below" },
     createpanelrefs: { x: 373, y: 600, side: "below" },
+    seqinspector: { x: 500, y: 600, side: "below" },
   },
 });

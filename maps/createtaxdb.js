@@ -4,6 +4,7 @@ registerMap({
   overview: "Where nf-core/createtaxdb gets its reference sequences, and which pipeline reads its databases.",
   at: {
     "reference sequences": { x: 150, y: 340, side: "below" },
-    taxprofiler: { x: 850, y: 340, side: "below" },
+    taxprofiler: { x: 880, y: 205, side: "below" },
+    seqinspector: { x: 880, y: 475, side: "below" },
   },
 });

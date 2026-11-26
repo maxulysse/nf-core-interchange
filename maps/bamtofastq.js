@@ -10,5 +10,6 @@ registerMap({
     raredisease: { x: 130, y: 490, side: "below" },
     rnaseq: { x: 870, y: 200, side: "below" },
     taxprofiler: { x: 870, y: 490, side: "below" },
+    seqinspector: { x: 870, y: 340, side: "below" },
   },
 });
