@@ -10,6 +10,10 @@ const MAPS = {
     overview:
       "Where nf-core/createpanelrefs gets its cohort of normal alignments and its reference genome, and which pipelines read the panels and models it builds. Each line is a handoff between two pipelines.",
   },
+  oncoanalyser: {
+    overview:
+      "Where nf-core/oncoanalyser gets its alignments, reads and Hartwig reference data, and where its calls go next. Each line is a handoff between two pipelines.",
+  },
   bamtofastq: {
     overview:
       "Which pipelines' alignments nf-core/bamtofastq turns back into reads, and which pipelines can start again from those reads, to realign against another genome build or with another aligner. Each line is a handoff between two pipelines.",
