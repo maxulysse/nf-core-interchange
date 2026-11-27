@@ -317,14 +317,6 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
-    t: "raredisease",
-    checked: "2026-11-27",
-    st: "conversion",
-    via: "fastq_1 and fastq_2 from samplesheet/samplesheet.csv, into sample, lane, fastq_1, fastq_2, sex, phenotype, paternal_id, maternal_id, case_id",
-    note: "--nf_core_pipeline has no raredisease option. The pedigree columns come from the study's metadata, written by hand. Not yet run.",
-  },
-  {
-    f: "fetchngs",
     t: "rnaseq",
     checked: "2026-11-25",
     st: "native",
