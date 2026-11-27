@@ -22,9 +22,10 @@ const STATIONS = {
     gives: "VEP cache, snpEff cache",
   },
   atacseq: {
-    blurb: "ATAC-seq peak calling and QC.",
-    takes: "Samplesheet: sample, fastq_1, fastq_2, replicate",
-    gives: "Peaks, consensus peaks, counts",
+    blurb:
+      "ATAC-seq: QC, trimming, alignment with BWA, Bowtie2, Chromap or STAR, filtering of mitochondrial and duplicate reads, MACS2 peak calling, consensus peaks across samples and HOMER annotation.",
+    takes: "Samplesheet: sample, fastq_1, fastq_2, replicate; --genome or --fasta and --gtf, --read_length",
+    gives: "Filtered BAMs, bigWigs, narrow or broad peaks, consensus peaks with featureCounts, annotations, MultiQC",
   },
   bamtofastq: {
     blurb:

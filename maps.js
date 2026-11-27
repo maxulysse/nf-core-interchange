@@ -26,6 +26,10 @@ const MAPS = {
     overview:
       "Where nf-core/rnavar gets its RNA-seq reads or alignments, its reference and annotation caches, and where its variant calls can go next. Each line is a handoff between two pipelines.",
   },
+  atacseq: {
+    overview:
+      "Where nf-core/atacseq gets its reads and its reference, and where its consensus peak counts go next. Each line is a handoff between two pipelines.",
+  },
   detaxizer: {
     overview: "Where nf-core/detaxizer gets its reads, and which pipelines read the filtered reads back.",
   },
