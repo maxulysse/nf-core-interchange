@@ -38,6 +38,10 @@ const MAPS = {
   taxprofiler: {
     overview: "Where nf-core/taxprofiler gets its shotgun reads and databases, and where its profiles go.",
   },
+  viralrecon: {
+    overview:
+      "Where nf-core/viralrecon gets its reads and its viral genomes and primer sets, and where its consensus genomes go next. Each line is a handoff between two pipelines.",
+  },
   mag: {
     overview: "Where nf-core/mag gets its shotgun reads, and which pipelines take its contigs, bins and proteins.",
   },
