@@ -67,7 +67,7 @@ const MAPS = {
   },
   scrnaseq: {
     overview:
-      "Where nf-core/scrnaseq gets its single-cell reads and its reference, and where its count matrices go next. Each line is a handoff between two pipelines.",
+      "Where nf-core/scrnaseq gets its reference, and where its count matrices go next. Each line is a handoff between two pipelines.",
   },
 };
 for (const [id, m] of Object.entries(MAPS)) m.id = id;
