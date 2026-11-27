@@ -8,7 +8,7 @@ const MAPS = {
   },
   chipseq: {
     overview:
-      "Where nf-core/chipseq gets its reads and its reference, and where its consensus peak counts go next. Each line is a handoff between two pipelines.",
+      "Where nf-core/chipseq gets its reference, and where its consensus peak counts go next. Each line is a handoff between two pipelines.",
   },
   createpanelrefs: {
     overview:

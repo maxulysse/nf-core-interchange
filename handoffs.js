@@ -298,14 +298,6 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
-    t: "chipseq",
-    checked: "2026-11-27",
-    st: "conversion",
-    via: "samplesheet/samplesheet.csv: sample, fastq_1, fastq_2, then replicate, antibody, control, control_replicate added",
-    note: "--nf_core_pipeline has no chipseq option. The read columns carry over, but the IP and input design comes from the study's metadata, written by hand. Not yet run.",
-  },
-  {
-    f: "fetchngs",
     t: "detaxizer",
     checked: "2026-11-26",
     st: "conversion",
