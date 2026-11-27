@@ -171,13 +171,15 @@ const labelAt = (s) =>
   s.anchor === "middle"
     ? { x: 0, y: 0, angle: 0 }
     : { x: (s.anchor === "start" ? 1 : -1) * LABEL.side, y: LABEL.lift, angle: -LABEL.slant };
+// The middle of a station's name of width w, before scaling: its release sits centred there.
+const nameMid = (s, w) => labelAt(s).x + ((s.anchor === "end" ? -1 : 1) * w) / 2;
 // The outline a station's label covers at scale F, in map units. It runs from the name's cap height, 0.8em above the
 // baseline, to below the release, which sits centred under the name.
 function labelBox(s, F) {
-  const { x, y, angle } = labelAt(s),
+  const { y, angle } = labelAt(s),
     name = textWidth(s.id, LABEL.name),
     w = Math.max(name, textWidth(release(s), LABEL.ver)),
-    mid = x + ((s.anchor === "end" ? -1 : 1) * name) / 2,
+    mid = nameMid(s, name),
     a = (angle * Math.PI) / 180,
     [cos, sin] = [Math.cos(a), Math.sin(a)];
   return corners(mid - w / 2, y - 0.8 * LABEL.name, w, LABEL.name + LABEL.lead).map(([u, v]) => [

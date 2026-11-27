@@ -136,9 +136,7 @@ function renderMap(M, from, animate = !reduced) {
   // A release sits centred under its name, which only the browser can measure: again once the fonts have loaded.
   const releases = [];
   const centre = () =>
-    releases.forEach(([s, name, ver]) =>
-      ver.setAttribute("x", labelAt(s).x + ((s.anchor === "end" ? -1 : 1) * name.getComputedTextLength()) / 2),
-    );
+    releases.forEach(([s, name, ver]) => ver.setAttribute("x", nameMid(s, name.getComputedTextLength())));
   S.forEach((s) => {
     s.node = el("g", {
       class: ["stn", s.hub && "hub", s.tag].filter(Boolean).join(" "),
