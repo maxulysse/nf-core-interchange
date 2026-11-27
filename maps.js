@@ -18,6 +18,10 @@ const MAPS = {
     overview:
       "Where nf-core/fetchngs downloads public sequencing data from, and which pipelines start from the samplesheet it writes. With --nf_core_pipeline it adds the columns a pipeline needs. Each line is a handoff between two pipelines.",
   },
+  nanoseq: {
+    overview:
+      "Where nf-core/nanoseq gets its genomes, and where its reads, alignments and counts go next. Each line is a handoff between two pipelines.",
+  },
   references: {
     overview:
       "Where nf-core/references gets its genomes, and which pipelines can read the indices it builds. No released pipeline reads its datasheet yet, so every pipeline handoff passes files by hand. Each line is a handoff between two pipelines.",
