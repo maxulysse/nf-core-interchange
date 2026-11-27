@@ -43,6 +43,15 @@ const HANDOFFS = [
   },
   {
     f: "AWS iGenomes",
+    t: "chipseq",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome, --igenomes_base",
+    note: "Gives the FASTA, GTF, gene BED and BWA, Bowtie2 and STAR indices. For the main human and mouse builds chipseq adds the MACS3 genome size and its bundled ENCODE blacklist.",
+  },
+  {
+    f: "AWS iGenomes",
     t: "createpanelrefs",
     checked: "2026-11-25",
     res: true,
@@ -116,6 +125,14 @@ const HANDOFFS = [
     st: "conversion",
     via: "reads/*_{1,2}.merged.fastq.gz into sample, run_accession, instrument_platform, fastq_1, fastq_2",
     note: "To profile what else is in a human BAM or CRAM. Turn on --perform_shortread_hostremoval so the human reads are removed again before classification.",
+  },
+  {
+    f: "chipseq",
+    t: "differentialabundance",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "<aligner>/merged_library/macs3/<peak_type>/consensus/<antibody>/*.featureCounts.txt into --matrix, with --features_id_col Geneid and no GTF",
+    note: "chipseq only runs DESeq2 for QC (PCA and clustering); differentialabundance tests the contrasts. Drop featureCounts' comment line and Chr to Length columns, and rename the BAM columns to the sample ids. One antibody per run. Not yet run.",
   },
   {
     f: "createpanelrefs",
@@ -529,6 +546,15 @@ const HANDOFFS = [
     st: "conversion",
     via: "--fasta, --fasta_fai",
     note: "bamtofastq 2.2.1 reads no references datasheet. Only CRAM input needs a reference: point the two params at the files references builds.",
+  },
+  {
+    f: "references",
+    t: "chipseq",
+    checked: "2026-11-27",
+    res: true,
+    st: "conversion",
+    via: "--fasta, --gtf, --bwa_index (or --bowtie2_index, --star_index)",
+    note: "chipseq reads no references datasheet. Pass --gene_bed, or chipseq makes one from the GTF, and --macs_gsize and --blacklist for builds it doesn't know.",
   },
   {
     f: "references",
