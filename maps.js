@@ -6,6 +6,10 @@ const MAPS = {
       "Where nf-core/sarek gets its input data and resources, and where its results go next. Each line is a handoff between two pipelines.",
     also: ["hlatyping>epitopeprediction"],
   },
+  chipseq: {
+    overview:
+      "Where nf-core/chipseq gets its reads and its reference, and where its consensus peak counts go next. Each line is a handoff between two pipelines.",
+  },
   createpanelrefs: {
     overview:
       "Where nf-core/createpanelrefs gets its cohort of normal alignments and its reference genome, and which pipelines read the panels and models it builds. Each line is a handoff between two pipelines.",

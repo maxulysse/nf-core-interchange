@@ -32,6 +32,13 @@ const STATIONS = {
     takes: "Samplesheet: sample_id, mapped, index, file_type (bam or cram); FASTA and fai for CRAM",
     gives: "reads/<sample>_{1,2}.merged.fastq.gz, FastQC and samtools stats",
   },
+  chipseq: {
+    blurb:
+      "ChIP-seq: QC, trimming, alignment with BWA, Bowtie2, Chromap or STAR, filtering, MACS3 peak calling, consensus peaks across samples and HOMER annotation.",
+    takes:
+      "Samplesheet: sample, fastq_1, fastq_2, replicate, antibody, control, control_replicate; --genome or --fasta and --gtf",
+    gives: "Filtered BAMs, bigWigs, narrow or broad peaks, consensus peaks with featureCounts, annotations, MultiQC",
+  },
   createpanelrefs: {
     blurb:
       "Builds panels of normals and cohort models from many normal samples, one tool per --tools entry: mutect2 (somatic PON), cnvkit (copy-number reference), germlinecnvcaller (GATK gCNV ploidy and CNV models) and gens (read-count PON, short or long reads).",
