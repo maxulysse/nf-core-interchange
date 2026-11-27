@@ -139,7 +139,7 @@ function renderMap(M, from, animate = !reduced) {
       "aria-label": s.id,
     });
     // The hub label sits inside the fixed-size hexagon, so it keeps its size.
-    const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F})` });
+    const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F}) rotate(${s.angle})` });
     // A long hub name shrinks to fit the hexagon; 0.56em is about one Overpass character.
     const hubSize = s.hub ? `font-size:${Math.min(26, (HEX_R * 1.5) / (s.id.length * 0.56)).toFixed(1)}px` : "";
     label.append(
