@@ -316,14 +316,6 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
-    t: "rnafusion",
-    checked: "2026-11-27",
-    st: "conversion",
-    via: "samplesheet/samplesheet.csv plus a strandedness column into --input",
-    note: "--nf_core_pipeline has no rnafusion option. rnafusion needs sample, fastq_1 and fastq_2, which every fetchngs sheet starts with, and a strandedness column, which it doesn't: add it, or use unknown. Not yet run.",
-  },
-  {
-    f: "fetchngs",
     t: "rnaseq",
     checked: "2026-11-25",
     st: "native",
