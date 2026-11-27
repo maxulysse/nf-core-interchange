@@ -61,6 +61,10 @@ const MAPS = {
   proteinfamilies: {
     overview: "Which pipelines give nf-core/proteinfamilies its proteins, and which read the samplesheets it writes.",
   },
+  scrnaseq: {
+    overview:
+      "Where nf-core/scrnaseq gets its reference, and where its count matrices go next. Each line is a handoff between two pipelines.",
+  },
 };
 for (const [id, m] of Object.entries(MAPS)) m.id = id;
 const mapTitle = (id) => `${id[0].toUpperCase()}${id.slice(1)} Interchange`;

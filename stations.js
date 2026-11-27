@@ -200,6 +200,19 @@ const STATIONS = {
     takes: "Samplesheet: patient, sex, status, sample, lane, fastq_1, fastq_2 (or spring, bam, cram, vcf)",
     gives: "BAM/CRAM, VCFs per caller, annotated VCFs, MultiQC report, restart CSVs",
   },
+  scdownstream: {
+    blurb:
+      "Downstream single-cell analysis: QC, ambient RNA and doublet removal, integration, clustering and annotation.",
+    takes:
+      "Samplesheet: sample, filtered and/or unfiltered (h5ad, h5, rds or csv), plus optional per-sample QC columns",
+    gives: "Integrated h5ad (rds with --tords), clusters, cell-type labels, QC report",
+  },
+  scrnaseq: {
+    blurb:
+      "Single-cell RNA-seq: barcode and UMI processing and quantification with simpleaf, STARsolo, kallisto/bustools or Cell Ranger, with optional CellBender filtering.",
+    takes: "Samplesheet: sample, fastq_1 (barcode read), fastq_2 (cDNA read), expected_cells; --protocol, --aligner",
+    gives: "Count matrices as mtx, h5ad and rds (raw, filtered, CellBender-filtered), QC",
+  },
   "sequencing run": {
     ext: true,
     url: "https://nf-co.re/demultiplex/1.8.0/docs/usage/",
