@@ -50,6 +50,10 @@ const MAPS = {
   viralmetagenome: {
     overview: "Where nf-core/viralmetagenome gets its reads, and which pipelines take its viral contigs.",
   },
+  cutandrun: {
+    overview:
+      "Where nf-core/cutandrun gets its genome and its spike-in genome. Each line is a handoff between two pipelines.",
+  },
   seqinspector: {
     overview:
       "Which pipelines hand nf-core/seqinspector reads to check, which references and databases its QC reads, and where the checked reads go next. Each line is a handoff between two pipelines.",

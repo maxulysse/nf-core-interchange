@@ -52,6 +52,15 @@ const HANDOFFS = [
   },
   {
     f: "AWS iGenomes",
+    t: "cutandrun",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome, --igenomes_base; --spikein_genome (K12-MG1655 by default)",
+    note: "Gives the FASTA, GTF, gene BED and Bowtie2 index, plus the bundled blacklist for the main builds. The default spike-in normalisation also pulls the E. coli genome from iGenomes: pass --spikein_fasta and --spikein_bowtie2 to use your own.",
+  },
+  {
+    f: "AWS iGenomes",
     t: "rnavar",
     checked: "2026-11-25",
     res: true,
@@ -538,6 +547,15 @@ const HANDOFFS = [
     st: "conversion",
     via: "--fasta, --fai, --dict",
     note: "createpanelrefs 1.1.0 reads no references datasheet. Point the three params at the files references builds.",
+  },
+  {
+    f: "references",
+    t: "cutandrun",
+    checked: "2026-11-27",
+    res: true,
+    st: "conversion",
+    via: "--fasta, --gtf, --bowtie2",
+    note: "cutandrun reads no references datasheet. Pass --blacklist yourself, and --spikein_fasta and --spikein_bowtie2 unless you set --normalisation_mode to CPM, RPKM, BPM or None.",
   },
   {
     f: "references",
