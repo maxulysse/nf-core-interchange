@@ -44,6 +44,10 @@ const MAPS = {
   magmap: {
     overview: "Which genomes nf-core/magmap maps reads to, and where its counts go.",
   },
+  funcscan: {
+    overview:
+      "Which pipelines give nf-core/funcscan the contigs and annotations it screens. Each line is a handoff between two pipelines.",
+  },
   metatdenovo: {
     overview: "Where nf-core/metatdenovo gets its RNA reads, and which pipelines take its assembly and proteins.",
   },

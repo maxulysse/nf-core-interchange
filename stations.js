@@ -26,6 +26,12 @@ const STATIONS = {
     takes: "Samplesheet: sample, fastq_1, fastq_2, replicate",
     gives: "Peaks, consensus peaks, counts",
   },
+  bacass: {
+    blurb:
+      "Bacterial genome assembly from short, long or hybrid reads, with QC, polishing, contamination checks and Prokka, Bakta or DFAST annotation.",
+    takes: "Samplesheet: ID, R1, R2, LongFastQ, Fast5, GenomeSize; --assembly_type, --assembler",
+    gives: "Assemblies, polished consensus, QUAST and BUSCO reports, annotations (GFF, GenBank, proteins)",
+  },
   bamtofastq: {
     blurb:
       "Converts aligned BAM or CRAM back to FASTQ, with QC before and after. Mapped and unmapped reads are both kept, and --chr limits it to some chromosomes or regions.",
