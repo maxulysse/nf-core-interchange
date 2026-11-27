@@ -32,6 +32,10 @@ const MAPS = {
   createtaxdb: {
     overview: "Where nf-core/createtaxdb gets its reference sequences, and which pipeline reads its databases.",
   },
+  methylseq: {
+    overview:
+      "Where nf-core/methylseq gets its bisulfite or TAPS reads and its genome indices. Each line is a handoff between two pipelines.",
+  },
   ampliseq: {
     overview: "Where nf-core/ampliseq gets its amplicon reads, and where its abundance tables go.",
   },

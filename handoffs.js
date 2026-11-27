@@ -52,6 +52,15 @@ const HANDOFFS = [
   },
   {
     f: "AWS iGenomes",
+    t: "methylseq",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome, --igenomes_base",
+    note: "Gives the FASTA and a prebuilt Bismark index for every build. bwa-meth indices exist only for GRCh37 and GRCh38, and the BWA-MEM2 index only for CHM13; elsewhere methylseq indexes the FASTA itself.",
+  },
+  {
+    f: "AWS iGenomes",
     t: "rnavar",
     checked: "2026-11-25",
     res: true,
@@ -76,6 +85,14 @@ const HANDOFFS = [
     st: "native",
     via: "--genome (fasta, fai, dict, bwamem2)",
     note: "Only the alignment-based QC needs it (BWA-MEM2, then Picard). Without a genome or --fasta, seqinspector skips those steps.",
+  },
+  {
+    f: "bamtofastq",
+    t: "methylseq",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "reads/*_{1,2}.merged.fastq.gz into sample, fastq_1, fastq_2",
+    note: "Only for bisulfite or TAPS reads, to realign them with another aligner or genome.",
   },
   {
     f: "bamtofastq",
@@ -305,6 +322,14 @@ const HANDOFFS = [
     via: "--nf_core_pipeline metatdenovo: samplesheet/samplesheet.csv into --input",
     note: "Needs no extra columns.",
     src: "sig",
+  },
+  {
+    f: "fetchngs",
+    t: "methylseq",
+    checked: "2026-11-27",
+    st: "native",
+    via: "samplesheet/samplesheet.csv (no --nf_core_pipeline) into --input",
+    note: "methylseq needs sample, fastq_1 and fastq_2, which every fetchngs sheet starts with, and ignores the metadata columns. Set --aligner and the library protocol (--pbat, --em_seq, --rrbs and so on) to match the study. Not yet run.",
   },
   {
     f: "fetchngs",
