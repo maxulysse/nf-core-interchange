@@ -78,6 +78,14 @@ const HANDOFFS = [
     note: "Only the alignment-based QC needs it (BWA-MEM2, then Picard). Without a genome or --fasta, seqinspector skips those steps.",
   },
   {
+    f: "bacass",
+    t: "funcscan",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "annotation/prokka/<ID>/<ID>.fna, .faa, .gbk and .gff into sample, fasta, protein, gbk, gff",
+    note: "With protein and gbk given, funcscan skips its own annotation and screens Prokka's genes. With bakta or dfast, or no annotation, pass only the assembly FASTA and funcscan annotates it. bacass writes no sheet for it. Not yet run.",
+  },
+  {
     f: "bamtofastq",
     t: "raredisease",
     checked: "2026-11-25",
