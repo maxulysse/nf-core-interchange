@@ -136,8 +136,8 @@ function layout(M, E, stop) {
   const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, anchor: "end" });
   if (stop) {
     // The stop sits level with the hub, so source, stop and hub run as one straight line; the other inputs sit
-    // above and below it, further out when the stop fans in two sources.
-    const wide = feeders.length > 1 ? 200 : 135;
+    // above and below it, far enough out that the stop's label clears their lines.
+    const wide = 200;
     set(left, [-wide, wide], onLeft);
     at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, anchor: "end", tag: "optional" };
     const fan = feeders.length > 1 ? Math.min(100, 520 / (feeders.length - 1)) : 0;

@@ -16,7 +16,7 @@ const MAPS = {
   },
   fetchngs: {
     overview:
-      "Where nf-core/fetchngs downloads public sequencing data from, and which pipelines start from the samplesheet it writes. With --nf_core_pipeline it adds the columns a pipeline needs. Each line is a handoff between two pipelines.",
+      "Where nf-core/fetchngs downloads public sequencing data from, and which pipelines it writes a samplesheet for with --nf_core_pipeline. Each line is a handoff between two pipelines.",
   },
   references: {
     overview:
@@ -52,7 +52,7 @@ const MAPS = {
   },
   seqinspector: {
     overview:
-      "Which pipelines hand nf-core/seqinspector reads to check, which references and databases its QC reads, and where the checked reads go next. Each line is a handoff between two pipelines.",
+      "Where nf-core/seqinspector gets the runs it checks, which references and databases its QC reads, and which analyses go on once its report passes. Each line is a handoff between two pipelines.",
   },
   demultiplex: {
     overview:

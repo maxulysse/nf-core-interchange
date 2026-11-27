@@ -208,9 +208,9 @@ const STATIONS = {
     gives: "Run folder (or tar.gz), SampleSheet.csv",
   },
   seqinspector: {
-    intercepts: ["fetchngs", "demultiplex"],
+    intercepts: ["demultiplex"],
     blurb:
-      "QC of sequencing runs and FASTQ, with MultiQC reports per run and per group. Bundles: illumina, ont, fastq, bam, minimal.",
+      "QC gate between demultiplex and analysis: reports on each sequencing run and its FASTQ, per run and per group, so you decide whether to go on. Bundles: illumina, ont, fastq, bam, minimal.",
     takes: "Samplesheet: sample, fastq_1, fastq_2, rundir, tags",
     gives: "MultiQC QC report",
   },
