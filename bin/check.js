@@ -29,6 +29,26 @@ const overlap = (p, q) =>
       return Math.min(...a) < Math.max(...b) && Math.min(...b) < Math.max(...a);
     }),
   );
+// The outlines a line covers, drawn 8 wide (.line in style.css): one per step between the points of its path, whose
+// curves stay inside the steps through their control points.
+const lineBoxes = (d) => {
+  const p = [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [+m[1], +m[2]]);
+  return p.slice(1).flatMap(([x1, y1], i) => {
+    const [x0, y0] = p[i],
+      l = Math.hypot(x1 - x0, y1 - y0),
+      [nx, ny] = [((y0 - y1) / l) * 4, ((x1 - x0) / l) * 4];
+    return l
+      ? [
+          [
+            [x0 + nx, y0 + ny],
+            [x1 + nx, y1 + ny],
+            [x1 - nx, y1 - ny],
+            [x0 - nx, y0 - ny],
+          ],
+        ]
+      : [];
+  });
+};
 
 // Every catalogue pipeline sits in the tree, and the tree names only catalogue pipelines.
 const leaves = new Set();
@@ -66,7 +86,8 @@ for (const M of Object.values(MAPS)) {
   );
   const at = S.map((s) => `${s.x},${s.y}`);
   at.filter((xy, i) => at.indexOf(xy) !== i).forEach((xy) => fail(`${M.id}: two stations sit at ${xy}`));
-  // At every label scale renderMap uses, 1 to 1.8 in tenths, no label covers another label, another station or the hub.
+  // At every label scale renderMap uses, 1 to 1.8 in tenths, no label covers another label, a station, the hub or a line.
+  const lines = E.map((e) => [e, lineBoxes(e.d)]);
   for (const F of [10, 11, 12, 13, 14, 15, 16, 17, 18].map((k) => k / 10)) {
     const labelled = S.filter((s) => !s.hub),
       box = new Map(labelled.map((s) => [s, labelBox(s, F)]));
@@ -77,6 +98,9 @@ for (const M of Object.values(MAPS)) {
       S.filter((b) => b !== a && overlap(box.get(a), markBox(b))).forEach((b) =>
         fail(`${M.id}: at scale ${F}, the label of ${a.id} covers ${b.id}`),
       );
+      lines
+        .filter(([, l]) => l.some((o) => overlap(box.get(a), o)))
+        .forEach(([e]) => fail(`${M.id}: at scale ${F}, the label of ${a.id} covers the line ${pair(e)}`));
     });
   }
   S.forEach((s) => placed.add(s.id));

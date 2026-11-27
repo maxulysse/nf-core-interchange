@@ -126,33 +126,41 @@ function layout(M, E, stop) {
   const at = {};
   const set = (list, offs, xy) => list.forEach((id, i) => (at[id] = xy(offs[i])));
   const [tr, br] = [row(top.length), row(bottom.length)];
-  // Labels run away from stations above and right of the hub ("start"), and up to the others ("end").
-  set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, anchor: "start" }));
+  // Labels run away from stations above and right of the hub, and up to the others.
+  set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, label: "away" }));
   set(bottom, place(bottom, br.step, ROW_PAIR), (d) => ({
     x: CENTRE.x + d,
     y: CENTRE.y + ROW + br.out,
-    anchor: "end",
+    label: "toward",
   }));
-  const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, anchor: "end" });
+  const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, label: "toward" });
   if (stop) {
     // The stop sits level with the hub, so source, stop and hub run as one straight line; the other inputs sit
     // above and below it, further out when the stop fans in two sources.
     const wide = feeders.length > 1 ? 200 : 135;
     set(left, [-wide, wide], onLeft);
-    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, anchor: "end", tag: "optional" };
+    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, label: "under", tag: "optional" };
     const fan = feeders.length > 1 ? Math.min(100, 520 / (feeders.length - 1)) : 0;
     set(feeders, place(feeders, fan, 200), onLeft);
   } else set(left, place(left, column, COL_PAIR, true), onLeft);
-  set(right, place(right, column, COL_PAIR, true), (d) => ({ x: CENTRE.x + COL, y: CENTRE.y + d, anchor: "start" }));
+  set(right, place(right, column, COL_PAIR, true), (d) => ({ x: CENTRE.x + COL, y: CENTRE.y + d, label: "away" }));
   return at;
 }
 
 // A station's release, or what it is instead: "resource", or "dev" before a first release.
 const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
-// A station's label: its name over its release, `lead` below, drawn F times larger on a small map. The sizes match
-// .stn .name and .stn .ver in style.css. A label sits `side` beside its station, its name `lift` above the station's
-// centre line, turned `slant` degrees. The map's box keeps `edge` around the labels.
-const LABEL = { name: 15, ver: 11, lead: 15, side: 16, lift: -2, slant: 45, edge: 12 };
+// A station's label: its name over its release, `lead` below, drawn F times larger on a small map and turned `slant`
+// degrees. The sizes match .stn .name and .stn .ver in style.css. `at` places each kind of label by its name's
+// baseline [x, y] from the station, before turning: one runs away from its station ("away") or up to it ("toward"),
+// and a stop's hangs under it ("under"), clear of the lines on both its sides. The map's box keeps `edge` around them.
+const LABEL = {
+  name: 15,
+  ver: 11,
+  lead: 15,
+  slant: 45,
+  edge: 12,
+  at: { away: [16, -2], toward: [-20, -2], under: [-8, 14] },
+};
 // The radius of a station's mark.
 const MARK_R = 10;
 // Label widths are estimated from character counts, generously (0.62em a character, 0.78em a capital), so a label
@@ -165,14 +173,18 @@ const corners = (x, y, w, h) => [
   [x + w, y + h],
   [x, y + h],
 ];
-// Where a station's label sits before scaling: its name's baseline (x, y) and its turn in degrees. A station's label
-// runs away from it ("start") or up to it ("end"), rising to the right; the hub's ("middle") sits level inside it.
-const labelAt = (s) =>
-  s.anchor === "middle"
-    ? { x: 0, y: 0, angle: 0 }
-    : { x: (s.anchor === "start" ? 1 : -1) * LABEL.side, y: LABEL.lift, angle: -LABEL.slant };
+// Where a station's label sits before scaling: its name's baseline (x, y), the end of the name there, and its turn in
+// degrees. Labels rise to the right; the hub's sits level inside it.
+const labelAt = (s) => {
+  if (s.hub) return { x: 0, y: 0, anchor: "middle", angle: 0 };
+  const [x, y] = LABEL.at[s.label];
+  return { x, y, anchor: s.label === "away" ? "start" : "end", angle: -LABEL.slant };
+};
 // The middle of a station's name of width w, before scaling: its release sits centred there.
-const nameMid = (s, w) => labelAt(s).x + ((s.anchor === "end" ? -1 : 1) * w) / 2;
+const nameMid = (s, w) => {
+  const { x, anchor } = labelAt(s);
+  return x + ((anchor === "end" ? -1 : 1) * w) / 2;
+};
 // The outline a station's label covers at scale F, in map units. It runs from the name's cap height, 0.8em above the
 // baseline, to below the release, which sits centred under the name.
 function labelBox(s, F) {
@@ -221,7 +233,7 @@ function mapModel(M) {
   const drawn = (h) => !skip.has(pair(h)) && (h.f === M.id || h.t === M.id || also.has(pair(h)));
   // Copies, so rendering twice never stacks state on the shared data.
   const E = HANDOFFS.filter(drawn).map((h) => ({ ...h, handoff: h }));
-  const HUB = { id: M.id, ...STATIONS[M.id], ...CENTRE, hub: true, anchor: "middle" };
+  const HUB = { id: M.id, ...STATIONS[M.id], ...CENTRE, hub: true };
   const S = [HUB, ...Object.entries(layout(M, E, stop)).map(([id, at]) => ({ id, ...STATIONS[id], ...at }))];
   // Colour by direction: into the hub is input (or a resource), out of it is results. A handoff between two
   // other stations takes the colour of the hub line at its target, or at its source.

@@ -148,7 +148,7 @@ function renderMap(M, from, animate = !reduced) {
     const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F}) rotate(${at.angle})` });
     // A long hub name shrinks to fit the hexagon; 0.56em is about one Overpass character.
     const hubSize = s.hub ? `font-size:${Math.min(26, (HEX_R * 1.5) / (s.id.length * 0.56)).toFixed(1)}px` : "";
-    const name = el("text", { x: at.x, y: at.y, "text-anchor": s.anchor, class: "name", style: hubSize }, s.id),
+    const name = el("text", { x: at.x, y: at.y, "text-anchor": at.anchor, class: "name", style: hubSize }, s.id),
       ver = el("text", { x: at.x, y: at.y + LABEL.lead, "text-anchor": "middle", class: "ver" }, release(s));
     label.append(name, ver);
     if (!s.hub) releases.push([s, name, ver]);
