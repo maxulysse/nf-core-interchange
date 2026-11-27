@@ -153,6 +153,15 @@ const HANDOFFS = [
   },
   {
     f: "createtaxdb",
+    t: "eager",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "kraken2/<db_name>/ (or malt/<db_name>/) into --database, with --metagenomic_tool kraken (or malt)",
+    note: "For eager's metagenomic screen of the reads that didn't map. Needs --build_kraken2 or --build_malt in createtaxdb. createtaxdb builds MALT indices with MALT 0.62 and eager runs 0.61, so prefer Kraken2 until that pairing has been tried.",
+  },
+  {
+    f: "createtaxdb",
     t: "seqinspector",
     checked: "2026-11-26",
     res: true,
@@ -253,6 +262,14 @@ const HANDOFFS = [
     via: "--generate_downstream_samplesheets: downstream_samplesheets/taxprofiler.csv into --input",
     note: "taxprofiler 2.0.1 read it unchanged in the SIG benchmark. taxprofiler still needs a --databases sheet, which detaxizer does not write.",
     src: "sig",
+  },
+  {
+    f: "eager",
+    t: "taxprofiler",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "--run_bam_filtering --bam_unmapped_type fastq: samtools/filter/<library>.unmapped.fastq.gz into fastq_1, with instrument_platform ILLUMINA",
+    note: "Profiles the off-target reads with several classifiers, beyond eager's own single Kraken2 or MALT screen. Merged aDNA reads are single-end: leave fastq_2 empty. eager writes no sheet for it. Not yet run.",
   },
   {
     f: "ENA / SRA",
@@ -538,6 +555,15 @@ const HANDOFFS = [
     st: "conversion",
     via: "--fasta, --fai, --dict",
     note: "createpanelrefs 1.1.0 reads no references datasheet. Point the three params at the files references builds.",
+  },
+  {
+    f: "references",
+    t: "eager",
+    checked: "2026-11-27",
+    res: true,
+    st: "conversion",
+    via: "--fasta, --fasta_index, --seq_dict, --bwa_index",
+    note: "eager 2 reads no references datasheet and ignores iGenomes by default. It builds whatever indices are missing itself.",
   },
   {
     f: "references",

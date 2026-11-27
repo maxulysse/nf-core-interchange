@@ -60,6 +60,14 @@ const STATIONS = {
     takes: "--input: sample and condition columns; --matrix; --contrasts",
     gives: "Differential tables, report",
   },
+  eager: {
+    blurb:
+      "Ancient DNA: read QC, adapter removal and merging, mapping with BWA or Bowtie2, deduplication, damage profiling and rescaling, sex determination, contamination estimates, genotyping, and a metagenomic screen of the unmapped reads.",
+    takes:
+      "TSV: Sample_Name, Library_ID, Lane, Colour_Chemistry, SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM; --fasta",
+    gives:
+      "Filtered and deduplicated BAMs, damage and authentication reports, genotypes (VCF, EIGENSTRAT), Kraken2 or MALT profiles, MultiQC",
+  },
   epitopeprediction: {
     blurb: "Predicts which mutated peptides bind the patient's HLA alleles, for MHC class I or II.",
     takes: "Samplesheet: sample, alleles, mhc_class, filename (raw somatic VCF), germline_vcf, tumor_sample",

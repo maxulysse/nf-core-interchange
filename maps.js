@@ -29,6 +29,10 @@ const MAPS = {
   detaxizer: {
     overview: "Where nf-core/detaxizer gets its reads, and which pipelines read the filtered reads back.",
   },
+  eager: {
+    overview:
+      "Where nf-core/eager gets its reference and screening databases, and where its unmapped reads go next. Each line is a handoff between two pipelines.",
+  },
   createtaxdb: {
     overview: "Where nf-core/createtaxdb gets its reference sequences, and which pipeline reads its databases.",
   },
