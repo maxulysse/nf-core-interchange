@@ -325,14 +325,6 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
-    t: "methylseq",
-    checked: "2026-11-27",
-    st: "native",
-    via: "samplesheet/samplesheet.csv (no --nf_core_pipeline) into --input",
-    note: "methylseq needs sample, fastq_1 and fastq_2, which every fetchngs sheet starts with, and ignores the metadata columns. Set --aligner and the library protocol (--pbat, --em_seq, --rrbs and so on) to match the study. Not yet run.",
-  },
-  {
-    f: "fetchngs",
     t: "rnaseq",
     checked: "2026-11-25",
     st: "native",
