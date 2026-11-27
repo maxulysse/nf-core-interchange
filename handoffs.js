@@ -52,6 +52,15 @@ const HANDOFFS = [
   },
   {
     f: "AWS iGenomes",
+    t: "raredisease",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome (GRCh38 by default), --igenomes_base",
+    note: "Only gives the FASTA, BWA index and mitochondrial contig name. Everything else raredisease reads, from the VEP cache and plugins to gnomAD, vcfanno resources, ploidy models and target BEDs, comes as its own parameters, and its FASTA must list chromosomes 1-22, X, Y and MT first.",
+  },
+  {
+    f: "AWS iGenomes",
     t: "rnavar",
     checked: "2026-11-25",
     res: true,
@@ -308,6 +317,14 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
+    t: "raredisease",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "fastq_1 and fastq_2 from samplesheet/samplesheet.csv, into sample, lane, fastq_1, fastq_2, sex, phenotype, paternal_id, maternal_id, case_id",
+    note: "--nf_core_pipeline has no raredisease option. The pedigree columns come from the study's metadata, written by hand. Not yet run.",
+  },
+  {
+    f: "fetchngs",
     t: "rnaseq",
     checked: "2026-11-25",
     st: "native",
@@ -505,6 +522,14 @@ const HANDOFFS = [
     note: "Published as BAM by default, CRAM with --save_all_mapped_as_cram. raredisease writes no sheet for it. Use one run per sex for the Gens panels (see the Gens handoff).",
   },
   {
+    f: "raredisease",
+    t: "variantbenchmarking",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "call_snv/genome/<case_id>_snv.vcf.gz (or call_sv/genome/<case_id>_sv_merge.vcf.gz) into test_vcf, with subsample set to the sample with a truth set",
+    note: "The case VCFs hold the whole family, so subsample picks the GIAB or other benchmark sample. Use --analysis germline with --variant_type small or structural. raredisease writes no sheet for it. Not yet run.",
+  },
+  {
     f: "reference sequences",
     t: "createtaxdb",
     checked: "2026-11-26",
@@ -546,6 +571,15 @@ const HANDOFFS = [
     st: "conversion",
     via: "--fasta, --fasta_index (and --bwamem_index with --aligner bwamem)",
     note: "methylseq 4.2.0 reads no references datasheet. references 0.1 builds no Bismark or bwa-meth index, so methylseq still builds those from the FASTA.",
+  },
+  {
+    f: "references",
+    t: "raredisease",
+    checked: "2026-11-27",
+    res: true,
+    st: "conversion",
+    via: "--fasta, --fai, --bwamem2 (or --bwa)",
+    note: "raredisease reads no references datasheet, and builds the rest of its references itself or takes them as files.",
   },
   {
     f: "references",
