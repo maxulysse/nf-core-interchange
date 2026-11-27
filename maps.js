@@ -22,10 +22,6 @@ const MAPS = {
     overview:
       "Where nf-core/references gets its genomes, and which pipelines can read the indices it builds. No released pipeline reads its datasheet yet, so every pipeline handoff passes files by hand. Each line is a handoff between two pipelines.",
   },
-  scrnaseq: {
-    overview:
-      "Where nf-core/scrnaseq gets its single-cell reads and its reference, and where its count matrices go next. Each line is a handoff between two pipelines.",
-  },
   rnavar: {
     overview:
       "Where nf-core/rnavar gets its RNA-seq reads or alignments, its reference and annotation caches, and where its variant calls can go next. Each line is a handoff between two pipelines.",
@@ -64,6 +60,10 @@ const MAPS = {
   },
   proteinfamilies: {
     overview: "Which pipelines give nf-core/proteinfamilies its proteins, and which read the samplesheets it writes.",
+  },
+  scrnaseq: {
+    overview:
+      "Where nf-core/scrnaseq gets its single-cell reads and its reference, and where its count matrices go next. Each line is a handoff between two pipelines.",
   },
 };
 for (const [id, m] of Object.entries(MAPS)) m.id = id;
