@@ -47,6 +47,10 @@ const MAPS = {
   metatdenovo: {
     overview: "Where nf-core/metatdenovo gets its RNA reads, and which pipelines take its assembly and proteins.",
   },
+  scdownstream: {
+    overview:
+      "Which pipelines give nf-core/scdownstream the count matrices it integrates, clusters and annotates. Each line is a handoff between two pipelines.",
+  },
   viralmetagenome: {
     overview: "Where nf-core/viralmetagenome gets its reads, and which pipelines take its viral contigs.",
   },

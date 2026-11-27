@@ -689,6 +689,14 @@ const HANDOFFS = [
     note: "Same patient, status and sample IDs as sarek. Sarek writes no sheet for it, so build it by hand.",
   },
   {
+    f: "scnanoseq",
+    t: "scdownstream",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "<sample>/genome/isoquant/*.gene_counts.tsv (or transcriptome/oarfish/ mtx) converted to h5ad, into filtered",
+    note: "scnanoseq's matrices only hold the barcodes BLAZE called as cells, so they go in as filtered, and SoupX's ambient correction has no unfiltered matrix to work from: set --ambient_correction decontx or turn it off per sample. scdownstream (not yet released) reads no TSV or mtx, so convert them first. Not yet run.",
+  },
+  {
     f: "seqinspector",
     t: "ampliseq",
     checked: "2026-11-26",
