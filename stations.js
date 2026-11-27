@@ -125,6 +125,14 @@ const STATIONS = {
       "Samplesheet: sample, fastq_1, fastq_2, genome; --fasta, --fasta_index, --bismark_index, --bwameth_index, --bwamem_index",
     gives: "Aligned BAMs, methylation calls, QC",
   },
+  nanoseq: {
+    blurb:
+      "Nanopore DNA or RNA: demultiplexing, QC, alignment with minimap2 or GraphMap2, then variant calling for DNA, or transcript quantification, differential expression, RNA modifications and fusions for RNA.",
+    takes:
+      "Samplesheet: group, replicate, barcode, input_file (FASTQ, BAM or run folder), fasta (or iGenomes key), gtf; --protocol DNA, cDNA or directRNA",
+    gives:
+      "Demultiplexed FASTQ, sorted BAMs, coverage tracks, small and structural variant VCFs, counts, DESeq2 and DEXSeq results",
+  },
   phageannotator: {
     blurb: "Identifies and annotates phage sequences in assembled contigs. No release yet.",
     takes: "Samplesheet: sample, group, fastq_1, fasta (gzipped)",
