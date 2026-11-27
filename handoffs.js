@@ -52,6 +52,15 @@ const HANDOFFS = [
   },
   {
     f: "AWS iGenomes",
+    t: "cutandrun",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome, --igenomes_base; --spikein_genome (K12-MG1655 by default)",
+    note: "Gives the FASTA, GTF, gene BED and Bowtie2 index, plus the bundled blacklist for the main builds. The default spike-in normalisation also pulls the E. coli genome from iGenomes: pass --spikein_fasta and --spikein_bowtie2 to use your own.",
+  },
+  {
+    f: "AWS iGenomes",
     t: "rnavar",
     checked: "2026-11-25",
     res: true,
@@ -278,6 +287,14 @@ const HANDOFFS = [
     st: "native",
     via: "--nf_core_pipeline atacseq: samplesheet/samplesheet.csv into --input",
     note: "Sets replicate to 1 on every row: number the real replicates, and add controls, by hand.",
+  },
+  {
+    f: "fetchngs",
+    t: "cutandrun",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "fastq_1 and fastq_2 from samplesheet/samplesheet.csv, into group, replicate, fastq_1, fastq_2, control",
+    note: "--nf_core_pipeline has no cutandrun option, and cutandrun's sheet has no sample column: write group, replicate and the IgG control from the study design. Paired-end reads only. Not yet run.",
   },
   {
     f: "fetchngs",
@@ -538,6 +555,15 @@ const HANDOFFS = [
     st: "conversion",
     via: "--fasta, --fai, --dict",
     note: "createpanelrefs 1.1.0 reads no references datasheet. Point the three params at the files references builds.",
+  },
+  {
+    f: "references",
+    t: "cutandrun",
+    checked: "2026-11-27",
+    res: true,
+    st: "conversion",
+    via: "--fasta, --gtf, --bowtie2",
+    note: "cutandrun reads no references datasheet. Pass --blacklist yourself, and --spikein_fasta and --spikein_bowtie2 unless you set --normalisation_mode to CPM, RPKM, BPM or None.",
   },
   {
     f: "references",

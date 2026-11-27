@@ -44,6 +44,14 @@ const STATIONS = {
     takes: "Samplesheet: id, taxid, fasta_dna and/or fasta_aa; --dbname; one --build_TOOL flag per database",
     gives: "One database per classifier",
   },
+  cutandrun: {
+    blurb:
+      "CUT&RUN, CUT&Tag and TIPseq: QC, trimming, Bowtie2 alignment to the target and spike-in genomes, duplicate handling, spike-in or read-count normalisation, SEACR or MACS2 peak calling, consensus peaks and fragment-based QC.",
+    takes:
+      "Samplesheet: group, replicate, fastq_1, fastq_2, control (paired-end only); --genome or --fasta, --gtf, --bowtie2",
+    gives:
+      "Filtered BAMs, bedGraphs and bigWigs, peaks and consensus peaks, heatmaps, FRiP and fingerprint QC, MultiQC",
+  },
   demultiplex: {
     blurb: "Demultiplexes raw sequencer output into per-sample FASTQ.",
     takes: "Samplesheet: id, samplesheet (the run's SampleSheet.csv), lane, flowcell (the BCL run folder)",
