@@ -183,6 +183,23 @@ const STATIONS = {
     takes: "Samplesheet: patient, sample, status, lane, fastq_1, fastq_2 (or bam, cram, vcf, maf), normal_id",
     gives: "Somatic variants supported by DNA and RNA",
   },
+  rnafusion: {
+    blurb:
+      "Fusion genes from RNA-seq: STAR-Fusion, Arriba and FusionCatcher calls, merged by fusion-report and checked with FusionInspector, with CTAT-SPLICING, StringTie and QC alongside.",
+    takes:
+      "Samplesheet: sample, strandedness, then fastq_1 and fastq_2, or a STAR bam or cram with junctions and splice_junctions; --genomes_base",
+    gives:
+      "Fusion calls per caller, fusion-report HTML and TSV, FusionInspector results, a fusions VCF, Arriba plots, StringTie GTFs",
+  },
+  "rnafusion references": {
+    ext: true,
+    url: "https://nf-co.re/rnafusion/4.2.0/docs/usage/#download-and-build-references",
+    blurb:
+      "rnafusion's prebuilt GRCh38 references on the nf-core S3 bucket. rnafusion's --references_only mode builds most of them itself, but not the Arriba and FusionCatcher ones.",
+    takes: "",
+    gives:
+      "GENCODE FASTA and GTF, STAR and STAR-Fusion CTAT library, Arriba, FusionCatcher and fusion-report databases",
+  },
   rnaseq: {
     blurb: "Bulk RNA-seq: alignment, quantification and extensive QC.",
     takes: "Samplesheet: sample, fastq_1, fastq_2, strandedness (or genome_bam, transcriptome_bam)",
