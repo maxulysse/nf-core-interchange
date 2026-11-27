@@ -41,6 +41,10 @@ const MAPS = {
   mag: {
     overview: "Where nf-core/mag gets its shotgun reads, and which pipelines take its contigs, bins and proteins.",
   },
+  raredisease: {
+    overview:
+      "Where nf-core/raredisease gets its reads, alignments, genome and panels, and where its calls go next. Each line is a handoff between two pipelines.",
+  },
   magmap: {
     overview: "Which genomes nf-core/magmap maps reads to, and where its counts go.",
   },
