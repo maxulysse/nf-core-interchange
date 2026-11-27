@@ -4,10 +4,10 @@
 // readable; a width change that alters F, such as turning a phone, draws the map again.
 const mapBox = document.querySelector("#v-map .map");
 const labelScale = () => Math.min(1.8, Math.max(1, Math.round(7600 / mapBox.clientWidth) / 10));
-let F = 1,
-  shown = null;
+// The map on screen and the label scale it was drawn at.
+let drawn = null;
 new ResizeObserver(() => {
-  if (shown && !mapBox.closest(".view").hidden && labelScale() !== F) renderMap(shown, null, true);
+  if (drawn && !mapBox.closest(".view").hidden && labelScale() !== drawn.F) renderMap(drawn.M, null, false);
 }).observe(mapBox);
 const LN = { reads: "Input data", res: "Resources", out: "Results out" };
 // Map and catalogue text that is not markup: escape it before it goes into HTML. Notes and overviews are markup.
@@ -62,9 +62,9 @@ const around = (s, w, full) => {
   return [s.x - w / 2, s.y - h / 2, w, h];
 };
 
-function renderMap(M, from, redraw = false) {
-  shown = M;
-  F = labelScale();
+function renderMap(M, from, animate = !reduced) {
+  const F = labelScale();
+  drawn = { M, F };
   const { HUB, S, E, box: full, checked } = mapModel(M, F);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
   document.getElementById("map-title").textContent = mapTitle(M.id);
@@ -78,8 +78,8 @@ function renderMap(M, from, redraw = false) {
   svg.classList.remove("zooming");
   // Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
   const start = byId[from] ? around(byId[from], 160, full) : around(HUB, HEX_R * 2.4, full);
-  if (reduced || redraw) svg.setAttribute("viewBox", full.join(" "));
-  else animateBox(svg, start, full);
+  if (animate) animateBox(svg, start, full);
+  else svg.setAttribute("viewBox", full.join(" "));
   const gL = el("g"),
     gD = el("g"),
     gS = el("g");
@@ -127,7 +127,7 @@ function renderMap(M, from, redraw = false) {
       ? el("polygon", { points: hexPoints(s.x, s.y, HEX_R) })
       : s.ext
         ? el("rect", { x: s.x - 9, y: s.y - 9, width: 18, height: 18, class: "mark" })
-        : el("circle", { cx: s.x, cy: s.y, r: 10, class: "mark" });
+        : el("circle", { cx: s.x, cy: s.y, r: MARK_R, class: "mark" });
   S.forEach((s) => {
     s.node = el("g", {
       class: ["stn", s.hub && "hub", s.tag].filter(Boolean).join(" "),
@@ -140,7 +140,7 @@ function renderMap(M, from, redraw = false) {
     const hubSize = s.hub ? `font-size:${Math.min(26, (HEX_R * 1.5) / (s.id.length * 0.56)).toFixed(1)}px` : "";
     label.append(
       el("text", { x: s.lx, y: s.ly, "text-anchor": s.anchor, class: "name", style: hubSize }, s.id),
-      el("text", { x: s.lx, y: s.ly + 15, "text-anchor": s.anchor, class: "ver" }, release(s)),
+      el("text", { x: s.lx, y: s.ly + LABEL.lead, "text-anchor": s.anchor, class: "ver" }, release(s)),
     );
     s.node.append(mark(s), label);
     // A second click on a selected station that has its own map opens that map.

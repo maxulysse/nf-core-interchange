@@ -126,67 +126,80 @@ function layout(M, E, stop) {
   const at = {};
   const set = (list, offs, xy) => list.forEach((id, i) => (at[id] = xy(offs[i])));
   const [tr, br] = [row(top.length), row(bottom.length)];
-  set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, label: "above" }));
-  set(bottom, place(bottom, br.step, ROW_PAIR), (d) => ({
-    x: CENTRE.x + d,
-    y: CENTRE.y + ROW + br.out,
-    label: "below",
-  }));
-  const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, label: "below" });
+  set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, side: "t" }));
+  set(bottom, place(bottom, br.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y + ROW + br.out, side: "b" }));
+  const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, side: "l" });
   if (stop) {
     // The stop sits level with the hub, so source, stop and hub run as one straight line; the other inputs sit
     // above and below it, further out when the stop fans in two sources.
     const wide = feeders.length > 1 ? 200 : 135;
     set(left, [-wide, wide], onLeft);
-    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, label: "below", tag: "optional" };
+    // On no side, the stop keeps its label below.
+    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, tag: "optional" };
     const fan = feeders.length > 1 ? Math.min(100, 520 / (feeders.length - 1)) : 0;
     set(feeders, place(feeders, fan, 200), onLeft);
   } else set(left, place(left, column, COL_PAIR, true), onLeft);
-  set(right, place(right, column, COL_PAIR, true), (d) => ({ x: CENTRE.x + COL, y: CENTRE.y + d, label: "below" }));
+  set(right, place(right, column, COL_PAIR, true), (d) => ({ x: CENTRE.x + COL, y: CENTRE.y + d, side: "r" }));
   return at;
 }
 
 // A station's release, or what it is instead: "resource", or "dev" before a first release.
 const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
-// Station labels are drawn F times larger on a map narrower than 760px. Their widths are estimated from character
-// counts, generously (0.62em a character, 0.78em a capital), so a label keeps clear of its neighbours in any font.
+// A station's label: its name over its release, `gap` from the station, drawn F times larger on a small map. The sizes
+// match .stn .name and .stn .ver in style.css; its box runs `rise` above the name's baseline and is `height` tall.
+// Labels keep `clear` apart, tiers of a crowded row sit `tier` apart, and the map's box keeps `edge` around them.
+const LABEL = { name: 15, ver: 11, lead: 15, rise: 12, height: 30, gap: 32, tier: 36, clear: 8, edge: 12 };
+// The radius of a station's mark.
+const MARK_R = 10;
+// Label widths are estimated from character counts, generously (0.62em a character, 0.78em a capital), so a label
+// keeps clear of its neighbours in any font.
 const textWidth = (t, px) => [...t].reduce((w, c) => w + (c >= "A" && c <= "Z" ? 0.78 : 0.62), 0) * px;
-const labelWidth = (s) => Math.max(textWidth(s.id, 15), textWidth(release(s), 11));
+const labelWidth = (s) => Math.max(textWidth(s.id, LABEL.name), textWidth(release(s), LABEL.ver));
 // The box a station's label covers, in map units: its name's baseline sits (lx, ly) from the station, times F.
 function labelBox(s, F) {
   const w = labelWidth(s) * F;
   return {
     x: s.x + s.lx * F - (s.anchor === "end" ? w : s.anchor === "middle" ? w / 2 : 0),
-    y: s.y + (s.ly - 12) * F,
+    y: s.y + (s.ly - LABEL.rise) * F,
     w,
-    h: 30 * F,
+    h: LABEL.height * F,
   };
 }
-// Puts each label below its station, or above on the top row. A side column too tight for labels below puts them
-// beside its stations, away from the hub; a row whose labels would touch staggers them over two or three tiers.
-// Returns the map's box, grown to hold every label.
+const markBox = (s, r = s.hub ? HEX_R : MARK_R) => ({ x: s.x - r, y: s.y - r, w: 2 * r, h: 2 * r });
+// Whether two boxes come closer than m.
+const overlap = (a, b, m = 0) =>
+  a.x < b.x + b.w + m && b.x < a.x + a.w + m && a.y < b.y + b.h + m && b.y < a.y + a.h + m;
+
+// Puts each label below its station, or above on the top row. A side column where a label below would reach the next
+// station puts them beside its stations, away from the hub; a row whose labels would touch staggers them over two or
+// three tiers.
 function placeLabels(S, F) {
   const set = (s, lx, ly, anchor = "middle") => Object.assign(s, { lx, ly, anchor });
-  S.forEach((s) => set(s, 0, s.hub ? 0 : s.label === "above" ? -32 : 32));
-  const others = S.filter((s) => !s.hub);
-  for (const side of [-1, 1]) {
-    const col = others.filter((s) => s.x === CENTRE.x + side * COL).sort((a, b) => a.y - b.y);
-    if (col.some((s, i) => i && s.y - col[i - 1].y < 52 * F + 12))
-      col.forEach((s) => set(s, side * 16, -2, side < 0 ? "end" : "start"));
+  const clear = LABEL.clear * F;
+  S.forEach((s) => set(s, 0, s.hub ? 0 : s.side === "t" ? -LABEL.gap : LABEL.gap));
+  const on = (side) => S.filter((s) => s.side === side);
+  for (const dir of [-1, 1]) {
+    const col = on(dir < 0 ? "l" : "r").sort((a, b) => a.y - b.y);
+    if (col.some((s, i) => i && overlap(labelBox(col[i - 1], F), markBox(s), clear)))
+      col.forEach((s) => set(s, dir * 16, -2, dir < 0 ? "end" : "start"));
   }
-  for (const row of [others.filter((s) => s.y <= CENTRE.y - ROW), others.filter((s) => s.y >= CENTRE.y + ROW)]) {
+  for (const row of [on("t"), on("b")]) {
     row.sort((a, b) => a.x - b.x);
     // Labels k apart share a tier: use the fewest tiers that keep each one clear.
-    const gap = (a, b) => b.x - a.x - ((labelWidth(a) + labelWidth(b)) / 2 + 8) * F;
-    const tiers = [1, 2, 3].find((k) => row.slice(k).every((s, i) => gap(row[i], s) >= 0)) ?? 3;
-    row.forEach((s, i) => (s.ly += Math.sign(s.ly) * 36 * (i % tiers)));
+    const tiers =
+      [1, 2, 3].find((k) => row.slice(k).every((s, i) => !overlap(labelBox(row[i], F), labelBox(s, F), clear))) ?? 3;
+    row.forEach((s, i) => (s.ly += Math.sign(s.ly) * LABEL.tier * (i % tiers)));
   }
+}
+
+// The map's box: the map with a margin that grows with F, grown further to hold every label.
+function viewBox(S, F) {
   const pad = 100 * (F - 1),
-    boxes = others.map((s) => labelBox(s, F)),
-    x0 = Math.min(-pad, ...boxes.map((b) => b.x - 12)),
-    y0 = Math.min(-pad / 2, ...boxes.map((b) => b.y - 12)),
-    x1 = Math.max(MAP_W + pad, ...boxes.map((b) => b.x + b.w + 12)),
-    y1 = Math.max(MAP_H + pad / 2, ...boxes.map((b) => b.y + b.h + 12));
+    boxes = S.filter((s) => !s.hub).map((s) => labelBox(s, F)),
+    x0 = Math.min(-pad, ...boxes.map((b) => b.x - LABEL.edge)),
+    y0 = Math.min(-pad / 2, ...boxes.map((b) => b.y - LABEL.edge)),
+    x1 = Math.max(MAP_W + pad, ...boxes.map((b) => b.x + b.w + LABEL.edge)),
+    y1 = Math.max(MAP_H + pad / 2, ...boxes.map((b) => b.y + b.h + LABEL.edge));
   return [x0, y0, x1 - x0, y1 - y0];
 }
 
@@ -210,7 +223,7 @@ function mapModel(M, F = 1) {
   const drawn = (h) => !skip.has(pair(h)) && (h.f === M.id || h.t === M.id || also.has(pair(h)));
   // Copies, so rendering twice never stacks state on the shared data.
   const E = HANDOFFS.filter(drawn).map((h) => ({ ...h, handoff: h }));
-  const HUB = { id: M.id, ...STATIONS[M.id], ...CENTRE, hub: true, label: "inside" };
+  const HUB = { id: M.id, ...STATIONS[M.id], ...CENTRE, hub: true };
   const S = [HUB, ...Object.entries(layout(M, E, stop)).map(([id, at]) => ({ id, ...STATIONS[id], ...at }))];
   // Colour by direction: into the hub is input (or a resource), out of it is results. A handoff between two
   // other stations takes the colour of the hub line at its target, or at its source.
@@ -227,7 +240,7 @@ function mapModel(M, F = 1) {
   };
   E.forEach((e) => (e.leg = legOf(e)));
   routeMap(HUB, S, E);
-  const box = placeLabels(S, F);
+  placeLabels(S, F);
   const days = E.map((e) => e.checked).sort();
-  return { HUB, S, E, box, checked: [days[0], days.at(-1)] };
+  return { HUB, S, E, box: viewBox(S, F), checked: [days[0], days.at(-1)] };
 }
