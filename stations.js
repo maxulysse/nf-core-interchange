@@ -207,6 +207,13 @@ const STATIONS = {
       "Samplesheet: sample, filtered and/or unfiltered (h5ad, h5, rds or csv), plus optional per-sample QC columns",
     gives: "Integrated h5ad (rds with --tords), clusters, cell-type labels, QC report",
   },
+  scnanoseq: {
+    blurb:
+      "10x single-cell or single-nucleus RNA-seq on Nanopore Q20+ reads: QC, BLAZE barcode calling and correction, minimap2 alignment to genome and transcriptome, UMI deduplication, and gene and transcript matrices from IsoQuant or oarfish.",
+    takes:
+      "Samplesheet: sample, fastq, cell_count; --quantifier isoquant and/or oarfish, genome and transcriptome references",
+    gives: "Tagged and deduplicated BAMs, gene and transcript count matrices, Seurat QC, MultiQC",
+  },
   scrnaseq: {
     blurb:
       "Single-cell RNA-seq: barcode and UMI processing and quantification with simpleaf, STARsolo, kallisto/bustools or Cell Ranger, with optional CellBender filtering.",
