@@ -52,6 +52,15 @@ const HANDOFFS = [
   },
   {
     f: "AWS iGenomes",
+    t: "rnaseq",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome, --igenomes_base",
+    note: "The bundle gives the FASTA, GTF, BED12 and a STAR index, which rnaseq adapts to its newer STAR. rnaseq's docs advise against it for new work: the annotations are old, and GRCh38's GTF keys genes by symbol. Pass --fasta and --gtf instead.",
+  },
+  {
+    f: "AWS iGenomes",
     t: "rnavar",
     checked: "2026-11-25",
     res: true,
@@ -597,6 +606,14 @@ const HANDOFFS = [
     st: "conversion",
     via: "star_salmon/<SAMPLE>.markdup.sorted.bam into sample_id, mapped, index, file_type",
     note: "For a rerun with another aligner or genome. With the same setup, rnaseq reads its own BAMs back through genome_bam and transcriptome_bam, no conversion needed.",
+  },
+  {
+    f: "rnaseq",
+    t: "differentialabundance",
+    checked: "2026-11-27",
+    st: "native",
+    via: "star_salmon/salmon.merged.gene_counts.tsv into --matrix, salmon.merged.gene_lengths.tsv into --feature_length_matrix, the same GTF into --gtf",
+    note: "The documented route into differentialabundance: raw counts only with the gene lengths beside them, else gene_counts_length_scaled.tsv. Add the condition columns to rnaseq's samplesheet for --input and write --contrasts. Avoid the iGenomes GRCh38 GTF, which keys genes by symbol.",
   },
   {
     f: "rnaseq",

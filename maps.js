@@ -22,6 +22,10 @@ const MAPS = {
     overview:
       "Where nf-core/references gets its genomes, and which pipelines can read the indices it builds. No released pipeline reads its datasheet yet, so every pipeline handoff passes files by hand. Each line is a handoff between two pipelines.",
   },
+  rnaseq: {
+    overview:
+      "Where nf-core/rnaseq gets its reads and its reference, and where its alignments and gene counts go next: variant calling, differential abundance, or back to reads. Each line is a handoff between two pipelines.",
+  },
   rnavar: {
     overview:
       "Where nf-core/rnavar gets its RNA-seq reads or alignments, its reference and annotation caches, and where its variant calls can go next. Each line is a handoff between two pipelines.",
