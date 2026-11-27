@@ -70,6 +70,15 @@ const HANDOFFS = [
   },
   {
     f: "AWS iGenomes",
+    t: "scrnaseq",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome, --igenomes_base",
+    note: "Gives the FASTA, GTF and a STAR index, which scrnaseq adapts to its newer STAR. scrnaseq's docs advise building fresh indices from current FASTA and GTF for real runs: iGenomes annotations are old.",
+  },
+  {
+    f: "AWS iGenomes",
     t: "seqinspector",
     checked: "2026-11-26",
     res: true,
@@ -332,6 +341,14 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
+    t: "scrnaseq",
+    checked: "2026-11-27",
+    st: "native",
+    via: "samplesheet/samplesheet.csv (no --nf_core_pipeline) into --input",
+    note: "scrnaseq needs sample, fastq_1 and fastq_2, which every fetchngs sheet starts with, and ignores the metadata columns. fastq_1 must be the barcode read: check the order for each study, since archives store 10x runs in different ways. Set --protocol to match. Not yet run.",
+  },
+  {
+    f: "fetchngs",
     t: "seqinspector",
     checked: "2026-11-26",
     st: "native",
@@ -575,6 +592,15 @@ const HANDOFFS = [
   },
   {
     f: "references",
+    t: "scrnaseq",
+    checked: "2026-11-27",
+    res: true,
+    st: "conversion",
+    via: "--fasta, --gtf, --transcript_fasta, --star_index",
+    note: "scrnaseq 4.2.0 reads no references datasheet. references builds its STAR index with STAR 2.7.11b, whose index format STARsolo (2.7.10b) reads. scrnaseq builds its own simpleaf, kallisto and Cell Ranger indices from the FASTA and GTF.",
+  },
+  {
+    f: "references",
     t: "seqinspector",
     checked: "2026-11-26",
     res: true,
@@ -677,6 +703,14 @@ const HANDOFFS = [
     st: "conversion",
     via: "the same FASTQ, in ampliseq's own samplesheet, once the QC report passes",
     note: "seqinspector only reports on the reads: it changes nothing and writes no samplesheet for ampliseq.",
+  },
+  {
+    f: "scrnaseq",
+    t: "scdownstream",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "<aligner>/mtx_conversions/<sample>/<sample>_filtered_matrix.h5ad into filtered, <sample>_raw_matrix.h5ad into unfiltered",
+    note: "scdownstream (not yet released) reads one h5ad pair per sample; scrnaseq writes no sheet for it. simpleaf, the default aligner, writes only a raw matrix and its CellBender filter (_cellbender_filter_matrix.h5ad). If CellBender already ran, turn off scdownstream's ambient correction to avoid correcting twice.",
   },
   {
     f: "seqinspector",
