@@ -126,20 +126,24 @@ function layout(M, E, stop) {
   const at = {};
   const set = (list, offs, xy) => list.forEach((id, i) => (at[id] = xy(offs[i])));
   const [tr, br] = [row(top.length), row(bottom.length)];
-  set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, side: "t" }));
-  set(bottom, place(bottom, br.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y + ROW + br.out, side: "b" }));
-  const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, side: "l" });
+  // Labels run away from stations above and right of the hub ("start"), and up to the others ("end").
+  set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, anchor: "start" }));
+  set(bottom, place(bottom, br.step, ROW_PAIR), (d) => ({
+    x: CENTRE.x + d,
+    y: CENTRE.y + ROW + br.out,
+    anchor: "end",
+  }));
+  const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, anchor: "end" });
   if (stop) {
     // The stop sits level with the hub, so source, stop and hub run as one straight line; the other inputs sit
     // above and below it, further out when the stop fans in two sources.
     const wide = feeders.length > 1 ? 200 : 135;
     set(left, [-wide, wide], onLeft);
-    // On no side, the stop keeps its label below.
-    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, tag: "optional" };
+    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, anchor: "end", tag: "optional" };
     const fan = feeders.length > 1 ? Math.min(100, 520 / (feeders.length - 1)) : 0;
     set(feeders, place(feeders, fan, 200), onLeft);
   } else set(left, place(left, column, COL_PAIR, true), onLeft);
-  set(right, place(right, column, COL_PAIR, true), (d) => ({ x: CENTRE.x + COL, y: CENTRE.y + d, side: "r" }));
+  set(right, place(right, column, COL_PAIR, true), (d) => ({ x: CENTRE.x + COL, y: CENTRE.y + d, anchor: "start" }));
   return at;
 }
 
@@ -162,50 +166,30 @@ const corners = (x, y, w, h) => [
   [x + w, y + h],
   [x, y + h],
 ];
-// The outline a station's label covers, in map units: its name's baseline sits (lx, ly) from the station, in a frame
-// turned by `angle` degrees and scaled by F. It runs from the name's cap height, 0.8em above the baseline, to below
-// the release.
+// Where a station's label sits before scaling: its name's baseline (x, y) and its turn in degrees. A station's label
+// runs away from it ("start") or up to it ("end"), rising to the right; the hub's ("middle") sits level inside it.
+const labelAt = (s) =>
+  s.anchor === "middle"
+    ? { x: 0, y: 0, angle: 0 }
+    : { x: (s.anchor === "start" ? 1 : -1) * LABEL.side, y: LABEL.lift, angle: -LABEL.slant };
+// The outline a station's label covers at scale F, in map units. It runs from the name's cap height, 0.8em above the
+// baseline, to below the release.
 function labelBox(s, F) {
-  const w = labelWidth(s),
-    a = (s.angle * Math.PI) / 180,
+  const { x, y, angle } = labelAt(s),
+    w = labelWidth(s),
+    a = (angle * Math.PI) / 180,
     [cos, sin] = [Math.cos(a), Math.sin(a)];
-  return corners(s.anchor === "end" ? s.lx - w : s.lx, s.ly - 0.8 * LABEL.name, w, LABEL.name + LABEL.lead).map(
-    ([u, v]) => [s.x + (u * cos - v * sin) * F, s.y + (u * sin + v * cos) * F],
-  );
-}
-const markBox = (s, r = s.hub ? HEX_R : MARK_R) => corners(s.x - r, s.y - r, 2 * r, 2 * r);
-// Whether two outlines, both rectangles, overlap: no side of either keeps them apart.
-const overlap = (p, q) =>
-  [p, q].every((o) =>
-    o.every(([x0, y0], i) => {
-      const [x1, y1] = o[(i + 1) % o.length],
-        along = (r) => r.map(([x, y]) => x * (y0 - y1) + y * (x1 - x0)),
-        [a, b] = [along(p), along(q)];
-      return Math.min(...a) < Math.max(...b) && Math.min(...b) < Math.max(...a);
-    }),
-  );
-
-// Turns every label beside its station, rising to the right: away from the station on the top row and the right
-// column, up to it on the bottom row, the left column and the stop. The hub's label sits inside it. Each labelled
-// station keeps its label's outline as `box`.
-function placeLabels(S, F) {
-  S.forEach((s) => {
-    const away = s.side === "t" || s.side === "r";
-    Object.assign(
-      s,
-      s.hub
-        ? { lx: 0, ly: 0, anchor: "middle", angle: 0 }
-        : { lx: (away ? 1 : -1) * LABEL.side, ly: LABEL.lift, anchor: away ? "start" : "end", angle: -LABEL.slant },
-    );
-    if (!s.hub) s.box = labelBox(s, F);
-  });
+  return corners(s.anchor === "end" ? x - w : x, y - 0.8 * LABEL.name, w, LABEL.name + LABEL.lead).map(([u, v]) => [
+    s.x + (u * cos - v * sin) * F,
+    s.y + (u * sin + v * cos) * F,
+  ]);
 }
 
 // The map's box: the map with a margin that grows with F, the framing phones had before labels were measured, grown
 // further to hold every label.
 function viewBox(S, F) {
   const pad = 100 * (F - 1),
-    pts = S.filter((s) => !s.hub).flatMap((s) => s.box),
+    pts = S.filter((s) => !s.hub).flatMap((s) => labelBox(s, F)),
     xs = pts.map(([x]) => x),
     ys = pts.map(([, y]) => y),
     x0 = Math.min(-pad, ...xs.map((x) => x - LABEL.edge)),
@@ -216,9 +200,8 @@ function viewBox(S, F) {
 }
 
 // What a map draws, without the DOM: its stations with their text from stations.js, and the handoffs from
-// handoffs.js that it draws, each coloured and routed, and its labels placed for scale F. renderMap draws it and
-// bin/check.js checks it.
-function mapModel(M, F = 1) {
+// handoffs.js that it draws, each coloured and routed. renderMap draws it and bin/check.js checks it.
+function mapModel(M) {
   const also = new Set(M.also),
     skip = new Set();
   let stop;
@@ -235,7 +218,7 @@ function mapModel(M, F = 1) {
   const drawn = (h) => !skip.has(pair(h)) && (h.f === M.id || h.t === M.id || also.has(pair(h)));
   // Copies, so rendering twice never stacks state on the shared data.
   const E = HANDOFFS.filter(drawn).map((h) => ({ ...h, handoff: h }));
-  const HUB = { id: M.id, ...STATIONS[M.id], ...CENTRE, hub: true };
+  const HUB = { id: M.id, ...STATIONS[M.id], ...CENTRE, hub: true, anchor: "middle" };
   const S = [HUB, ...Object.entries(layout(M, E, stop)).map(([id, at]) => ({ id, ...STATIONS[id], ...at }))];
   // Colour by direction: into the hub is input (or a resource), out of it is results. A handoff between two
   // other stations takes the colour of the hub line at its target, or at its source.
@@ -252,7 +235,6 @@ function mapModel(M, F = 1) {
   };
   E.forEach((e) => (e.leg = legOf(e)));
   routeMap(HUB, S, E);
-  placeLabels(S, F);
   const days = E.map((e) => e.checked).sort();
-  return { HUB, S, E, box: viewBox(S, F), checked: [days[0], days.at(-1)] };
+  return { HUB, S, E, checked: [days[0], days.at(-1)] };
 }

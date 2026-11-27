@@ -65,7 +65,8 @@ const around = (s, w, full) => {
 function renderMap(M, from, animate = !reduced) {
   const F = labelScale();
   onScreen = { M, F };
-  const { HUB, S, E, box: full, checked } = mapModel(M, F);
+  const { HUB, S, E, checked } = mapModel(M);
+  const full = viewBox(S, F);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
   document.getElementById("map-title").textContent = mapTitle(M.id);
   document.getElementById("map-checked").textContent =
@@ -139,12 +140,13 @@ function renderMap(M, from, animate = !reduced) {
       "aria-label": s.id,
     });
     // The hub label sits inside the fixed-size hexagon, so it keeps its size.
-    const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F}) rotate(${s.angle})` });
+    const at = labelAt(s);
+    const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F}) rotate(${at.angle})` });
     // A long hub name shrinks to fit the hexagon; 0.56em is about one Overpass character.
     const hubSize = s.hub ? `font-size:${Math.min(26, (HEX_R * 1.5) / (s.id.length * 0.56)).toFixed(1)}px` : "";
     label.append(
-      el("text", { x: s.lx, y: s.ly, "text-anchor": s.anchor, class: "name", style: hubSize }, s.id),
-      el("text", { x: s.lx, y: s.ly + LABEL.lead, "text-anchor": s.anchor, class: "ver" }, release(s)),
+      el("text", { x: at.x, y: at.y, "text-anchor": s.anchor, class: "name", style: hubSize }, s.id),
+      el("text", { x: at.x, y: at.y + LABEL.lead, "text-anchor": s.anchor, class: "ver" }, release(s)),
     );
     s.node.append(mark(s), label);
     // A second click on a selected station that has its own map opens that map.

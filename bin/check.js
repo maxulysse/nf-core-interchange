@@ -7,9 +7,10 @@ const vm = require("vm");
 const scripts = [...fs.readFileSync("index.html", "utf8").matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
 for (const f of scripts.slice(0, scripts.indexOf("js/map.js")))
   vm.runInThisContext(fs.readFileSync(f, "utf8"), { filename: f });
-const { TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel, markBox, overlap } = vm.runInThisContext(
-  "({ TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel, markBox, overlap })",
-);
+const { TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel, labelBox, corners, HEX_R, MARK_R } =
+  vm.runInThisContext(
+    "({ TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel, labelBox, corners, HEX_R, MARK_R })",
+  );
 
 let bad = 0;
 const fail = (msg) => {
@@ -17,6 +18,17 @@ const fail = (msg) => {
   bad = 1;
 };
 const pair = (h) => `${h.f}>${h.t}`;
+const markBox = (s, r = s.hub ? HEX_R : MARK_R) => corners(s.x - r, s.y - r, 2 * r, 2 * r);
+// Whether two outlines, both rectangles, overlap: no side of either keeps them apart.
+const overlap = (p, q) =>
+  [p, q].every((o) =>
+    o.every(([x0, y0], i) => {
+      const [x1, y1] = o[(i + 1) % o.length],
+        along = (r) => r.map(([x, y]) => x * (y0 - y1) + y * (x1 - x0)),
+        [a, b] = [along(p), along(q)];
+      return Math.min(...a) < Math.max(...b) && Math.min(...b) < Math.max(...a);
+    }),
+  );
 
 // Every catalogue pipeline sits in the tree, and the tree names only catalogue pipelines.
 const leaves = new Set();
@@ -56,15 +68,15 @@ for (const M of Object.values(MAPS)) {
   at.filter((xy, i) => at.indexOf(xy) !== i).forEach((xy) => fail(`${M.id}: two stations sit at ${xy}`));
   // At every label scale renderMap uses, 1 to 1.8 in tenths, no label covers another label, another station or the hub.
   for (const F of [10, 11, 12, 13, 14, 15, 16, 17, 18].map((k) => k / 10)) {
-    const all = mapModel(M, F).S,
-      labelled = all.filter((s) => !s.hub);
+    const labelled = S.filter((s) => !s.hub),
+      box = new Map(labelled.map((s) => [s, labelBox(s, F)]));
     labelled.forEach((a, i) => {
       labelled.slice(i + 1).forEach((b) => {
-        if (overlap(a.box, b.box)) fail(`${M.id}: at scale ${F}, the labels of ${a.id} and ${b.id} touch`);
+        if (overlap(box.get(a), box.get(b))) fail(`${M.id}: at scale ${F}, the labels of ${a.id} and ${b.id} touch`);
       });
-      all
-        .filter((b) => b !== a && overlap(a.box, markBox(b)))
-        .forEach((b) => fail(`${M.id}: at scale ${F}, the label of ${a.id} covers ${b.id}`));
+      S.filter((b) => b !== a && overlap(box.get(a), markBox(b))).forEach((b) =>
+        fail(`${M.id}: at scale ${F}, the label of ${a.id} covers ${b.id}`),
+      );
     });
   }
   S.forEach((s) => placed.add(s.id));
