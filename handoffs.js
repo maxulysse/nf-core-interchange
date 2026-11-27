@@ -79,6 +79,14 @@ const HANDOFFS = [
   },
   {
     f: "bamtofastq",
+    t: "oncoanalyser",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "reads/<sample>_{1,2}.merged.fastq.gz into filetype fastq, filepath R1;R2, info library_id and lane",
+    note: "oncoanalyser's own advice for alignments it can't read: BAMs on another build, or GRCh38 with HLA class I ALT contigs, which break LILAC and variant calling. oncoanalyser then realigns to GRCh38_hmf with BWA-MEM2.",
+  },
+  {
+    f: "bamtofastq",
     t: "raredisease",
     checked: "2026-11-25",
     st: "conversion",
@@ -365,6 +373,15 @@ const HANDOFFS = [
     note: "For Illumina runs. Nanopore runs go into viralrecon as barcode folders, not FASTQ rows.",
   },
   {
+    f: "Hartwig reference data",
+    t: "oncoanalyser",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome GRCh38_hmf (or GRCh37_hmf); --mode prepare_reference --ref_data_types to stage it once",
+    note: "The Hartwig genome, its indices and the WiGiTS resource files, downloaded per run by default. Stage them once with prepare_reference and point a config at <outdir>/reference_data. A custom genome works, but Hartwig's is strongly recommended.",
+  },
+  {
     f: "hlatyping",
     t: "epitopeprediction",
     checked: "2026-11-16",
@@ -469,6 +486,14 @@ const HANDOFFS = [
     via: "--mode metagenomic_assemblies: megahit/megahit_assembly.contigs.fa.gz into id, fasta, run_accession, assembler, assembler_version",
     note: "seqsubmit 1.0.0 registers every assembly as a primary metagenome, so a metatranscriptome gets the wrong ENA type. It takes one run_accession per row, not a co-assembly of several runs.",
     src: "sig",
+  },
+  {
+    f: "oncoanalyser",
+    t: "epitopeprediction",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "sage/somatic/<tumor>.sage.somatic.vcf.gz into filename, LILAC alleles from lilac/<tumor>.lilac.tsv into alleles, purple/<tumor>.purple.germline.vcf.gz into germline_vcf",
+    note: "oncoanalyser already scores class I neoepitopes with NEO; this adds class II, pVACtools and other predictors. Give the SAGE calls, not PURPLE's annotated VCF, and set tumor_sample, since SAGE writes tumor and normal columns. Not yet run.",
   },
   {
     f: "proteinfamilies",
@@ -645,6 +670,14 @@ const HANDOFFS = [
     st: "conversion",
     via: "--save_output_as_bam, then the preprocessing BAM into sample, bam, seq_type",
     note: "hlatyping takes BAM, not CRAM. It extracts the reads again and maps them to the HLA region.",
+  },
+  {
+    f: "sarek",
+    t: "oncoanalyser",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "--save_output_as_bam: preprocessing/markduplicates/<sample>/<sample>.md.bam{,.bai} into filetype bam, with group_id, subject_id, sample_id, sample_type, sequence_type dna",
+    note: "Only for CRAMs aligned to the Hartwig genome: run sarek with oncoanalyser's GRCh38_hmf FASTA and BWA-MEM2 index. sarek already soft-clips supplementary reads (-Y). Ask for BAM: oncoanalyser wants CRAM 3.0 with NM tags stored, which sarek's CRAMs don't promise. With GATK.GRCh38, the HLA ALT contigs break LILAC: go through bamtofastq instead.",
   },
   {
     f: "sarek",

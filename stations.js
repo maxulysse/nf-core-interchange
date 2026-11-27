@@ -77,6 +77,14 @@ const STATIONS = {
     takes: "Samplesheet: sample, fasta (protein, gbk, gff optional)",
     gives: "AMP, ARG and BGC calls, summary tables",
   },
+  "Hartwig reference data": {
+    ext: true,
+    url: "https://nf-co.re/oncoanalyser/3.0.0/docs/usage/#reference-data",
+    blurb:
+      "Hartwig Medical Foundation's GRCh37 and GRCh38 genomes with their indices, and the WiGiTS resource files that oncoanalyser's tools read.",
+    takes: "",
+    gives: "Genome FASTA, BWA-MEM2 and STAR indices, WiGiTS resources (panels, ensembl cache, PON, known fusions)",
+  },
   hlatyping: {
     blurb:
       "Types HLA alleles from DNA or RNA reads with OptiType (class I), and with HLA-HD (class II) when installed.",
@@ -124,6 +132,13 @@ const STATIONS = {
     takes:
       "Samplesheet: sample, fastq_1, fastq_2, genome; --fasta, --fasta_index, --bismark_index, --bwameth_index, --bwamem_index",
     gives: "Aligned BAMs, methylation calls, QC",
+  },
+  oncoanalyser: {
+    blurb:
+      "Hartwig's WiGiTS cancer genome and transcriptome analysis for tumor/normal, tumor-only or panel data: small variants, SVs, copy number, purity, HLA, neoepitopes, signatures and a report.",
+    takes:
+      "Samplesheet: group_id, subject_id, sample_id, sample_type, sequence_type, filetype (fastq, bam, cram, redux), info, filepath; --mode, --genome",
+    gives: "REDUX BAMs, SAGE, PURPLE, LINX and ESVEE calls, LILAC HLA types, NEO neoepitopes, ORANGE report",
   },
   phageannotator: {
     blurb: "Identifies and annotates phage sequences in assembled contigs. No release yet.",
