@@ -153,6 +153,15 @@ const HANDOFFS = [
   },
   {
     f: "createtaxdb",
+    t: "eager",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "kraken2/<db_name>/ (or malt/<db_name>/) into --database, with --metagenomic_tool kraken (or malt)",
+    note: "For eager's metagenomic screen of the reads that didn't map. Needs --build_kraken2 or --build_malt in createtaxdb. createtaxdb builds MALT indices with MALT 0.62 and eager runs 0.61, so prefer Kraken2 until that pairing has been tried.",
+  },
+  {
+    f: "createtaxdb",
     t: "seqinspector",
     checked: "2026-11-26",
     res: true,
@@ -255,6 +264,14 @@ const HANDOFFS = [
     src: "sig",
   },
   {
+    f: "eager",
+    t: "taxprofiler",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "--run_bam_filtering --bam_unmapped_type fastq: samtools/filter/<library>.unmapped.fastq.gz into fastq_1, with instrument_platform ILLUMINA",
+    note: "Profiles the off-target reads with several classifiers, beyond eager's own single Kraken2 or MALT screen. Merged aDNA reads are single-end: leave fastq_2 empty. eager writes no sheet for it. Not yet run.",
+  },
+  {
     f: "ENA / SRA",
     t: "fetchngs",
     checked: "2026-11-25",
@@ -287,6 +304,14 @@ const HANDOFFS = [
     via: "samplesheet/samplesheet.csv, then rename fastq_1, fastq_2 to short_reads_fastq_1, short_reads_fastq_2",
     note: '--nf_core_pipeline has no detaxizer option. <a href="https://github.com/vagkaratzas/meta-omics-sig/blob/main/scripts/converters/fetchngs_to_reads_samplesheet.py" target="_blank" rel="noopener">fetchngs_to_reads_samplesheet.py</a> --target detaxizer does the rename, and detaxizer ran on its sheet in the SIG benchmark.',
     src: "sig",
+  },
+  {
+    f: "fetchngs",
+    t: "eager",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "fastq_1 and fastq_2 from samplesheet/samplesheet.csv, into a TSV of Sample_Name, Library_ID, Lane, Colour_Chemistry, SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM",
+    note: "--nf_core_pipeline has no eager option, and eager reads a TSV, not a CSV. Library preparation (UDG treatment, strandedness) and colour chemistry come from the study's metadata. Not yet run.",
   },
   {
     f: "fetchngs",
@@ -538,6 +563,15 @@ const HANDOFFS = [
     st: "conversion",
     via: "--fasta, --fai, --dict",
     note: "createpanelrefs 1.1.0 reads no references datasheet. Point the three params at the files references builds.",
+  },
+  {
+    f: "references",
+    t: "eager",
+    checked: "2026-11-27",
+    res: true,
+    st: "conversion",
+    via: "--fasta, --fasta_index, --seq_dict, --bwa_index",
+    note: "eager 2 reads no references datasheet and ignores iGenomes by default. It builds whatever indices are missing itself.",
   },
   {
     f: "references",
