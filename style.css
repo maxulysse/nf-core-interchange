@@ -99,9 +99,6 @@ code,
   width: 100%;
   height: auto;
 }
-.map > svg:not(.narrow) {
-  min-width: 760px;
-}
 
 .line {
   fill: none;
@@ -370,7 +367,6 @@ header {
   place-items: center;
 }
 .pave > svg {
-  min-width: 0 !important;
   max-width: 100%;
   touch-action: manipulation;
 }
@@ -427,6 +423,8 @@ header {
 }
 .view {
   display: grid;
+  /* minmax(0, 1fr), not auto: else the view grows to its widest child (tables, cards) and overflows phones. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   animation: fadein 0.35s ease-out;
 }
@@ -511,4 +509,7 @@ header {
 }
 .tile.dev text {
   opacity: 0.75;
+}
+.nowrap {
+  white-space: nowrap;
 }

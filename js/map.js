@@ -1,8 +1,14 @@
 // Draws one interchange map: the hub pipeline in the middle as a hexagon, the pipelines and resources
 // around it as stations, and each handoff as a metro line. Call renderMap(M, from), where from is the id of the previous view.
-const narrow = matchMedia("(max-width: 640px)");
-narrow.addEventListener("change", () => location.reload());
-const F = narrow.matches ? 1.8 : 1;
+// The map always fits its box. Below 760px wide its labels scale up, by F (at most 1.8 on a phone), so they stay
+// readable; a width change that alters F, such as turning a phone, draws the map again.
+const mapBox = document.querySelector("#v-map .map");
+const labelScale = () => Math.min(1.8, Math.max(1, Math.round(7600 / mapBox.clientWidth) / 10));
+// The map on screen and the label scale it was drawn at.
+let onScreen = null;
+new ResizeObserver(() => {
+  if (onScreen && !mapBox.closest(".view").hidden && labelScale() !== onScreen.F) renderMap(onScreen.M, null, false);
+}).observe(mapBox);
 const LN = { reads: "Input data", res: "Resources", out: "Results out" };
 // Map and catalogue text that is not markup: escape it before it goes into HTML. Notes and overviews are markup.
 const esc = (t) => String(t).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -56,11 +62,12 @@ const around = (s, w, full) => {
   return [s.x - w / 2, s.y - h / 2, w, h];
 };
 
-function renderMap(M, from) {
+function renderMap(M, from, animate = !reduced) {
+  const F = labelScale();
+  onScreen = { M, F };
   const { HUB, S, E, checked } = mapModel(M);
+  const full = viewBox(S, F);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
-  // Releases come from catalogue.js.
-  const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
   document.getElementById("map-title").textContent = mapTitle(M.id);
   document.getElementById("map-checked").textContent =
     checked[0] === checked[1] ? `on ${checked[0]}` : `between ${checked[0]} and ${checked[1]}`;
@@ -69,14 +76,15 @@ function renderMap(M, from) {
   const svg = document.getElementById("map");
   svg.replaceChildren();
   svg.setAttribute("aria-label", `Map of pipelines connected to nf-core/${HUB.id}`);
-  const pad = 100 * (F - 1),
-    full = [-pad, -pad / 2, MAP_W + 2 * pad, MAP_H + pad];
-  svg.classList.toggle("narrow", narrow.matches);
   svg.classList.remove("zooming");
   // Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
   const start = byId[from] ? around(byId[from], 160, full) : around(HUB, HEX_R * 2.4, full);
-  if (reduced) svg.setAttribute("viewBox", full.join(" "));
-  else animateBox(svg, start, full);
+  if (animate) animateBox(svg, start, full);
+  else {
+    // Stops a zoom still running, which would end on the previous box.
+    svg.anim = (svg.anim ?? 0) + 1;
+    svg.setAttribute("viewBox", full.join(" "));
+  }
   const gL = el("g"),
     gD = el("g"),
     gS = el("g");
@@ -119,33 +127,38 @@ function renderMap(M, from) {
     }
   });
 
-  const LBL = { above: [0, -32, "middle"], below: [0, 32, "middle"], inside: [0, 0, "middle"] };
   const mark = (s) =>
     s.hub
       ? el("polygon", { points: hexPoints(s.x, s.y, HEX_R) })
       : s.ext
         ? el("rect", { x: s.x - 9, y: s.y - 9, width: 18, height: 18, class: "mark" })
-        : el("circle", { cx: s.x, cy: s.y, r: 10, class: "mark" });
+        : el("circle", { cx: s.x, cy: s.y, r: MARK_R, class: "mark" });
+  // A release sits centred under its name, which only the browser can measure: again once the fonts have loaded.
+  const releases = [];
+  const centre = () =>
+    releases.forEach(([s, name, ver]) => ver.setAttribute("x", nameMid(s, name.getComputedTextLength())));
   S.forEach((s) => {
     s.node = el("g", {
       class: ["stn", s.hub && "hub", s.tag].filter(Boolean).join(" "),
       role: "button",
       "aria-label": s.id,
     });
-    const [dx, dy, anc] = LBL[s.label];
     // The hub label sits inside the fixed-size hexagon, so it keeps its size.
-    const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F})` });
+    const at = labelAt(s);
+    const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F}) rotate(${at.angle})` });
     // A long hub name shrinks to fit the hexagon; 0.56em is about one Overpass character.
     const hubSize = s.hub ? `font-size:${Math.min(26, (HEX_R * 1.5) / (s.id.length * 0.56)).toFixed(1)}px` : "";
-    label.append(
-      el("text", { x: dx, y: dy, "text-anchor": anc, class: "name", style: hubSize }, s.id),
-      el("text", { x: dx, y: dy + 15, "text-anchor": anc, class: "ver" }, release(s)),
-    );
+    const name = el("text", { x: at.x, y: at.y, "text-anchor": at.anchor, class: "name", style: hubSize }, s.id),
+      ver = el("text", { x: at.x, y: at.y + LABEL.lead, "text-anchor": "middle", class: "ver" }, release(s));
+    label.append(name, ver);
+    if (!s.hub) releases.push([s, name, ver]);
     s.node.append(mark(s), label);
     // A second click on a selected station that has its own map opens that map.
     activate(s.node, () => (s.node.classList.contains("sel") && !s.hub && MAPS[s.id] ? openMap(s) : selectStation(s)));
     gS.append(s.node);
   });
+  centre();
+  document.fonts.ready.then(centre);
 
   const card = document.getElementById("card");
   const pill = (st) => `<span class="pill ${st}">${ST[st].label}</span>`;
