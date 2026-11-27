@@ -126,40 +126,40 @@ function layout(M, E, stop) {
   const at = {};
   const set = (list, offs, xy) => list.forEach((id, i) => (at[id] = xy(offs[i])));
   const [tr, br] = [row(top.length), row(bottom.length)];
-  // Labels run away from stations above and right of the hub, and up to the others, the stop included.
-  set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, label: "away" }));
+  // Labels run away from stations above and right of the hub ("start"), and up to the others and the stop ("end").
+  set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, anchor: "start" }));
   set(bottom, place(bottom, br.step, ROW_PAIR), (d) => ({
     x: CENTRE.x + d,
     y: CENTRE.y + ROW + br.out,
-    label: "toward",
+    anchor: "end",
   }));
-  const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, label: "toward" });
+  const onLeft = (d) => ({ x: CENTRE.x - COL, y: CENTRE.y + d, anchor: "end" });
   if (stop) {
     // The stop sits level with the hub, so source, stop and hub run as one straight line; the other inputs sit
     // above and below it, further out when the stop fans in two sources.
     const wide = feeders.length > 1 ? 200 : 135;
     set(left, [-wide, wide], onLeft);
-    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, label: "toward", tag: "optional" };
+    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, anchor: "end", tag: "optional" };
     const fan = feeders.length > 1 ? Math.min(100, 520 / (feeders.length - 1)) : 0;
     set(feeders, place(feeders, fan, 200), onLeft);
   } else set(left, place(left, column, COL_PAIR, true), onLeft);
-  set(right, place(right, column, COL_PAIR, true), (d) => ({ x: CENTRE.x + COL, y: CENTRE.y + d, label: "away" }));
+  set(right, place(right, column, COL_PAIR, true), (d) => ({ x: CENTRE.x + COL, y: CENTRE.y + d, anchor: "start" }));
   return at;
 }
 
 // A station's release, or what it is instead: "resource", or "dev" before a first release.
 const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
 // A station's label: its name over its release, `lead` below, drawn F times larger on a small map and turned `slant`
-// degrees. The sizes match .stn .name and .stn .ver in style.css. `at` places each kind of label by its name's
-// baseline [x, y] from the station, before turning, and the end of the name there: one runs away from its station
-// ("away") or up to it ("toward"). The map's box keeps `edge` around them.
+// degrees. The sizes match .stn .name and .stn .ver in style.css. `at` places a label by its name's baseline [x, y]
+// from the station, before turning, by the end of the name there: a label runs away from its station ("start") or up
+// to it ("end"). The map's box keeps `edge` around them.
 const LABEL = {
   name: 15,
   ver: 11,
   lead: 15,
   slant: 45,
   edge: 12,
-  at: { away: [16, -2, "start"], toward: [-20, 2, "end"] },
+  at: { start: [16, -2], end: [-20, 2] },
 };
 // The radius of a station's mark.
 const MARK_R = 10;
@@ -177,8 +177,8 @@ const corners = (x, y, w, h) => [
 // degrees. Labels rise to the right; the hub's sits level inside it.
 const labelAt = (s) => {
   if (s.hub) return { x: 0, y: 0, anchor: "middle", angle: 0 };
-  const [x, y, anchor] = LABEL.at[s.label];
-  return { x, y, anchor, angle: -LABEL.slant };
+  const [x, y] = LABEL.at[s.anchor];
+  return { x, y, anchor: s.anchor, angle: -LABEL.slant };
 };
 // The middle of a station's name of width w, before scaling: its release sits centred there.
 const nameMid = (s, w) => {
