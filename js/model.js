@@ -126,7 +126,7 @@ function layout(M, E, stop) {
   const at = {};
   const set = (list, offs, xy) => list.forEach((id, i) => (at[id] = xy(offs[i])));
   const [tr, br] = [row(top.length), row(bottom.length)];
-  // Labels run away from stations above and right of the hub, and up to the others.
+  // Labels run away from stations above and right of the hub, and up to the others, the stop included.
   set(top, place(top, tr.step, ROW_PAIR), (d) => ({ x: CENTRE.x + d, y: CENTRE.y - ROW - tr.out, label: "away" }));
   set(bottom, place(bottom, br.step, ROW_PAIR), (d) => ({
     x: CENTRE.x + d,
@@ -139,7 +139,7 @@ function layout(M, E, stop) {
     // above and below it, further out when the stop fans in two sources.
     const wide = feeders.length > 1 ? 200 : 135;
     set(left, [-wide, wide], onLeft);
-    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, label: "under", tag: "optional" };
+    at[stop] = { x: CENTRE.x - 200, y: CENTRE.y, label: "toward", tag: "optional" };
     const fan = feeders.length > 1 ? Math.min(100, 520 / (feeders.length - 1)) : 0;
     set(feeders, place(feeders, fan, 200), onLeft);
   } else set(left, place(left, column, COL_PAIR, true), onLeft);
@@ -152,15 +152,14 @@ const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
 // A station's label: its name over its release, `lead` below, drawn F times larger on a small map and turned `slant`
 // degrees. The sizes match .stn .name and .stn .ver in style.css. `at` places each kind of label by its name's
 // baseline [x, y] from the station, before turning, and the end of the name there: one runs away from its station
-// ("away") or up to it ("toward"), and a stop's hangs under it ("under"), clear of the lines on both its sides. The
-// map's box keeps `edge` around them.
+// ("away") or up to it ("toward"). The map's box keeps `edge` around them.
 const LABEL = {
   name: 15,
   ver: 11,
   lead: 15,
   slant: 45,
   edge: 12,
-  at: { away: [16, -2, "start"], toward: [-20, -2, "end"], under: [-8, 14, "end"] },
+  at: { away: [16, -2, "start"], toward: [-20, 2, "end"] },
 };
 // The radius of a station's mark.
 const MARK_R = 10;
