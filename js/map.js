@@ -79,7 +79,11 @@ function renderMap(M, from, animate = !reduced) {
   // Open zoomed on where we came from, then pull back: the hub after a zoom in, the previous map's station after going back.
   const start = byId[from] ? around(byId[from], 160, full) : around(HUB, HEX_R * 2.4, full);
   if (animate) animateBox(svg, start, full);
-  else svg.setAttribute("viewBox", full.join(" "));
+  else {
+    // Stops a zoom still running, which would end on the previous box.
+    svg.anim = (svg.anim ?? 0) + 1;
+    svg.setAttribute("viewBox", full.join(" "));
+  }
   const gL = el("g"),
     gD = el("g"),
     gS = el("g");
