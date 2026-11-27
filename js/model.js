@@ -151,15 +151,16 @@ function layout(M, E, stop) {
 const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
 // A station's label: its name over its release, `lead` below, drawn F times larger on a small map and turned `slant`
 // degrees. The sizes match .stn .name and .stn .ver in style.css. `at` places each kind of label by its name's
-// baseline [x, y] from the station, before turning: one runs away from its station ("away") or up to it ("toward"),
-// and a stop's hangs under it ("under"), clear of the lines on both its sides. The map's box keeps `edge` around them.
+// baseline [x, y] from the station, before turning, and the end of the name there: one runs away from its station
+// ("away") or up to it ("toward"), and a stop's hangs under it ("under"), clear of the lines on both its sides. The
+// map's box keeps `edge` around them.
 const LABEL = {
   name: 15,
   ver: 11,
   lead: 15,
   slant: 45,
   edge: 12,
-  at: { away: [16, -2], toward: [-20, -2], under: [-8, 14] },
+  at: { away: [16, -2, "start"], toward: [-20, -2, "end"], under: [-8, 14, "end"] },
 };
 // The radius of a station's mark.
 const MARK_R = 10;
@@ -177,8 +178,8 @@ const corners = (x, y, w, h) => [
 // degrees. Labels rise to the right; the hub's sits level inside it.
 const labelAt = (s) => {
   if (s.hub) return { x: 0, y: 0, anchor: "middle", angle: 0 };
-  const [x, y] = LABEL.at[s.label];
-  return { x, y, anchor: s.label === "away" ? "start" : "end", angle: -LABEL.slant };
+  const [x, y, anchor] = LABEL.at[s.label];
+  return { x, y, anchor, angle: -LABEL.slant };
 };
 // The middle of a station's name of width w, before scaling: its release sits centred there.
 const nameMid = (s, w) => {

@@ -31,23 +31,23 @@ const overlap = (p, q) =>
   );
 // The outlines a line covers, drawn 8 wide (.line in style.css): one per step between the points of its path, whose
 // curves stay inside the steps through their control points.
+const LINE_HALF = 4;
 const lineBoxes = (d) => {
   const p = [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => [+m[1], +m[2]]);
-  return p.slice(1).flatMap(([x1, y1], i) => {
-    const [x0, y0] = p[i],
-      l = Math.hypot(x1 - x0, y1 - y0),
-      [nx, ny] = [((y0 - y1) / l) * 4, ((x1 - x0) / l) * 4];
-    return l
-      ? [
-          [
-            [x0 + nx, y0 + ny],
-            [x1 + nx, y1 + ny],
-            [x1 - nx, y1 - ny],
-            [x0 - nx, y0 - ny],
-          ],
-        ]
-      : [];
-  });
+  return p
+    .slice(1)
+    .map((b, i) => [p[i], b])
+    .filter(([[x0, y0], [x1, y1]]) => x0 !== x1 || y0 !== y1)
+    .map(([[x0, y0], [x1, y1]]) => {
+      const l = Math.hypot(x1 - x0, y1 - y0),
+        [nx, ny] = [((y0 - y1) / l) * LINE_HALF, ((x1 - x0) / l) * LINE_HALF];
+      return [
+        [x0 + nx, y0 + ny],
+        [x1 + nx, y1 + ny],
+        [x1 - nx, y1 - ny],
+        [x0 - nx, y0 - ny],
+      ];
+    });
 };
 
 // Every catalogue pipeline sits in the tree, and the tree names only catalogue pipelines.
