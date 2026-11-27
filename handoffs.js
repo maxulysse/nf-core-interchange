@@ -290,14 +290,6 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
-    t: "cutandrun",
-    checked: "2026-11-27",
-    st: "conversion",
-    via: "fastq_1 and fastq_2 from samplesheet/samplesheet.csv, into group, replicate, fastq_1, fastq_2, control",
-    note: "--nf_core_pipeline has no cutandrun option, and cutandrun's sheet has no sample column: write group, replicate and the IgG control from the study design. Paired-end reads only. Not yet run.",
-  },
-  {
-    f: "fetchngs",
     t: "detaxizer",
     checked: "2026-11-26",
     st: "conversion",

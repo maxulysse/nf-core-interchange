@@ -52,7 +52,7 @@ const MAPS = {
   },
   cutandrun: {
     overview:
-      "Where nf-core/cutandrun gets its reads, its genome and its spike-in genome. Each line is a handoff between two pipelines.",
+      "Where nf-core/cutandrun gets its genome and its spike-in genome. Each line is a handoff between two pipelines.",
   },
   seqinspector: {
     overview:
