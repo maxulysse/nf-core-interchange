@@ -100,7 +100,7 @@ function renderMap(M, from, animate = !reduced) {
     e.id = "e" + i;
     e.node = el("path", { id: e.id, d: e.d, class: `line ${e.line} ${e.st}` });
     const hit = el("path", { d: e.d, class: "hit" });
-    hit.append(el("title", {}, `${e.f} to ${e.t}: ${ST[e.st].label}`));
+    hit.append(el("title", {}, `${e.from ?? e.f} to ${e.t}: ${ST[e.st].label}`));
     hit.addEventListener("click", () => selectEdge(e));
     gL.append(e.node, hit);
     if (!reduced) {
@@ -203,8 +203,9 @@ function renderMap(M, from, animate = !reduced) {
   function selectEdge(e) {
     highlight([e.node, byId[e.f].node, byId[e.t].node]);
     card.innerHTML = `<div class="kicker">Handoff · ${LN[e.line]}</div>
-    <h2>${e.f} → ${e.t}</h2><div>${pill(e.st)}</div>
+    <h2>${e.from ?? e.f} → ${e.t}</h2><div>${pill(e.st)}</div>
     <dl><dt>Through</dt><dd class="mono">${esc(e.via)}</dd><dt>Note</dt><dd>${e.note}</dd>
+    ${e.gate ? `<dt>Gate</dt><dd>${e.gate} checks the reads first; its QC report decides whether this goes ahead.</dd>` : ""}
     ${e.src ? `<dt>Source</dt><dd>${SOURCES[e.src]}</dd>` : ""}</dl>`;
   }
   function reset() {

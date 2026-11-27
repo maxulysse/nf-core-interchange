@@ -52,7 +52,7 @@ const MAPS = {
   },
   seqinspector: {
     overview:
-      "Where nf-core/seqinspector gets the runs it checks, which references and databases its QC reads, and which analyses go on once its report passes. Each line is a handoff between two pipelines.",
+      "Where nf-core/seqinspector gets the runs it checks, and which references and databases its QC reads. It hands nothing on: its report decides whether demultiplex's handoffs go ahead. Each line is a handoff between two pipelines.",
   },
   demultiplex: {
     overview:

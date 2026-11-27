@@ -1,6 +1,6 @@
 // Every station drawn on a map: what it is, what it takes and what it gives. Releases come from catalogue.js;
-// url is only for resources; a pipeline station links to nf-co.re/<id>. intercepts lists read sources whose
-// handoffs to a hub run through this station instead, when it hands that hub the same reads.
+// url is only for resources; a pipeline station links to nf-co.re/<id>. gates makes the station a QC gate on the
+// listed read sources: it hands nothing on, but sits on their lines to any hub they hand reads to.
 const STATIONS = {
   "ENA / SRA": {
     ext: true,
@@ -208,9 +208,9 @@ const STATIONS = {
     gives: "Run folder (or tar.gz), SampleSheet.csv",
   },
   seqinspector: {
-    intercepts: ["demultiplex"],
+    gates: ["demultiplex"],
     blurb:
-      "QC gate between demultiplex and analysis: reports on each sequencing run and its FASTQ, per run and per group, so you decide whether to go on. Bundles: illumina, ont, fastq, bam, minimal.",
+      "QC gate between demultiplex and analysis: reports on each sequencing run and its FASTQ, per run and per group, so you decide whether to go on. It hands nothing on, and 1.1.2 only stops itself on a lint failure (--continue_with_lint_fail false). Bundles: illumina, ont, fastq, bam, minimal.",
     takes: "Samplesheet: sample, fastq_1, fastq_2, rundir, tags",
     gives: "MultiQC QC report",
   },
