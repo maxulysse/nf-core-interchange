@@ -145,24 +145,26 @@ function layout(M, E, stop) {
 
 // A station's release, or what it is instead: "resource", or "dev" before a first release.
 const release = (s) => (s.ext ? "resource" : (CATALOGUE[s.id]?.rel ?? "dev"));
-// A station's label: its name over its release, `gap` from the station, drawn F times larger on a small map. The sizes
-// match .stn .name and .stn .ver in style.css; its box runs `rise` above the name's baseline and is `height` tall.
-// Labels keep `clear` apart, tiers of a crowded row sit `tier` apart, and the map's box keeps `edge` around them.
-const LABEL = { name: 15, ver: 11, lead: 15, rise: 12, height: 30, gap: 32, tier: 36, clear: 8, edge: 12 };
+// A station's label: its name over its release, `lead` below, drawn F times larger on a small map. The sizes match
+// .stn .name and .stn .ver in style.css. A label sits `gap` above or below its station, or `side` beside it with its
+// name `lift` above the station's centre line. Labels keep `clear` apart, tiers of a crowded row sit `tier` apart, and
+// the map's box keeps `edge` around them.
+const LABEL = { name: 15, ver: 11, lead: 15, gap: 32, side: 16, lift: -2, tier: 36, clear: 8, edge: 12 };
 // The radius of a station's mark.
 const MARK_R = 10;
 // Label widths are estimated from character counts, generously (0.62em a character, 0.78em a capital), so a label
 // keeps clear of its neighbours in any font.
 const textWidth = (t, px) => [...t].reduce((w, c) => w + (c >= "A" && c <= "Z" ? 0.78 : 0.62), 0) * px;
 const labelWidth = (s) => Math.max(textWidth(s.id, LABEL.name), textWidth(release(s), LABEL.ver));
-// The box a station's label covers, in map units: its name's baseline sits (lx, ly) from the station, times F.
+// The box a station's label covers, in map units: its name's baseline sits (lx, ly) from the station, times F. The
+// box runs from the name's cap height, 0.8em above the baseline, to below the release.
 function labelBox(s, F) {
   const w = labelWidth(s) * F;
   return {
     x: s.x + s.lx * F - (s.anchor === "end" ? w : s.anchor === "middle" ? w / 2 : 0),
-    y: s.y + (s.ly - LABEL.rise) * F,
+    y: s.y + (s.ly - 0.8 * LABEL.name) * F,
     w,
-    h: LABEL.height * F,
+    h: (LABEL.name + LABEL.lead) * F,
   };
 }
 const markBox = (s, r = s.hub ? HEX_R : MARK_R) => ({ x: s.x - r, y: s.y - r, w: 2 * r, h: 2 * r });
@@ -172,7 +174,7 @@ const overlap = (a, b, m = 0) =>
 
 // Puts each label below its station, or above on the top row. A side column where a label below would reach the next
 // station puts them beside its stations, away from the hub; a row whose labels would touch staggers them over two or
-// three tiers.
+// three tiers. Each labelled station keeps its label's final box as `box`.
 function placeLabels(S, F) {
   const set = (s, lx, ly, anchor = "middle") => Object.assign(s, { lx, ly, anchor });
   const clear = LABEL.clear * F;
@@ -181,7 +183,7 @@ function placeLabels(S, F) {
   for (const dir of [-1, 1]) {
     const col = on(dir < 0 ? "l" : "r").sort((a, b) => a.y - b.y);
     if (col.some((s, i) => i && overlap(labelBox(col[i - 1], F), markBox(s), clear)))
-      col.forEach((s) => set(s, dir * 16, -2, dir < 0 ? "end" : "start"));
+      col.forEach((s) => set(s, dir * LABEL.side, LABEL.lift, dir < 0 ? "end" : "start"));
   }
   for (const row of [on("t"), on("b")]) {
     row.sort((a, b) => a.x - b.x);
@@ -190,12 +192,14 @@ function placeLabels(S, F) {
       [1, 2, 3].find((k) => row.slice(k).every((s, i) => !overlap(labelBox(row[i], F), labelBox(s, F), clear))) ?? 3;
     row.forEach((s, i) => (s.ly += Math.sign(s.ly) * LABEL.tier * (i % tiers)));
   }
+  S.filter((s) => !s.hub).forEach((s) => (s.box = labelBox(s, F)));
 }
 
-// The map's box: the map with a margin that grows with F, grown further to hold every label.
+// The map's box: the map with a margin that grows with F, the framing phones had before labels were measured, grown
+// further to hold every label.
 function viewBox(S, F) {
   const pad = 100 * (F - 1),
-    boxes = S.filter((s) => !s.hub).map((s) => labelBox(s, F)),
+    boxes = S.filter((s) => !s.hub).map((s) => s.box),
     x0 = Math.min(-pad, ...boxes.map((b) => b.x - LABEL.edge)),
     y0 = Math.min(-pad / 2, ...boxes.map((b) => b.y - LABEL.edge)),
     x1 = Math.max(MAP_W + pad, ...boxes.map((b) => b.x + b.w + LABEL.edge)),

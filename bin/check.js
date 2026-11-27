@@ -7,10 +7,9 @@ const vm = require("vm");
 const scripts = [...fs.readFileSync("index.html", "utf8").matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
 for (const f of scripts.slice(0, scripts.indexOf("js/map.js")))
   vm.runInThisContext(fs.readFileSync(f, "utf8"), { filename: f });
-const { TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel, labelBox, markBox, overlap } =
-  vm.runInThisContext(
-    "({ TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel, labelBox, markBox, overlap })",
-  );
+const { TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel, markBox, overlap } = vm.runInThisContext(
+  "({ TREE, CATALOGUE, MAPS, STATIONS, HANDOFFS, SOURCES, ST, mapModel, markBox, overlap })",
+);
 
 let bad = 0;
 const fail = (msg) => {
@@ -61,11 +60,10 @@ for (const M of Object.values(MAPS)) {
       labelled = all.filter((s) => !s.hub);
     labelled.forEach((a, i) => {
       labelled.slice(i + 1).forEach((b) => {
-        if (overlap(labelBox(a, F), labelBox(b, F)))
-          fail(`${M.id}: at scale ${F}, the labels of ${a.id} and ${b.id} touch`);
+        if (overlap(a.box, b.box)) fail(`${M.id}: at scale ${F}, the labels of ${a.id} and ${b.id} touch`);
       });
       all
-        .filter((b) => b !== a && overlap(labelBox(a, F), markBox(b)))
+        .filter((b) => b !== a && overlap(a.box, markBox(b)))
         .forEach((b) => fail(`${M.id}: at scale ${F}, the label of ${a.id} covers ${b.id}`));
     });
   }

@@ -5,9 +5,9 @@
 const mapBox = document.querySelector("#v-map .map");
 const labelScale = () => Math.min(1.8, Math.max(1, Math.round(7600 / mapBox.clientWidth) / 10));
 // The map on screen and the label scale it was drawn at.
-let drawn = null;
+let onScreen = null;
 new ResizeObserver(() => {
-  if (drawn && !mapBox.closest(".view").hidden && labelScale() !== drawn.F) renderMap(drawn.M, null, false);
+  if (onScreen && !mapBox.closest(".view").hidden && labelScale() !== onScreen.F) renderMap(onScreen.M, null, false);
 }).observe(mapBox);
 const LN = { reads: "Input data", res: "Resources", out: "Results out" };
 // Map and catalogue text that is not markup: escape it before it goes into HTML. Notes and overviews are markup.
@@ -64,7 +64,7 @@ const around = (s, w, full) => {
 
 function renderMap(M, from, animate = !reduced) {
   const F = labelScale();
-  drawn = { M, F };
+  onScreen = { M, F };
   const { HUB, S, E, box: full, checked } = mapModel(M, F);
   const byId = Object.fromEntries(S.map((s) => [s.id, s]));
   document.getElementById("map-title").textContent = mapTitle(M.id);
