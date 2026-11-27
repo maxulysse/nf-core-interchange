@@ -841,4 +841,21 @@ const HANDOFFS = [
     note: "Each row also needs refseqfile, refphylogeny and model. No pipeline here makes them, and they depend on the clade.",
     src: "sig",
   },
+  {
+    f: "viralrecon",
+    t: "phyloplace",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "variants/<caller>/consensus/<consensus_caller>/*.consensus.fa (or artic_minion consensus FASTA), together, into queryseqfile",
+    note: "For placing consensus genomes on your own reference alignment and tree, beyond the Pangolin and Nextclade calls viralrecon makes for SARS-CoV-2. You supply refseqfile, refphylogeny and model. Not yet run.",
+  },
+  {
+    f: "viralrecon genomes",
+    t: "viralrecon",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genome MN908947.3 with --primer_set and --primer_set_version",
+    note: "viralrecon loads this config from nf-core/configs at run time: reference FASTA, GFF and the ARTIC and other primer BEDs for the genomes it lists. Pass --fasta, --gff and --primer_bed for any other virus.",
+  },
 ];

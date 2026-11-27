@@ -250,8 +250,19 @@ const STATIONS = {
     gives: "Viral contigs, consensus genomes, variants",
   },
   viralrecon: {
-    blurb: "Assembly and intrahost and low-frequency variant calling for viral samples.",
-    takes: "Samplesheet: sample, fastq_1, fastq_2 (or barcode for Nanopore)",
-    gives: "Consensus genomes, variants",
+    blurb:
+      "Viral genomes from Illumina or Nanopore reads, amplicon or shotgun: QC, alignment, intrahost and low-frequency variant calling, consensus genomes, de novo assembly, and Pangolin and Nextclade lineages for SARS-CoV-2.",
+    takes:
+      "Samplesheet: sample, fastq_1, fastq_2 (or barcode for Nanopore); --platform, --protocol, --genome or --fasta and --gff, --primer_set",
+    gives: "Variant VCFs and a long table, consensus FASTA, assemblies, lineages and clades, MultiQC",
+  },
+  "viralrecon genomes": {
+    ext: true,
+    url: "https://github.com/nf-core/configs/blob/master/conf/pipeline/viralrecon/genomes.config",
+    blurb:
+      "The genomes config viralrecon loads from nf-core/configs: viral references with their annotation and amplicon primer sets, updated apart from the pipeline.",
+    takes: "",
+    gives:
+      "Reference FASTA and GFF, primer BEDs, Nextclade datasets and Freyja database names, for SARS-CoV-2, mpox and other viruses",
   },
 };
