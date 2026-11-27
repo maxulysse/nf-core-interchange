@@ -221,18 +221,24 @@ function mapModel(M) {
     skip = new Set();
   let stop;
   const pair = (h) => `${h.f}>${h.t}`;
-  // A source that a station intercepts reaches the hub through it: source -> station -> hub.
+  // A gate (seqinspector) hands nothing on: it sits on its source's line to the hub, source -> gate -> hub, and its
+  // report decides whether the source's handoff goes ahead. The second leg is that handoff, drawn from the gate.
   const has = (f, t) => HANDOFFS.some((h) => h.f === f && h.t === t);
+  const gated = [];
   for (const [id, s] of Object.entries(STATIONS))
-    for (const src of s.intercepts ?? [])
-      if (has(id, M.id) && has(src, M.id) && has(src, id)) {
+    for (const src of s.gates ?? [])
+      if (id !== M.id && has(src, M.id) && has(src, id)) {
         skip.add(`${src}>${M.id}`);
         also.add(`${src}>${id}`);
+        gated.push(HANDOFFS.find((h) => h.f === src && h.t === M.id));
         stop = id;
       }
   const drawn = (h) => !skip.has(pair(h)) && (h.f === M.id || h.t === M.id || also.has(pair(h)));
   // Copies, so rendering twice never stacks state on the shared data.
-  const E = HANDOFFS.filter(drawn).map((h) => ({ ...h, handoff: h }));
+  const E = [
+    ...HANDOFFS.filter(drawn).map((h) => ({ ...h, handoff: h })),
+    ...gated.map((h) => ({ ...h, f: stop, from: h.f, gate: stop, handoff: h })),
+  ];
   const HUB = { id: M.id, ...STATIONS[M.id], ...CENTRE, hub: true };
   const S = [HUB, ...Object.entries(layout(M, E, stop)).map(([id, at]) => ({ id, ...STATIONS[id], ...at }))];
   // Colour by direction: into the hub is input (or a resource), out of it is results. A handoff between two
