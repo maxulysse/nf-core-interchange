@@ -307,14 +307,6 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
-    t: "eager",
-    checked: "2026-11-27",
-    st: "conversion",
-    via: "fastq_1 and fastq_2 from samplesheet/samplesheet.csv, into a TSV of Sample_Name, Library_ID, Lane, Colour_Chemistry, SeqType, Organism, Strandedness, UDG_Treatment, R1, R2, BAM",
-    note: "--nf_core_pipeline has no eager option, and eager reads a TSV, not a CSV. Library preparation (UDG treatment, strandedness) and colour chemistry come from the study's metadata. Not yet run.",
-  },
-  {
-    f: "fetchngs",
     t: "mag",
     checked: "2026-11-26",
     st: "conversion",

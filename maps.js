@@ -31,7 +31,7 @@ const MAPS = {
   },
   eager: {
     overview:
-      "Where nf-core/eager gets its reads, reference and screening databases, and where its unmapped reads go next. Each line is a handoff between two pipelines.",
+      "Where nf-core/eager gets its reference and screening databases, and where its unmapped reads go next. Each line is a handoff between two pipelines.",
   },
   createtaxdb: {
     overview: "Where nf-core/createtaxdb gets its reference sequences, and which pipeline reads its databases.",
