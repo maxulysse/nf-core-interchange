@@ -16,7 +16,7 @@ const TREE = {
         {
           id: "get-data",
           label: "Get reads",
-          children: ["fetchngs", "demultiplex", "nanoseq", "bamtofastq", "readsimulator"],
+          children: ["fetchngs", "demultiplex", "bamtofastq", "readsimulator"],
         },
         { id: "read-qc", label: "QC & clean", children: ["seqinspector", "fastqrepair", "fastquorum", "detaxizer"] },
         {
@@ -38,6 +38,7 @@ const TREE = {
             "sarek",
             "raredisease",
             "longraredisease",
+            "nanoseq",
             "pacvar",
             "drop",
             "hlatyping",
@@ -111,6 +112,7 @@ const TREE = {
           label: "Expression",
           children: [
             "rnaseq",
+            "nanoseq",
             "differentialabundance",
             "stableexpression",
             "alleleexpression",
