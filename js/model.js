@@ -158,7 +158,6 @@ const MARK_R = 10;
 // Label widths are estimated from character counts, generously (0.62em a character, 0.78em a capital), so a label
 // keeps clear of its neighbours in any font.
 const textWidth = (t, px) => [...t].reduce((w, c) => w + (c >= "A" && c <= "Z" ? 0.78 : 0.62), 0) * px;
-const labelWidth = (s) => Math.max(textWidth(s.id, LABEL.name), textWidth(release(s), LABEL.ver));
 // Outlines are lists of corners.
 const corners = (x, y, w, h) => [
   [x, y],
@@ -173,13 +172,15 @@ const labelAt = (s) =>
     ? { x: 0, y: 0, angle: 0 }
     : { x: (s.anchor === "start" ? 1 : -1) * LABEL.side, y: LABEL.lift, angle: -LABEL.slant };
 // The outline a station's label covers at scale F, in map units. It runs from the name's cap height, 0.8em above the
-// baseline, to below the release.
+// baseline, to below the release, which sits centred under the name.
 function labelBox(s, F) {
   const { x, y, angle } = labelAt(s),
-    w = labelWidth(s),
+    name = textWidth(s.id, LABEL.name),
+    w = Math.max(name, textWidth(release(s), LABEL.ver)),
+    mid = x + ((s.anchor === "end" ? -1 : 1) * name) / 2,
     a = (angle * Math.PI) / 180,
     [cos, sin] = [Math.cos(a), Math.sin(a)];
-  return corners(s.anchor === "end" ? x - w : x, y - 0.8 * LABEL.name, w, LABEL.name + LABEL.lead).map(([u, v]) => [
+  return corners(mid - w / 2, y - 0.8 * LABEL.name, w, LABEL.name + LABEL.lead).map(([u, v]) => [
     s.x + (u * cos - v * sin) * F,
     s.y + (u * sin + v * cos) * F,
   ]);

@@ -133,6 +133,12 @@ function renderMap(M, from, animate = !reduced) {
       : s.ext
         ? el("rect", { x: s.x - 9, y: s.y - 9, width: 18, height: 18, class: "mark" })
         : el("circle", { cx: s.x, cy: s.y, r: MARK_R, class: "mark" });
+  // A release sits centred under its name, which only the browser can measure: again once the fonts have loaded.
+  const releases = [];
+  const centre = () =>
+    releases.forEach(([s, name, ver]) =>
+      ver.setAttribute("x", labelAt(s).x + ((s.anchor === "end" ? -1 : 1) * name.getComputedTextLength()) / 2),
+    );
   S.forEach((s) => {
     s.node = el("g", {
       class: ["stn", s.hub && "hub", s.tag].filter(Boolean).join(" "),
@@ -144,15 +150,17 @@ function renderMap(M, from, animate = !reduced) {
     const label = el("g", { transform: `translate(${s.x},${s.y}) scale(${s.hub ? 1 : F}) rotate(${at.angle})` });
     // A long hub name shrinks to fit the hexagon; 0.56em is about one Overpass character.
     const hubSize = s.hub ? `font-size:${Math.min(26, (HEX_R * 1.5) / (s.id.length * 0.56)).toFixed(1)}px` : "";
-    label.append(
-      el("text", { x: at.x, y: at.y, "text-anchor": s.anchor, class: "name", style: hubSize }, s.id),
-      el("text", { x: at.x, y: at.y + LABEL.lead, "text-anchor": s.anchor, class: "ver" }, release(s)),
-    );
+    const name = el("text", { x: at.x, y: at.y, "text-anchor": s.anchor, class: "name", style: hubSize }, s.id),
+      ver = el("text", { x: at.x, y: at.y + LABEL.lead, "text-anchor": "middle", class: "ver" }, release(s));
+    label.append(name, ver);
+    if (!s.hub) releases.push([s, name, ver]);
     s.node.append(mark(s), label);
     // A second click on a selected station that has its own map opens that map.
     activate(s.node, () => (s.node.classList.contains("sel") && !s.hub && MAPS[s.id] ? openMap(s) : selectStation(s)));
     gS.append(s.node);
   });
+  centre();
+  document.fonts.ready.then(centre);
 
   const card = document.getElementById("card");
   const pill = (st) => `<span class="pill ${st}">${ST[st].label}</span>`;
