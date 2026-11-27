@@ -317,14 +317,6 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
-    t: "nanoseq",
-    checked: "2026-11-27",
-    st: "conversion",
-    via: "fastq_1 into input_file, with group, replicate, an empty barcode, fasta and gtf; --skip_demultiplexing",
-    note: "--nf_core_pipeline has no nanoseq option, and nanoseq's sheet shares no column with fetchngs': write group and replicate from the study design. ENA usually serves a Nanopore run as one FASTQ, so skip demultiplexing.",
-  },
-  {
-    f: "fetchngs",
     t: "rnaseq",
     checked: "2026-11-25",
     st: "native",

@@ -20,7 +20,7 @@ const MAPS = {
   },
   nanoseq: {
     overview:
-      "Where nf-core/nanoseq gets its Nanopore reads and genomes, and where its reads, alignments and counts go next. Each line is a handoff between two pipelines.",
+      "Where nf-core/nanoseq gets its genomes, and where its reads, alignments and counts go next. Each line is a handoff between two pipelines.",
   },
   references: {
     overview:
