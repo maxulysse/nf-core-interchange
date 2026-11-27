@@ -54,6 +54,10 @@ const MAPS = {
     overview:
       "Which pipelines hand nf-core/seqinspector reads to check, which references and databases its QC reads, and where the checked reads go next. Each line is a handoff between two pipelines.",
   },
+  proteinfold: {
+    overview:
+      "Which pipelines give nf-core/proteinfold the proteins it folds, and where it gets its model databases. Each line is a handoff between two pipelines.",
+  },
   demultiplex: {
     overview:
       "Where nf-core/demultiplex gets its sequencing runs, and which pipelines start from the samplesheets it writes for them. Each line is a handoff between two pipelines.",

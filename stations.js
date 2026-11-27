@@ -147,9 +147,19 @@ const STATIONS = {
     gives: "Families, HMMs, alignments, family representatives (_reps.faa)",
   },
   proteinfold: {
-    blurb: "Predicts protein structures with AlphaFold2, ColabFold, ESMFold and others.",
-    takes: "Samplesheet: id, fasta (or sequence); --split_fasta for a multi-FASTA",
-    gives: "Predicted structures, reports",
+    blurb:
+      "Predicts protein structures with AlphaFold2, AlphaFold3, ColabFold, ESMFold, Boltz, HelixFold3, RoseTTAFold2NA and RoseTTAFold-All-Atom, side by side, with an optional Foldseek search.",
+    takes: "Samplesheet: sequence (or id), fasta; --split_fasta for a multi-FASTA; --mode, --db",
+    gives: "Predicted structures (PDB, mmCIF), confidence scores, HTML report and cross-mode comparison",
+  },
+  "proteinfold databases": {
+    ext: true,
+    url: "https://nf-co.re/proteinfold/2.0.0/docs/usage/",
+    blurb:
+      "The model weights and sequence and structure databases each structure predictor reads, from AlphaFold, ColabFold, PDB and others, downloaded from the links in proteinfold's conf/dbs.config.",
+    takes: "",
+    gives:
+      "Model parameters, UniRef, BFD, MGnify, PDB70 and PDB mmCIF, ColabFold environmental databases, Foldseek databases",
   },
   raredisease: {
     blurb:

@@ -365,6 +365,14 @@ const HANDOFFS = [
     note: "For Illumina runs. Nanopore runs go into viralrecon as barcode folders, not FASTQ rows.",
   },
   {
+    f: "funcscan",
+    t: "proteinfold",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "ampcombi/<sample>/*_amp.faa into sequence, fasta, with --split_fasta",
+    note: "Folds the predicted antimicrobial peptides, which funcscan's docs suggest for the cluster representatives in Ampcombi_summary_cluster_representative_seq.tsv: turn those into a FASTA to fold one per cluster. ESMFold or ColabFold suit short peptides. Not yet run.",
+  },
+  {
     f: "hlatyping",
     t: "epitopeprediction",
     checked: "2026-11-16",
@@ -487,6 +495,15 @@ const HANDOFFS = [
     via: "--skip_proteinfold_samplesheet false: proteinfold/samplesheet.csv into --input",
     note: "Points at the family representatives, one multi-FASTA, so add --split_fasta. Needs proteinfold 2.0.0 or later. Not yet run.",
     src: "sig",
+  },
+  {
+    f: "proteinfold databases",
+    t: "proteinfold",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--db <dir>, or no --db to download what --mode needs",
+    note: "Hundreds of GB to several TB for AlphaFold2 and ColabFold: download once to a shared file system, in the layout proteinfold's usage docs describe, and pass --db. ESMFold needs only its weights.",
   },
   {
     f: "raredisease",
