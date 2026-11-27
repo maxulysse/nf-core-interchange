@@ -307,6 +307,14 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
+    t: "seqinspector",
+    checked: "2026-11-28",
+    st: "native",
+    via: "samplesheet/samplesheet.csv into --input",
+    note: "The QC gate before analysis. No --nf_core_pipeline needed: seqinspector needs only sample and fastq_1 (fastq_2 optional), which every fetchngs sheet starts with, and ignores the metadata columns. Not yet run.",
+  },
+  {
+    f: "fetchngs",
     t: "taxprofiler",
     checked: "2026-11-26",
     st: "native",

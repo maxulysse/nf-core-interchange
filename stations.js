@@ -208,9 +208,9 @@ const STATIONS = {
     gives: "Run folder (or tar.gz), SampleSheet.csv",
   },
   seqinspector: {
-    gates: ["demultiplex"],
+    gates: ["demultiplex", "fetchngs"],
     blurb:
-      "QC gate between demultiplex and analysis: reports on each sequencing run and its FASTQ, per run and per group, so you decide whether to go on. It hands nothing on, and 1.1.2 only stops itself on a lint failure (--continue_with_lint_fail false). Bundles: illumina, ont, fastq, bam, minimal.",
+      "QC gate between the entry points (demultiplex, fetchngs) and analysis: reports on each sequencing run and its FASTQ, per run and per group, so you decide whether to go on. It hands nothing on, and 1.1.2 only stops itself on a lint failure (--continue_with_lint_fail false). Bundles: illumina, ont, fastq, bam, minimal.",
     takes: "Samplesheet: sample, fastq_1, fastq_2, rundir, tags",
     gives: "MultiQC QC report",
   },
