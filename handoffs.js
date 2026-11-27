@@ -87,6 +87,14 @@ const HANDOFFS = [
   },
   {
     f: "bamtofastq",
+    t: "rnafusion",
+    checked: "2026-11-27",
+    st: "conversion",
+    via: "reads/*_{1,2}.merged.fastq.gz into sample, fastq_1, fastq_2, strandedness",
+    note: "For RNA BAMs from any aligner. rnafusion also reads STAR BAMs directly, but only ones aligned with chimeric output, which rnaseq's aren't.",
+  },
+  {
+    f: "bamtofastq",
     t: "rnaseq",
     checked: "2026-11-25",
     st: "conversion",
@@ -589,6 +597,15 @@ const HANDOFFS = [
     st: "native",
     via: "--input: a sheet from references-assets",
     note: "The repository the README points to for its assets: ready sheets for common genomes, by source.",
+  },
+  {
+    f: "rnafusion references",
+    t: "rnafusion",
+    checked: "2026-11-27",
+    res: true,
+    st: "native",
+    via: "--genomes_base <path>, after syncing s3://ngi-igenomes/nf-core/pipelines/rnafusion/references/",
+    note: "GRCh38 only. The bundle holds the GENCODE genome and the STAR, STAR-Fusion, Arriba, FusionCatcher and fusion-report databases, minus COSMIC, which needs your own login and a --references_only build.",
   },
   {
     f: "rnaseq",

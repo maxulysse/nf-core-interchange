@@ -35,6 +35,10 @@ const MAPS = {
   ampliseq: {
     overview: "Where nf-core/ampliseq gets its amplicon reads, and where its abundance tables go.",
   },
+  rnafusion: {
+    overview:
+      "Where nf-core/rnafusion gets its RNA reads and its fusion references. Each line is a handoff between two pipelines.",
+  },
   taxprofiler: {
     overview: "Where nf-core/taxprofiler gets its shotgun reads and databases, and where its profiles go.",
   },
