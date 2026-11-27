@@ -341,14 +341,6 @@ const HANDOFFS = [
   },
   {
     f: "fetchngs",
-    t: "scrnaseq",
-    checked: "2026-11-27",
-    st: "native",
-    via: "samplesheet/samplesheet.csv (no --nf_core_pipeline) into --input",
-    note: "scrnaseq needs sample, fastq_1 and fastq_2, which every fetchngs sheet starts with, and ignores the metadata columns. fastq_1 must be the barcode read: check the order for each study, since archives store 10x runs in different ways. Set --protocol to match. Not yet run.",
-  },
-  {
-    f: "fetchngs",
     t: "seqinspector",
     checked: "2026-11-26",
     st: "native",
